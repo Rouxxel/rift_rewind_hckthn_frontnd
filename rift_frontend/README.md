@@ -1,73 +1,177 @@
-# React + TypeScript + Vite
+# Rift Rewind Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A React-based coaching dashboard for League of Legends players, built for the Rift Rewind hackathon. This frontend interfaces with the Rift Rewind backend to provide personalized coaching insights and analytics.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **User Authentication**: Riot ID-based login with PUUID retrieval
+- **Coaching Dashboard**: Personalized insights and recommendations
+- **Performance Analytics**: Match history and performance analysis
+- **Game Assets Explorer**: Browse champions, items, and abilities
+- **Responsive Design**: League of Legends themed UI
+- **Multi-Backend Support**: Works with local, AWS, and Render deployments
 
-## React Compiler
+## Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **React 19** with TypeScript
+- **Vite** for fast development and building
+- **CSS3** with League of Legends inspired design
+- **Local Storage** for user session management
 
-## Expanding the ESLint configuration
+## Quick Start
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### Prerequisites
+- Node.js 18+ 
+- npm or yarn
+- Running Rift Rewind backend
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### Installation
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+1. **Clone and navigate to frontend**:
+   ```bash
+   cd rift_frontend
+   ```
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+2. **Install dependencies**:
+   ```bash
+   npm install
+   ```
+
+3. **Configure environment**:
+   ```bash
+   cp .env.example .env
+   # Edit .env with your backend URL
+   ```
+
+4. **Start development server**:
+   ```bash
+   npm run dev
+   ```
+
+5. **Open in browser**:
+   ```
+   http://localhost:5173
+   ```
+
+## Environment Configuration
+
+Create a `.env` file with your backend configuration:
+
+```env
+# For local development
+VITE_API_BASE_URL=http://localhost:8000
+VITE_ENVIRONMENT=development
+
+# For AWS deployment
+# VITE_API_BASE_URL=https://your-aws-url.amazonaws.com
+
+# For Render deployment  
+# VITE_API_BASE_URL=https://your-app.onrender.com
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Available Scripts
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run preview` - Preview production build
+- `npm run lint` - Run ESLint
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Project Structure
+
 ```
+src/
+├── components/          # React components
+│   ├── UserAuth.tsx    # Login/authentication form
+│   └── Dashboard.tsx   # Main coaching dashboard
+├── config/             # Configuration files
+│   └── api.ts         # API endpoints and settings
+├── services/          # API service functions
+│   └── api.ts        # Backend communication
+├── types/            # TypeScript type definitions
+│   └── user.ts      # User-related types
+├── utils/           # Utility functions
+│   └── storage.ts  # Browser storage management
+├── App.tsx         # Main application component
+├── App.css        # Application styles
+├── main.tsx      # Application entry point
+└── index.css    # Global styles
+```
+
+## User Flow
+
+1. **Authentication**: User enters Riot ID (gameName + tagLine) and region
+2. **PUUID Retrieval**: Frontend calls backend to get user's PUUID
+3. **Data Storage**: User credentials and PUUID saved to localStorage
+4. **Dashboard**: User sees personalized coaching interface
+5. **Analytics**: Access to performance insights and recommendations
+
+## API Integration
+
+The frontend communicates with the Rift Rewind backend through:
+
+- **User Authentication**: `/user/get_riot_puuid`
+- **Summoner Info**: `/user/get_summoner_info`
+- **Ranked Stats**: `/user/get_ranked_stats`
+- **Performance Analytics**: `/analytics/get_player_performance`
+- **Game Assets**: `/game_assets/get_lol_champions`, `/game_assets/get_lol_items`, `/game_assets/get_champion_abilities`
+
+## Deployment
+
+### Vercel (Recommended)
+
+1. **Connect repository** to Vercel
+2. **Set environment variables**:
+   - `VITE_API_BASE_URL`: Your backend URL
+   - `VITE_ENVIRONMENT`: `production`
+3. **Deploy** automatically on push
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions.
+
+### Other Platforms
+
+The app can be deployed to any static hosting service:
+- Netlify
+- GitHub Pages
+- AWS S3 + CloudFront
+- Firebase Hosting
+
+## Backend Compatibility
+
+This frontend is designed to work with multiple backend deployments:
+
+- **Local Development**: `http://localhost:8000`
+- **AWS Lambda**: API Gateway URL
+- **AWS App Runner**: App Runner URL  
+- **Render**: Render app URL
+
+Simply update the `VITE_API_BASE_URL` environment variable to switch backends.
+
+## Styling
+
+The application uses a League of Legends inspired color palette:
+
+- **Gold**: `#c89b3c` (Primary accent)
+- **Blue**: `#5bc0de` (Secondary accent)
+- **Dark Blue**: `#0a1428` (Background)
+- **Gray**: `#1e2328` (Cards/containers)
+- **Cream**: `#f0e6d2` (Text)
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
+
+## License
+
+This project is part of the Rift Rewind hackathon submission.
+
+## Support
+
+For issues and questions:
+- Check the browser console for errors
+- Verify backend connectivity
+- Ensure environment variables are set correctly
+- Review the [DEPLOYMENT.md](./DEPLOYMENT.md) guide
