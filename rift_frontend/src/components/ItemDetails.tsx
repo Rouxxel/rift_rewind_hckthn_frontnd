@@ -4,15 +4,17 @@ import { apiService } from '../services/api';
 interface ItemDetailsProps {
   itemId: string;
   itemData?: any; // Pass cached item data to avoid API call
+  allItemsData?: any; // Pass all items data for name resolution
   onClose: () => void;
 }
 
 interface ItemData {
-  item_id: string;
+  item_id?: string;
   name: string;
   description: string;
   plaintext: string;
   tags: string[];
+  colloq?: string;
   gold: {
     base: number;
     total: number;
@@ -29,47 +31,40 @@ interface ItemData {
     h: number;
   };
   stats?: {
-    attack_damage: number;
-    ability_power: number;
-    health: number;
-    mana: number;
-    armor: number;
-    magic_resist: number;
-    attack_speed: number;
-    crit_chance: number;
-    movement_speed: number;
-    life_steal: number;
-    ability_haste: number;
-    health_regen: number;
-    mana_regen: number;
+    FlatPhysicalDamageMod?: number;
+    FlatMagicDamageMod?: number;
+    FlatHPPoolMod?: number;
+    FlatMPPoolMod?: number;
+    FlatArmorMod?: number;
+    FlatSpellBlockMod?: number;
+    PercentAttackSpeedMod?: number;
+    FlatCritChanceMod?: number;
+    FlatMovementSpeedMod?: number;
+    PercentLifeStealMod?: number;
+    FlatHPRegenMod?: number;
+    FlatMPRegenMod?: number;
+    // Legacy field names for backward compatibility
+    attack_damage?: number;
+    ability_power?: number;
+    health?: number;
+    mana?: number;
+    armor?: number;
+    magic_resist?: number;
+    attack_speed?: number;
+    crit_chance?: number;
+    movement_speed?: number;
+    life_steal?: number;
+    ability_haste?: number;
+    health_regen?: number;
+    mana_regen?: number;
   };
-  recipe?: {
-    components: Array<{
-      id: string;
-      name: string;
-      cost: number;
-    }>;
-    builds_into: Array<{
-      id: string;
-      name: string;
-      cost: number;
-    }>;
-    total_cost: number;
-    base_cost: number;
-    sell_value: number;
-  };
-  metadata?: {
-    purchasable: boolean;
-    consumable: boolean;
-    boots: boolean;
-    legendary: boolean;
-    mythic: boolean;
-    starter: boolean;
-    support: boolean;
-  };
+  into?: string[];
+  from?: string[];
+  maps?: { [key: string]: boolean };
+  effect?: { [key: string]: string };
 }
 
-export const ItemDetails: React.FC<ItemDetailsProps> = ({ itemId, itemData: cachedItemData, onClose }) => {
+export const ItemDetails: React.FC<ItemDetailsProps> = ({ itemId, itemData: cachedItemData, allItemsData, onClose }) => {
   const [itemData, setItemData] = useState<ItemData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -82,19 +77,11 @@ export const ItemDetails: React.FC<ItemDetailsProps> = ({ itemId, itemData: cach
     try {
       setLoading(true);
       setError(null);
-      
+
       // If we have cached item data, use it first for basic info
       if (cachedItemData) {
         console.log('📋 Using cached item data:', cachedItemData);
-        setItemData({
-          item_id: itemId,
-          name: cachedItemData.name || 'Unknown Item',
-          description: cachedItemData.description || '',
-          plaintext: cachedItemData.plaintext || '',
-          tags: cachedItemData.tags || [],
-          gold: cachedItemData.gold || { base: 0, total: 0, sell: 0, purchasable: true },
-          image: cachedItemData.image || { full: '', sprite: '', group: '', x: 0, y: 0, w: 0, h: 0 }
-        });
+        setItemData(cachedItemData);
       } else {
         // Fallback to API call if no cached data
         console.log('🔄 Loading item details from API...');
@@ -120,30 +107,128 @@ export const ItemDetails: React.FC<ItemDetailsProps> = ({ itemId, itemData: cach
     return value.toLocaleString();
   };
 
-  const getItemTypeColor = (tags: string[]): string => {
-    if (tags.includes('Mythic')) return '#ff6b35';
-    if (tags.includes('Legendary')) return '#ffd700';
-    if (tags.includes('Epic')) return '#9d4edd';
-    if (tags.includes('Boots')) return '#06ffa5';
-    if (tags.includes('Consumable')) return '#ff9f1c';
-    return '#5bc0de';
+  const cleanDescription = (description: string): string => {
+    if (!description) return '';
+
+    // Remove extra whitespace and clean up HTML
+    return description
+      .replace(/\s+/g, ' ')
+      .replace(/>\s+</g, '><')
+      .trim();
   };
 
-  const getItemTypeLabel = (tags: string[]): string => {
-    if (tags.includes('Mythic')) return 'Mythic';
-    if (tags.includes('Legendary')) return 'Legendary';
-    if (tags.includes('Epic')) return 'Epic';
-    if (tags.includes('Boots')) return 'Boots';
-    if (tags.includes('Consumable')) return 'Consumable';
-    if (tags.includes('Starter')) return 'Starter';
-    return 'Basic';
+  const getStatValue = (stats: any, statName: string): number => {
+    if (!stats) return 0;
+
+    // Check both new API format and legacy format
+    const statMappings: { [key: string]: string[] } = {
+      'attack_damage': ['FlatPhysicalDamageMod', 'attack_damage'],
+      'ability_power': ['FlatMagicDamageMod', 'ability_power'],
+      'health': ['FlatHPPoolMod', 'health'],
+      'mana': ['FlatMPPoolMod', 'mana'],
+      'armor': ['FlatArmorMod', 'armor'],
+      'magic_resist': ['FlatSpellBlockMod', 'magic_resist'],
+      'attack_speed': ['PercentAttackSpeedMod', 'attack_speed'],
+      'crit_chance': ['FlatCritChanceMod', 'crit_chance'],
+      'movement_speed': ['FlatMovementSpeedMod', 'movement_speed'],
+      'life_steal': ['PercentLifeStealMod', 'life_steal'],
+      'health_regen': ['FlatHPRegenMod', 'health_regen'],
+      'mana_regen': ['FlatMPRegenMod', 'mana_regen']
+    };
+
+    const possibleKeys = statMappings[statName] || [statName];
+
+    for (const key of possibleKeys) {
+      if (stats[key] && stats[key] > 0) {
+        return stats[key];
+      }
+    }
+
+    return 0;
   };
+
+  const getMapName = (mapId: string): string => {
+    const mapNames: { [key: string]: string } = {
+      '3': 'Proving Grounds',
+      '8': 'Crystal Scar',
+      '10': 'Twisted Treeline',
+      '11': 'Summoner\'s Rift',
+      '12': 'Howling Abyss',
+      '13': 'Magma Chamber',
+      '14': 'Butcher\'s Bridge',
+      '16': 'Cosmic Ruins',
+      '18': 'Valoran City Park',
+      '19': 'Substructure 43',
+      '20': 'Crash Site',
+      '21': 'Temple of Lily and Lotus',
+      '22': 'Nexus Blitz',
+      '30': 'Arena: Rings of Wrath',
+      '35': 'The Bandlewood'
+    };
+
+    return mapNames[mapId] || `Unknown Map (${mapId})`;
+  };
+
+  const formatTag = (tag: string): string => {
+    // Split camelCase and PascalCase words
+    return tag
+      .replace(/([a-z])([A-Z])/g, '$1 $2')
+      .replace(/([A-Z])([A-Z][a-z])/g, '$1 $2')
+      .trim();
+  };
+
+  const getItemName = (itemId: string, allItemsData?: any): string => {
+    // First try to get from the passed allItemsData parameter
+    if (allItemsData && allItemsData[itemId] && allItemsData[itemId].name) {
+      return allItemsData[itemId].name;
+    }
+
+    // Try to get item name from cached data if available
+    if (cachedItemData && typeof cachedItemData === 'object') {
+      // Check if cachedItemData has items object (nested structure)
+      if (cachedItemData.items && cachedItemData.items[itemId]) {
+        return cachedItemData.items[itemId].name || itemId;
+      }
+      // Check if cachedItemData is the items object itself (flat structure)
+      if (cachedItemData[itemId] && cachedItemData[itemId].name) {
+        return cachedItemData[itemId].name;
+      }
+      // Check if there's a data property containing items
+      if (cachedItemData.data && cachedItemData.data[itemId] && cachedItemData.data[itemId].name) {
+        return cachedItemData.data[itemId].name;
+      }
+    }
+    return itemId;
+  };
+
+  const hasOffensiveStats = (stats: any): boolean => {
+    return getStatValue(stats, 'attack_damage') > 0 ||
+      getStatValue(stats, 'ability_power') > 0 ||
+      getStatValue(stats, 'attack_speed') > 0 ||
+      getStatValue(stats, 'crit_chance') > 0 ||
+      getStatValue(stats, 'life_steal') > 0;
+  };
+
+  const hasDefensiveStats = (stats: any): boolean => {
+    return getStatValue(stats, 'health') > 0 ||
+      getStatValue(stats, 'armor') > 0 ||
+      getStatValue(stats, 'magic_resist') > 0 ||
+      getStatValue(stats, 'health_regen') > 0;
+  };
+
+  const hasUtilityStats = (stats: any): boolean => {
+    return getStatValue(stats, 'mana') > 0 ||
+      getStatValue(stats, 'mana_regen') > 0 ||
+      getStatValue(stats, 'movement_speed') > 0;
+  };
+
+
 
   if (loading) {
     return (
-      <div className="item-details-overlay" onClick={handleOverlayClick}>
-        <div className="item-details-modal">
-          <div className="item-details-loading">
+      <div className="champion-details-overlay" onClick={handleOverlayClick}>
+        <div className="champion-details-modal">
+          <div className="champion-details-loading">
             <div className="loading-spinner"></div>
             <p>Loading item details...</p>
           </div>
@@ -154,9 +239,9 @@ export const ItemDetails: React.FC<ItemDetailsProps> = ({ itemId, itemData: cach
 
   if (error) {
     return (
-      <div className="item-details-overlay" onClick={handleOverlayClick}>
-        <div className="item-details-modal">
-          <div className="item-details-error">
+      <div className="champion-details-overlay" onClick={handleOverlayClick}>
+        <div className="champion-details-modal">
+          <div className="champion-details-error">
             <h3>Error Loading Item</h3>
             <p>{error}</p>
             <div className="error-actions">
@@ -178,12 +263,12 @@ export const ItemDetails: React.FC<ItemDetailsProps> = ({ itemId, itemData: cach
   }
 
   return (
-    <div className="item-details-overlay" onClick={handleOverlayClick}>
-      <div className="item-details-modal">
-        <div className="item-details-header">
-          <div className="item-title-section">
-            <div className="item-portrait">
-              <img 
+    <div className="champion-details-overlay" onClick={handleOverlayClick}>
+      <div className="champion-details-modal">
+        <div className="champion-details-header">
+          <div className="champion-title-section">
+            <div className="champion-portrait">
+              <img
                 src={`https://ddragon.leagueoflegends.com/cdn/14.22.1/img/item/${itemData.image.full}`}
                 alt={itemData.name}
                 onError={(e) => {
@@ -191,138 +276,271 @@ export const ItemDetails: React.FC<ItemDetailsProps> = ({ itemId, itemData: cach
                 }}
               />
             </div>
-            <div className="item-title-info">
-              <h2>{itemData.name}</h2>
-              <p className="item-plaintext">{itemData.plaintext}</p>
-              <div className="item-tags">
+            <div className="champion-title-info">
+              <h2>{itemData.name} <span className="item-id">(Id: {itemId})</span></h2>
+              <p className="champion-title">{itemData.plaintext}</p>
+              {/* Tags right below plaintext */}
+              <div className="champion-tags">
                 {itemData.tags.map(tag => (
-                  <span key={tag} className="item-tag" style={{ borderColor: getItemTypeColor(itemData.tags) }}>
-                    {tag}
+                  <span key={tag} className="champion-tag">
+                    {formatTag(tag)}
                   </span>
                 ))}
               </div>
-              <div className="item-type">
-                <span 
-                  className="type-badge"
-                  style={{ backgroundColor: getItemTypeColor(itemData.tags) }}
-                >
-                  {getItemTypeLabel(itemData.tags)}
-                </span>
-              </div>
             </div>
           </div>
-          <button onClick={onClose} className="item-close-button">×</button>
+          <button onClick={onClose} className="champion-close-button">×</button>
         </div>
 
-        <div className="item-details-content">
-          {/* Item Cost Section */}
-          <div className="item-cost-section">
-            <h3>Cost Information</h3>
-            <div className="cost-grid">
-              <div className="cost-item">
-                <span className="cost-label">Total Cost:</span>
-                <span className="cost-value gold">{formatGoldValue(itemData.gold.total)}g</span>
+        <div className="champion-details-content">
+          {/* Item Info Section */}
+          <div className="champion-info-section">
+            <h3>Item Info</h3>
+
+            {/* Item Description - First with proper spacing */}
+            {itemData.description && (
+              <div className="item-description-container">
+                <div
+                  className="item-description-content"
+                  dangerouslySetInnerHTML={{ __html: cleanDescription(itemData.description) }}
+                />
               </div>
-              <div className="cost-item">
-                <span className="cost-label">Base Cost:</span>
-                <span className="cost-value">{formatGoldValue(itemData.gold.base)}g</span>
+            )}
+
+            {/* Gold Information Table */}
+            <div className="item-gold-table">
+              <div className="gold-row">
+                <span className="gold-label">Total Cost:</span>
+                <span className="gold-value">{formatGoldValue(itemData.gold.total)}g</span>
               </div>
-              <div className="cost-item">
-                <span className="cost-label">Sell Value:</span>
-                <span className="cost-value">{formatGoldValue(itemData.gold.sell)}g</span>
+              <div className="gold-row">
+                <span className="gold-label">Base Cost:</span>
+                <span className="gold-value">{formatGoldValue(itemData.gold.base)}g</span>
               </div>
-              <div className="cost-item">
-                <span className="cost-label">Purchasable:</span>
-                <span className={`cost-value ${itemData.gold.purchasable ? 'purchasable' : 'not-purchasable'}`}>
-                  {itemData.gold.purchasable ? 'Yes' : 'No'}
-                </span>
+              <div className="gold-row">
+                <span className="gold-label">Sell Value:</span>
+                <span className="gold-value">{formatGoldValue(itemData.gold.sell)}g</span>
+              </div>
+              <div className="gold-row">
+                <span className="gold-label">Purchasable:</span>
+                <span className="gold-value">{itemData.gold.purchasable ? 'Yes' : 'No'}</span>
               </div>
             </div>
-          </div>
 
-          {/* Item Description */}
-          <div className="item-description-section">
-            <h3>Description</h3>
-            <div className="item-description" dangerouslySetInnerHTML={{ __html: itemData.description }} />
+            {/* Additional Item Properties */}
+            {itemData.maps && (
+              <div className="additional-info">
+                <div className="info-item">
+                  <span className="info-label">Available Maps:</span>
+                  <span className="info-value">
+                    {Object.entries(itemData.maps)
+                      .filter(([_, available]) => available)
+                      .map(([mapId, _]) => `${getMapName(mapId)} (${mapId})`)
+                      .join(', ')}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Special Effects Table */}
+            {itemData.effect && Object.keys(itemData.effect).length > 0 && (
+              <div className="special-effects-section">
+                <h4>Special Effects (Riot's Internal Parameters)</h4>
+                <p className="effects-explanation">
+                  <strong>⚠️ Item-Specific Values:</strong> These are Riot's internal effect parameters for this specific item.
+                  Each Effect# slot has a different meaning per item - there's no universal "Effect1 = damage" rule.
+                  These values are used in item tooltips with placeholders like {`{{ e1 }}`}, {`{{ e2 }}`}, etc.
+                  The actual meaning depends on this item's unique mechanics and tooltip implementation.
+                </p>
+                <div className="effects-table">
+                  <div className="effects-table-header">
+                    <div className="effect-cell header">Parameter</div>
+                    <div className="effect-cell header">Raw Value</div>
+                    <div className="effect-cell header">Estimated Type</div>
+                  </div>
+                  {Object.entries(itemData.effect)
+                    .filter(([_, value]) => value !== '0' && parseFloat(value as string) !== 0)
+                    .map(([key, value], index) => {
+                      const numValue = parseFloat(value as string);
+                      let estimatedType = 'Unknown';
+
+                      if (numValue > 0 && numValue < 1) {
+                        estimatedType = `Likely ${(numValue * 100).toFixed(1)}% (Percentage)`;
+                      } else if (numValue >= 1 && numValue <= 10) {
+                        estimatedType = `Likely ${numValue} (Duration/Count)`;
+                      } else if (numValue > 10 && numValue <= 100) {
+                        estimatedType = `Likely ${numValue} (Damage/Range)`;
+                      } else if (numValue > 100) {
+                        estimatedType = `Likely ${numValue} (Large Threshold)`;
+                      }
+
+                      return (
+                        <div key={key} className={`effects-table-row ${index % 2 === 0 ? 'even' : 'odd'}`}>
+                          <div className="effect-cell">
+                            <span className="effect-param">{key}</span>
+                          </div>
+                          <div className="effect-cell value">{value}</div>
+                          <div className="effect-cell meaning">{estimatedType}</div>
+                        </div>
+                      );
+                    })}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Item Stats Section */}
-          {itemData.stats && (
-            <div className="item-stats-section">
-              <h3>Item Statistics</h3>
-              <div className="stats-grid">
-                {Object.entries(itemData.stats).map(([statKey, statValue]) => {
-                  if (statValue === 0) return null;
-                  
-                  const statLabel = statKey.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-                  const isPercentage = statKey.includes('speed') || statKey.includes('crit') || statKey.includes('steal');
-                  
-                  return (
-                    <div key={statKey} className="stat-item">
-                      <span className="stat-label">{statLabel}:</span>
-                      <span className="stat-value">
-                        +{statValue}{isPercentage ? '%' : ''}
-                      </span>
-                    </div>
-                  );
-                })}
+          <div className="base-stats-section">
+            <h3>Item Statistics</h3>
+            <div className="stats-grid">
+              <div className="stat-group">
+                <h4>Offensive Stats</h4>
+                {hasOffensiveStats(itemData.stats) ? (
+                  <>
+                    {getStatValue(itemData.stats, 'attack_damage') > 0 && (
+                      <div className="stat-item">
+                        <span className="stat-label">Attack Damage:</span>
+                        <span className="stat-value">+{getStatValue(itemData.stats, 'attack_damage')}</span>
+                      </div>
+                    )}
+                    {getStatValue(itemData.stats, 'ability_power') > 0 && (
+                      <div className="stat-item">
+                        <span className="stat-label">Ability Power:</span>
+                        <span className="stat-value">+{getStatValue(itemData.stats, 'ability_power')}</span>
+                      </div>
+                    )}
+                    {getStatValue(itemData.stats, 'attack_speed') > 0 && (
+                      <div className="stat-item">
+                        <span className="stat-label">Attack Speed:</span>
+                        <span className="stat-value">+{getStatValue(itemData.stats, 'attack_speed')}%</span>
+                      </div>
+                    )}
+                    {getStatValue(itemData.stats, 'crit_chance') > 0 && (
+                      <div className="stat-item">
+                        <span className="stat-label">Critical Strike:</span>
+                        <span className="stat-value">+{getStatValue(itemData.stats, 'crit_chance')}%</span>
+                      </div>
+                    )}
+                    {getStatValue(itemData.stats, 'life_steal') > 0 && (
+                      <div className="stat-item">
+                        <span className="stat-label">Life Steal:</span>
+                        <span className="stat-value">+{getStatValue(itemData.stats, 'life_steal')}%</span>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="stat-not-applicable">
+                    <span>Not Applicable</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="stat-group">
+                <h4>Defensive Stats</h4>
+                {hasDefensiveStats(itemData.stats) ? (
+                  <>
+                    {getStatValue(itemData.stats, 'health') > 0 && (
+                      <div className="stat-item">
+                        <span className="stat-label">Health:</span>
+                        <span className="stat-value">+{getStatValue(itemData.stats, 'health')}</span>
+                      </div>
+                    )}
+                    {getStatValue(itemData.stats, 'armor') > 0 && (
+                      <div className="stat-item">
+                        <span className="stat-label">Armor:</span>
+                        <span className="stat-value">+{getStatValue(itemData.stats, 'armor')}</span>
+                      </div>
+                    )}
+                    {getStatValue(itemData.stats, 'magic_resist') > 0 && (
+                      <div className="stat-item">
+                        <span className="stat-label">Magic Resist:</span>
+                        <span className="stat-value">+{getStatValue(itemData.stats, 'magic_resist')}</span>
+                      </div>
+                    )}
+                    {getStatValue(itemData.stats, 'health_regen') > 0 && (
+                      <div className="stat-item">
+                        <span className="stat-label">Health Regen:</span>
+                        <span className="stat-value">+{getStatValue(itemData.stats, 'health_regen')}</span>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="stat-not-applicable">
+                    <span>Not Applicable</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="stat-group">
+                <h4>Utility Stats</h4>
+                {hasUtilityStats(itemData.stats) ? (
+                  <>
+                    {getStatValue(itemData.stats, 'mana') > 0 && (
+                      <div className="stat-item">
+                        <span className="stat-label">Mana:</span>
+                        <span className="stat-value">+{getStatValue(itemData.stats, 'mana')}</span>
+                      </div>
+                    )}
+                    {getStatValue(itemData.stats, 'mana_regen') > 0 && (
+                      <div className="stat-item">
+                        <span className="stat-label">Mana Regen:</span>
+                        <span className="stat-value">+{getStatValue(itemData.stats, 'mana_regen')}</span>
+                      </div>
+                    )}
+                    {getStatValue(itemData.stats, 'movement_speed') > 0 && (
+                      <div className="stat-item">
+                        <span className="stat-label">Movement Speed:</span>
+                        <span className="stat-value">+{getStatValue(itemData.stats, 'movement_speed')}</span>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="stat-not-applicable">
+                    <span>Not Applicable</span>
+                  </div>
+                )}
               </div>
             </div>
-          )}
+          </div>
 
-          {/* Recipe Section */}
-          {itemData.recipe && (
-            <div className="item-recipe-section">
+          {/* Build Information Section */}
+          {(itemData.from || itemData.into) && (
+            <div className="base-stats-section">
               <h3>Build Information</h3>
-              
-              {itemData.recipe.components.length > 0 && (
-                <div className="recipe-subsection">
+
+              {itemData.from && itemData.from.length > 0 && (
+                <div className="build-subsection">
                   <h4>Components</h4>
-                  <div className="recipe-items">
-                    {itemData.recipe.components.map((component, index) => (
-                      <div key={index} className="recipe-item">
-                        <span className="recipe-item-name">{component.name}</span>
-                        <span className="recipe-item-cost">{formatGoldValue(component.cost)}g</span>
-                      </div>
-                    ))}
+                  <div className="build-items-grid">
+                    {itemData.from.map((componentId, index) => {
+                      const itemName = getItemName(componentId, allItemsData);
+                      return (
+                        <div key={index} className="build-item-card">
+                          <div className="build-item-name">{itemName !== componentId ? itemName : `Item ${componentId}`}</div>
+                          <div className="build-item-id">ID: {componentId}</div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
 
-              {itemData.recipe.builds_into.length > 0 && (
-                <div className="recipe-subsection">
+              {itemData.into && itemData.into.length > 0 && (
+                <div className="build-subsection">
                   <h4>Builds Into</h4>
-                  <div className="recipe-items">
-                    {itemData.recipe.builds_into.map((upgrade, index) => (
-                      <div key={index} className="recipe-item">
-                        <span className="recipe-item-name">{upgrade.name}</span>
-                        <span className="recipe-item-cost">{formatGoldValue(upgrade.cost)}g</span>
-                      </div>
-                    ))}
+                  <div className="build-items-grid">
+                    {itemData.into.map((upgradeId, index) => {
+                      const itemName = getItemName(upgradeId, allItemsData);
+                      return (
+                        <div key={index} className="build-item-card">
+                          <div className="build-item-name">{itemName !== upgradeId ? itemName : `Item ${upgradeId}`}</div>
+                          <div className="build-item-id">ID: {upgradeId}</div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
-            </div>
-          )}
-
-          {/* Item Metadata */}
-          {itemData.metadata && (
-            <div className="item-metadata-section">
-              <h3>Item Properties</h3>
-              <div className="metadata-grid">
-                {Object.entries(itemData.metadata).map(([key, value]) => {
-                  if (!value) return null;
-                  
-                  const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-                  
-                  return (
-                    <div key={key} className="metadata-item">
-                      <span className="metadata-icon">✓</span>
-                      <span className="metadata-label">{label}</span>
-                    </div>
-                  );
-                })}
-              </div>
             </div>
           )}
         </div>

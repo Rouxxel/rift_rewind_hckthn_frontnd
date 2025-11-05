@@ -235,6 +235,7 @@ export const GameAssets: React.FC<GameAssetsProps> = ({ onBack }) => {
         <ItemDetails
           itemId={selectedItemForDetails}
           itemData={items[selectedItemForDetails]}
+          allItemsData={items}
           onClose={() => setSelectedItemForDetails(null)}
         />
       )}

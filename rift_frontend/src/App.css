@@ -824,7 +824,7 @@
 }
 
 .stat-label {
-  color: #a09b8c;
+  color: #ffffff;
 }
 
 .stat-value {
@@ -1242,7 +1242,7 @@ pion Details Popup */
 }
 
 .stat-label {
-  color: #a09b8c;
+  color: #ffffff;
   font-size: 0.9rem;
 }
 
@@ -1601,7 +1601,7 @@ Item Details Popup */
 }
 
 .stat-label {
-  color: #a09b8c;
+  color: #ffffff;
   font-size: 0.9rem;
 }
 
@@ -1757,3 +1757,406 @@ Item Details Popup */
   border-bottom: none;
 }
 
+/* Recipe subsection styling to match champion abilities */
+.recipe-subsection {
+  margin-bottom: 1.5rem;
+}
+
+.recipe-subsection h4 {
+  color: #5bc0de;
+  margin: 0 0 0.8rem 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+/* Ensure ability cards in recipe section have proper spacing */
+.abilities-section .recipe-subsection .ability-card {
+  margin-bottom: 0.5rem;
+}
+
+.abilities-section .recipe-subsection .ability-card h4 {
+  color: #f0e6d2;
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.abilities-section .recipe-subsection .cost {
+  color: #c89b3c;
+  font-weight: 600;
+}/* Item
+ Tags Section - aligned to left margin */
+.item-tags-section {
+  padding: 0 2rem;
+  margin-bottom: 1rem;
+}
+
+.item-tags-section .champion-tags {
+  justify-content: flex-start;
+  margin: 0;
+}
+
+/* Item Description Container - proper spacing */
+.item-description-container {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: linear-gradient(145deg, #463714 0%, #3c3c41 100%);
+  border-radius: 8px;
+  border-left: 4px solid #5bc0de;
+}
+
+.item-description-content {
+  color: #ffffff;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.item-description-content * {
+  margin: 0;
+  padding: 0;
+}
+
+/* Fix list styling for item descriptions with bullet points */
+.item-description-content ul {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+  list-style-type: disc;
+}
+
+.item-description-content li {
+  margin: 0.3rem 0;
+  padding-left: 0.2rem;
+}
+
+.item-description-content ol {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+  list-style-type: decimal;
+}
+
+/* Gold Information Table */
+.item-gold-table {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.gold-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.gold-row:last-child {
+  border-bottom: none;
+}
+
+.gold-label {
+  color: #a09b8c;
+  font-weight: 500;
+}
+
+.gold-value {
+  color: #c89b3c;
+  font-weight: 600;
+}
+
+/* Build Items List */
+.build-items-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.build-item {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid #5bc0de;
+  border-radius: 4px;
+  padding: 0.5rem 0.8rem;
+}
+
+.build-item-id {
+  color: #5bc0de;
+  font-weight: 500;
+  font-family: monospace;
+}
+
+/* Fix recipe subsection spacing */
+.abilities-section .recipe-subsection {
+  margin-bottom: 1.5rem;
+}
+
+.abilities-section .recipe-subsection:last-child {
+  margin-bottom: 0;
+}/
+* Remove item tags section since tags are now in header */
+.item-tags-section {
+  display: none;
+}
+
+/* Not Applicable styling for stats */
+.stat-not-applicable {
+  padding: 1rem;
+  text-align: center;
+  color: #666;
+  font-style: italic;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  border: 1px dashed #444;
+}
+
+/* Build Information styling - matching base stats section */
+.build-subsection {
+  margin-bottom: 1.5rem;
+}
+
+.build-subsection h4 {
+  color: #5bc0de;
+  margin: 0 0 0.8rem 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.build-items-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.8rem;
+}
+
+.build-item-card {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid #5bc0de;
+  border-radius: 6px;
+  padding: 0.8rem;
+  transition: background-color 0.2s ease;
+}
+
+.build-item-card:hover {
+  background: rgba(91, 192, 222, 0.1);
+}
+
+.build-item-name {
+  color: #f0e6d2;
+  font-weight: 600;
+  margin-bottom: 0.3rem;
+  font-size: 0.9rem;
+}
+
+.build-item-id {
+  color: #a09b8c;
+  font-size: 0.8rem;
+  font-family: monospace;
+}
+
+/* Fix champion tags in header to have proper spacing */
+.champion-title-info .champion-tags {
+  margin-top: 0.5rem;
+  justify-content: flex-start;
+}
+
+.champion-title-info .champion-tags .champion-tag {
+  margin-right: 0.5rem;
+  margin-bottom: 0.3rem;
+}/* Special 
+Effects Table - Excel-like styling */
+.special-effects-section {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  border: 1px solid #444;
+}
+
+.special-effects-section h4 {
+  color: #5bc0de;
+  margin: 0 0 0.5rem 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.effects-explanation {
+  color: #a09b8c;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  margin-bottom: 1rem;
+  font-style: italic;
+  padding: 0.5rem;
+  background: rgba(91, 192, 222, 0.1);
+  border-left: 3px solid #5bc0de;
+  border-radius: 4px;
+}
+
+.effects-table {
+  border: 1px solid #555;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #1e1e1e;
+}
+
+.effects-table-header {
+  display: grid;
+  grid-template-columns: 1fr 1fr 2fr;
+  background: linear-gradient(145deg, #2a2a2a 0%, #1a1a1a 100%);
+  border-bottom: 2px solid #5bc0de;
+}
+
+.effects-table-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 2fr;
+  border-bottom: 1px solid #333;
+}
+
+.effects-table-row.even {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.effects-table-row.odd {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.effects-table-row:hover {
+  background: rgba(91, 192, 222, 0.1);
+}
+
+.effect-cell {
+  padding: 0.75rem;
+  border-right: 1px solid #333;
+  display: flex;
+  align-items: center;
+  font-size: 0.9rem;
+}
+
+.effect-cell:last-child {
+  border-right: none;
+}
+
+.effect-cell.header {
+  font-weight: 600;
+  color: #5bc0de;
+  background: rgba(91, 192, 222, 0.1);
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  letter-spacing: 0.5px;
+}
+
+.effect-cell.value {
+  color: #c89b3c;
+  font-weight: 600;
+  font-family: monospace;
+  justify-content: center;
+}
+
+.effect-cell.meaning {
+  color: #a09b8c;
+  font-style: italic;
+}
+
+/* Responsive table for smaller screens */
+@media (max-width: 768px) {
+  .effects-table-header,
+  .effects-table-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .effect-cell {
+    border-right: none;
+    border-bottom: 1px solid #333;
+  }
+  
+  .effect-cell.header {
+    display: none;
+  }
+  
+  .effects-table-row {
+    margin-bottom: 0.5rem;
+    border: 1px solid #333;
+    border-radius: 4px;
+  }
+}/* En
+hanced Special Effects Table Styling */
+.effects-explanation strong {
+  color: #ff6b35;
+}
+
+.effect-param {
+  display: block;
+  font-weight: 600;
+  color: #f0e6d2;
+}
+
+.effect-tooltip {
+  display: block;
+  font-size: 0.75rem;
+  color: #5bc0de;
+  font-family: monospace;
+  margin-top: 0.2rem;
+  opacity: 0.8;
+}
+
+.effects-disclaimer {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: rgba(255, 107, 53, 0.1);
+  border: 1px solid rgba(255, 107, 53, 0.3);
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+.effects-disclaimer p {
+  margin: 0;
+  color: #a09b8c;
+  line-height: 1.4;
+}
+
+.effects-disclaimer strong {
+  color: #ff6b35;
+}
+
+/* Improve table cell spacing for new content */
+.effect-cell {
+  padding: 0.9rem 0.75rem;
+}
+
+.effect-cell.header {
+  padding: 0.6rem 0.75rem;
+}
+
+/* Better responsive handling for the enhanced table */
+@media (max-width: 768px) {
+  .effect-tooltip {
+    font-size: 0.7rem;
+  }
+  
+  .effects-disclaimer {
+    font-size: 0.8rem;
+    padding: 0.6rem;
+  }
+}/
+* Item ID and Champion ID styling */
+.item-id,
+.champion-id {
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: #a09b8c;
+  font-family: monospace;
+  opacity: 0.8;
+  margin-left: 0.5rem;
+}
+
+.item-id:hover,
+.champion-id:hover {
+  opacity: 1;
+  color: #5bc0de;
+}
+
+/* Responsive adjustments for IDs */
+@media (max-width: 768px) {
+  .item-id,
+  .champion-id {
+    font-size: 0.65rem;
+    margin-left: 0.3rem;
+  }
+}
