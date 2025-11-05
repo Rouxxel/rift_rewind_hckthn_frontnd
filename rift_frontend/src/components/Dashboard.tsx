@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { storage } from '../utils/storage';
 import { apiService } from '../services/api';
 import { GameAssets } from './GameAssets';
+import { Predictions } from './Predictions';
 import type { RiotUser } from '../types/user';
 
 interface DashboardProps {
@@ -16,6 +17,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ puuid, onLogout }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showGameAssets, setShowGameAssets] = useState(false);
+  const [showPredictions, setShowPredictions] = useState(false);
 
   useEffect(() => {
     loadUserData();
@@ -67,6 +69,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ puuid, onLogout }) => {
   // If showing Game Assets, render that instead of the dashboard
   if (showGameAssets) {
     return <GameAssets onBack={() => setShowGameAssets(false)} />;
+  }
+
+  // If showing Predictions, render that instead of the dashboard
+  if (showPredictions) {
+    return <Predictions onBack={() => setShowPredictions(false)} />;
   }
 
   if (loading) {
@@ -155,9 +162,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ puuid, onLogout }) => {
 
           <div className="section-card">
             <h3>🔮 Predictions</h3>
-            <p>Get AI-powered predictions for your next matches</p>
-            <button className="section-button" disabled>
-              Coming Soon
+            <p>Get AI-powered predictions for your next matches and view champion winrates</p>
+            <button 
+              className="section-button"
+              onClick={() => setShowPredictions(true)}
+            >
+              View Predictions
             </button>
           </div>
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { apiService } from '../services/api';
 import { ChampionDetails } from './ChampionDetails';
 import { ItemDetails } from './ItemDetails';
+import { cache, CACHE_KEYS } from '../utils/cache';
 
 interface GameAssetsProps {
   onBack: () => void;
@@ -45,17 +46,22 @@ export const GameAssets: React.FC<GameAssetsProps> = ({ onBack }) => {
   const [itemsLoaded, setItemsLoaded] = useState(false);
 
   useEffect(() => {
-    // Load both champions and items when component mounts (caching)
-    if (!championsLoaded) {
-      loadChampions();
-    }
-    if (!itemsLoaded) {
-      loadItems();
-    }
-  }, [championsLoaded, itemsLoaded]);
+    // Load both champions and items when component mounts (check cache first)
+    loadChampions();
+    loadItems();
+  }, []);
 
   const loadChampions = async () => {
-    if (championsLoaded) return; // Skip if already loaded (caching)
+    if (championsLoaded) return; // Skip if already loaded in this session
+
+    // Check persistent cache first
+    const cachedChampions = cache.get<Record<string, Champion>>(CACHE_KEYS.CHAMPIONS);
+    if (cachedChampions) {
+      console.log('📋 Using cached champions data');
+      setChampions(cachedChampions);
+      setChampionsLoaded(true);
+      return;
+    }
 
     try {
       setLoading(true);
@@ -63,8 +69,13 @@ export const GameAssets: React.FC<GameAssetsProps> = ({ onBack }) => {
       console.log('🔄 Loading champions from API...');
       const response = await apiService.getChampions();
       console.log('✅ Champions loaded:', response);
-      setChampions(response.champions || {});
+      
+      const championsData = response.champions || {};
+      setChampions(championsData);
       setChampionsLoaded(true);
+      
+      // Cache for 60 minutes
+      cache.set(CACHE_KEYS.CHAMPIONS, championsData, 60);
     } catch (err: any) {
       console.error('❌ Failed to load champions:', err);
       setError(`Failed to load champions: ${err.message}`);
@@ -74,7 +85,16 @@ export const GameAssets: React.FC<GameAssetsProps> = ({ onBack }) => {
   };
 
   const loadItems = async () => {
-    if (itemsLoaded) return; // Skip if already loaded (caching)
+    if (itemsLoaded) return; // Skip if already loaded in this session
+
+    // Check persistent cache first
+    const cachedItems = cache.get<Record<string, Item>>(CACHE_KEYS.ITEMS);
+    if (cachedItems) {
+      console.log('📋 Using cached items data');
+      setItems(cachedItems);
+      setItemsLoaded(true);
+      return;
+    }
 
     try {
       setLoading(true);
@@ -82,8 +102,13 @@ export const GameAssets: React.FC<GameAssetsProps> = ({ onBack }) => {
       console.log('🔄 Loading items from API...');
       const response = await apiService.getItems();
       console.log('✅ Items loaded:', response);
-      setItems(response.items || {});
+      
+      const itemsData = response.items || {};
+      setItems(itemsData);
       setItemsLoaded(true);
+      
+      // Cache for 60 minutes
+      cache.set(CACHE_KEYS.ITEMS, itemsData, 60);
     } catch (err: any) {
       console.error('❌ Failed to load items:', err);
       setError(`Failed to load items: ${err.message}`);

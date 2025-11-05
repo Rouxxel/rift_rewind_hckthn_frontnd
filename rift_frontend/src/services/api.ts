@@ -126,4 +126,29 @@ export const apiService = {
     }
     return apiRequest(`${API_CONFIG.endpoints.getChampionAbilities}?${params}`);
   },
+
+  // Predictions API methods
+  // Get match outcome prediction
+  getMatchOutcome: async (blueTeam: string[], redTeam: string[], gameMode: string = 'CLASSIC', averageRank: string = 'GOLD') => {
+    return apiRequest(API_CONFIG.endpoints.getMatchOutcome, {
+      method: 'POST',
+      body: JSON.stringify({
+        blue_team: blueTeam,
+        red_team: redTeam,
+        game_mode: gameMode,
+        average_rank: averageRank
+      }),
+    });
+  },
+
+  // Get champion win rates
+  getChampionWinrates: async (rank: string = 'ALL', role: string = 'ALL', sortBy: string = 'win_rate', limit: number = 20) => {
+    const params = new URLSearchParams({
+      rank,
+      role,
+      sort_by: sortBy,
+      limit: limit.toString()
+    });
+    return apiRequest(`${API_CONFIG.endpoints.getChampionWinrates}?${params}`);
+  },
 };

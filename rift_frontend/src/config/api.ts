@@ -14,6 +14,9 @@ export const API_CONFIG = {
     getChampions: '/game_assets/get_lol_champions',
     getItems: '/game_assets/get_lol_items',
     getChampionAbilities: '/game_assets/get_champion_abilities',
+    // Predictions endpoints
+    getMatchOutcome: '/predictions/get_match_outcome',
+    getChampionWinrates: '/analytics/get_champion_winrates',
   }
 };
 
