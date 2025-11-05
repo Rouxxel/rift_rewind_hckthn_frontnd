@@ -7,8 +7,7 @@ A React-based coaching dashboard for League of Legends players, built for the Ri
 - **User Authentication**: Riot ID-based login with PUUID retrieval
 - **Coaching Dashboard**: Personalized insights and recommendations
 - **Performance Analytics**: Match history and performance analysis
-- **Game Assets Explorer**: Browse champions, items, and abilities
-- **Responsive Design**: League of Legends themed UI
+- **Game Assets Explorer**: Browse champions and items
 - **Multi-Backend Support**: Works with local, AWS, and Render deployments
 
 ## Tech Stack

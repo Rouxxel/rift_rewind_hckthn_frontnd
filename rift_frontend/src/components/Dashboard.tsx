@@ -163,7 +163,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ puuid, onLogout }) => {
 
           <div className="section-card">
             <h3>🎮 Game Assets</h3>
-            <p>Explore champions, items, and abilities from League of Legends</p>
+            <p>Explore champions and items from League of Legends</p>
             <button 
               className="section-button"
               onClick={() => setShowGameAssets(true)}
