@@ -151,4 +151,73 @@ export const apiService = {
     });
     return apiRequest(`${API_CONFIG.endpoints.getChampionWinrates}?${params}`);
   },
+
+  // Match History API methods
+  // Get match history by PUUID (using existing getMatchIds endpoint)
+  getMatchHistory: async (puuid: string, region: string, count: number = 10) => {
+    return apiRequest(API_CONFIG.endpoints.getMatchIds, {
+      method: 'POST',
+      body: JSON.stringify({
+        puuid,
+        region,
+        count
+      }),
+    });
+  },
+
+  // Get match details by ID (using existing endpoint)
+  getMatchDetailsById: async (matchId: string, region: string) => {
+    return apiRequest(API_CONFIG.endpoints.getMatchDetails, {
+      method: 'POST',
+      body: JSON.stringify({
+        match_id: matchId,
+        region
+      }),
+    });
+  },
+
+  // Get match participants info
+  getMatchParticipants: async (matchId: string, region: string, numParticipants: number = -1, simplified: boolean = false) => {
+    return apiRequest(API_CONFIG.endpoints.getMatchParticipants, {
+      method: 'POST',
+      body: JSON.stringify({
+        match_id: matchId,
+        region,
+        num_participants: numParticipants,
+        simplified
+      }),
+    });
+  },
+
+  // Get match timeline
+  getMatchTimeline: async (matchId: string, region: string, eventTypes?: string[], participantId?: number) => {
+    const body: any = {
+      match_id: matchId,
+      region
+    };
+    
+    if (eventTypes) body.event_types = eventTypes;
+    if (participantId) body.participant_id = participantId;
+
+    return apiRequest(API_CONFIG.endpoints.getMatchTimeline, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+  },
+
+  // Analysis API methods
+  // Get team composition analysis
+  getTeamComposition: async (champions: string[], enemyChampions?: string[], gamePhase: string = 'all') => {
+    const body: any = {
+      champions,
+      game_phase: gamePhase
+    };
+    
+    if (enemyChampions) body.enemy_champions = enemyChampions;
+
+    return apiRequest(API_CONFIG.endpoints.getTeamComposition, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+  },
 };

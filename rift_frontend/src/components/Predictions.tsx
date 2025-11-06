@@ -66,10 +66,10 @@ export const Predictions: React.FC<PredictionsProps> = ({ onBack }) => {
       // Reset limit when filters change
       setCurrentLimit(100);
       setHasMoreChampions(true);
-      
+
       // Always try to use cached data first for filter changes
       const cachedAllWinrates = cache.get<ChampionWinrate[]>(CACHE_KEYS.WINRATES_ALL);
-      
+
       if (cachedAllWinrates) {
         console.log('✅ Filter changed, using cached data with new filters - no API call needed');
         applyFiltersAndSort(cachedAllWinrates, 100);
@@ -118,7 +118,7 @@ export const Predictions: React.FC<PredictionsProps> = ({ onBack }) => {
     }
 
     const cachedAllWinrates = cache.get<ChampionWinrate[]>(CACHE_KEYS.WINRATES_ALL);
-    
+
     if (cachedAllWinrates) {
       console.log('✅ Using existing cached winrates data - no API call needed');
       applyFiltersAndSort(cachedAllWinrates, 100);
@@ -136,20 +136,20 @@ export const Predictions: React.FC<PredictionsProps> = ({ onBack }) => {
       setLoading(true);
       setError(null);
       console.log('🔄 Loading ALL winrates from API (one-time fetch)...');
-      
+
       // Fetch ALL champions with maximum limit to cache everything
       const response = await apiService.getChampionWinrates('ALL', 'ALL', 'name', 200);
       console.log('✅ All winrates loaded and cached:', response);
 
       const allChampionsList = response.champions || [];
-      
+
       // Cache ALL the data for 15 minutes
       cache.set(CACHE_KEYS.WINRATES_ALL, allChampionsList, 15);
-      
+
       // Apply current filters and sorting
       applyFiltersAndSort(allChampionsList, limit);
       setWinratesLoaded(true);
-      
+
     } catch (err: any) {
       console.error('❌ Failed to load winrates:', err);
       setError(`Failed to load champion winrates: ${err.message}`);
@@ -161,10 +161,10 @@ export const Predictions: React.FC<PredictionsProps> = ({ onBack }) => {
   // New function to apply filters and sorting client-side
   const applyFiltersAndSort = (allChampions: ChampionWinrate[], limit: number) => {
     let filteredChampions = [...allChampions];
-    
+
     // Apply rank filter (if backend doesn't handle it, we'd filter here)
     // For now, assuming backend handles rank filtering, so we use all data
-    
+
     // Apply sorting
     if (sortBy === 'name') {
       filteredChampions.sort((a: ChampionWinrate, b: ChampionWinrate) => a.name.localeCompare(b.name));
@@ -187,7 +187,7 @@ export const Predictions: React.FC<PredictionsProps> = ({ onBack }) => {
 
     // Apply limit
     const limitedChampions = filteredChampions.slice(0, limit);
-    
+
     setWinrates(limitedChampions);
     setHasMoreChampions(filteredChampions.length > limit);
   };
@@ -198,10 +198,10 @@ export const Predictions: React.FC<PredictionsProps> = ({ onBack }) => {
 
     try {
       console.log(`📋 Loading more winrates from cache (${newLimit} total)...`);
-      
+
       // Always get cached data first (should exist at this point)
       const cachedAllWinrates = cache.get<ChampionWinrate[]>(CACHE_KEYS.WINRATES_ALL);
-      
+
       if (cachedAllWinrates) {
         // Use cached data with new limit
         applyFiltersAndSort(cachedAllWinrates, newLimit);
@@ -265,7 +265,15 @@ export const Predictions: React.FC<PredictionsProps> = ({ onBack }) => {
     try {
       setLoading(true);
       setError(null);
-      const response = await apiService.getMatchOutcome(blueTeam, redTeam, gameMode, averageRank);
+
+      // Normalize champion names before sending to API
+      const normalizedBlueTeam = blueTeam.map(normalizeChampionName);
+      const normalizedRedTeam = redTeam.map(normalizeChampionName);
+
+      console.log('Original teams:', { blueTeam, redTeam });
+      console.log('Normalized teams:', { normalizedBlueTeam, normalizedRedTeam });
+
+      const response = await apiService.getMatchOutcome(normalizedBlueTeam, normalizedRedTeam, gameMode, averageRank);
       setPrediction(response);
     } catch (err: any) {
       console.error('Failed to predict match:', err);
@@ -273,6 +281,16 @@ export const Predictions: React.FC<PredictionsProps> = ({ onBack }) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Function to normalize champion names for API calls
+  const normalizeChampionName = (championName: string): string => {
+    // Remove apostrophes and normalize common champion name issues
+    return championName
+      .replace(/'/g, '') // Remove apostrophes: Kha'Zix -> KhaZix, Kai'Sa -> KaiSa
+      .replace(/\s+/g, '') // Remove spaces: Aurelion Sol -> AurelionSol
+      .replace(/\./g, '') // Remove dots: Dr. Mundo -> DrMundo
+      .trim();
   };
 
   const clearTeams = () => {

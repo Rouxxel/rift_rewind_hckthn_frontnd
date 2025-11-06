@@ -106,4 +106,10 @@ export const CACHE_KEYS = {
   WINRATES_ALL: 'winrates_all_data', // Single cache for all winrates data
   WINRATES: (rank: string, sortBy: string) => `winrates_${rank}_${sortBy}`, // Legacy, kept for compatibility
   CHAMPION_ABILITIES: (championName: string) => `abilities_${championName}`,
+  // Match History cache keys
+  MATCH_HISTORY: (puuid: string) => `match_history_${puuid}`,
+  MATCH_DETAILS: (matchId: string) => `match_details_${matchId}`,
+  MATCH_PARTICIPANTS: (matchId: string) => `match_participants_${matchId}`,
+  MATCH_TIMELINE: (matchId: string) => `match_timeline_${matchId}`,
+  TEAM_COMPOSITION: (champions: string[]) => `team_comp_${champions.sort().join('_')}`,
 } as const;

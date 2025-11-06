@@ -17,6 +17,11 @@ export const API_CONFIG = {
     // Predictions endpoints
     getMatchOutcome: '/predictions/get_match_outcome',
     getChampionWinrates: '/analytics/get_champion_winrates',
+    // Match History endpoints
+    getMatchParticipants: '/match/get_lol_match_participants_info',
+    getMatchTimeline: '/match/get_match_timeline',
+    // Analysis endpoints
+    getTeamComposition: '/analysis/get_team_composition',
   }
 };
 

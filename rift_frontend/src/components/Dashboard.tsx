@@ -3,6 +3,7 @@ import { storage } from '../utils/storage';
 import { apiService } from '../services/api';
 import { GameAssets } from './GameAssets';
 import { Predictions } from './Predictions';
+import { MatchHistory } from './MatchHistory';
 import type { RiotUser } from '../types/user';
 
 interface DashboardProps {
@@ -18,6 +19,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ puuid, onLogout }) => {
   const [error, setError] = useState<string | null>(null);
   const [showGameAssets, setShowGameAssets] = useState(false);
   const [showPredictions, setShowPredictions] = useState(false);
+  const [showMatchHistory, setShowMatchHistory] = useState(false);
 
   useEffect(() => {
     loadUserData();
@@ -74,6 +76,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ puuid, onLogout }) => {
   // If showing Predictions, render that instead of the dashboard
   if (showPredictions) {
     return <Predictions onBack={() => setShowPredictions(false)} />;
+  }
+
+  // If showing Match History, render that instead of the dashboard
+  if (showMatchHistory) {
+    return <MatchHistory onBack={() => setShowMatchHistory(false)} />;
   }
 
   if (loading) {
@@ -154,16 +161,19 @@ export const Dashboard: React.FC<DashboardProps> = ({ puuid, onLogout }) => {
 
           <div className="section-card">
             <h3>📊 Match History</h3>
-            <p>Deep dive into your recent games with detailed insights</p>
-            <button className="section-button" disabled>
-              Coming Soon
+            <p>Deep dive into your recent games with detailed insights and team composition analysis</p>
+            <button
+              className="section-button"
+              onClick={() => setShowMatchHistory(true)}
+            >
+              View Match History
             </button>
           </div>
 
           <div className="section-card">
             <h3>🔮 Predictions</h3>
             <p>Get AI-powered predictions for your next matches and view champion winrates</p>
-            <button 
+            <button
               className="section-button"
               onClick={() => setShowPredictions(true)}
             >
@@ -174,7 +184,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ puuid, onLogout }) => {
           <div className="section-card">
             <h3>🎮 Game Assets</h3>
             <p>Explore champions and items from League of Legends</p>
-            <button 
+            <button
               className="section-button"
               onClick={() => setShowGameAssets(true)}
             >
