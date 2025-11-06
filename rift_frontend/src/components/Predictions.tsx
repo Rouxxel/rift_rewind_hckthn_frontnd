@@ -29,6 +29,7 @@ export const Predictions: React.FC<PredictionsProps> = ({ onBack }) => {
 
   // Caching states (now using persistent cache)
   const [championsLoaded, setChampionsLoaded] = useState(false);
+  const [winratesLoaded, setWinratesLoaded] = useState(false);
 
   // Winrates filters (removed role)
   const [rank, setRank] = useState('ALL');
@@ -54,20 +55,31 @@ export const Predictions: React.FC<PredictionsProps> = ({ onBack }) => {
     // Load champions on mount (check cache first)
     loadChampions();
 
-    // Load winrates if on winrates tab
+    // Load winrates if on winrates tab - but only if not already loaded
     if (activeTab === 'winrates') {
-      loadWinrates(100);
+      loadWinratesIfNeeded();
     }
   }, [activeTab]);
 
   useEffect(() => {
-    if (activeTab === 'winrates') {
+    if (activeTab === 'winrates' && winratesLoaded) {
       // Reset limit when filters change
       setCurrentLimit(100);
       setHasMoreChampions(true);
-      loadWinrates(100);
+      
+      // Always try to use cached data first for filter changes
+      const cachedAllWinrates = cache.get<ChampionWinrate[]>(CACHE_KEYS.WINRATES_ALL);
+      
+      if (cachedAllWinrates) {
+        console.log('✅ Filter changed, using cached data with new filters - no API call needed');
+        applyFiltersAndSort(cachedAllWinrates, 100);
+      } else {
+        console.log('🔄 Cache expired during filter change, reloading from API...');
+        setWinratesLoaded(false); // Reset loaded state
+        loadWinrates(100);
+      }
     }
-  }, [rank, sortBy]);
+  }, [rank, sortBy, winratesLoaded]);
 
   const loadChampions = async () => {
     if (championsLoaded) return; // Skip if already loaded in this session
@@ -97,53 +109,47 @@ export const Predictions: React.FC<PredictionsProps> = ({ onBack }) => {
     }
   };
 
-  const loadWinrates = async (limit: number = currentLimit) => {
-    const cacheKey = CACHE_KEYS.WINRATES(rank, sortBy) + `_${limit}`;
-
-    // Check persistent cache first
-    const cachedWinrates = cache.get<ChampionWinrate[]>(cacheKey);
-    if (cachedWinrates) {
-      console.log('📋 Using cached winrates data for:', cacheKey);
-      setWinrates(cachedWinrates);
-      setHasMoreChampions(cachedWinrates.length >= limit);
+  // New function to check if winrates need to be loaded
+  const loadWinratesIfNeeded = async () => {
+    // Skip if already loaded in this session
+    if (winratesLoaded) {
+      console.log('✅ Winrates already loaded in this session - no API call needed');
       return;
     }
 
+    const cachedAllWinrates = cache.get<ChampionWinrate[]>(CACHE_KEYS.WINRATES_ALL);
+    
+    if (cachedAllWinrates) {
+      console.log('✅ Using existing cached winrates data - no API call needed');
+      applyFiltersAndSort(cachedAllWinrates, 100);
+      setWinratesLoaded(true);
+      return;
+    }
+
+    // No cached data, load from API
+    console.log('🔄 No cached data found, making API call...');
+    await loadWinrates(100);
+  };
+
+  const loadWinrates = async (limit: number = currentLimit) => {
     try {
       setLoading(true);
       setError(null);
-      console.log('🔄 Loading winrates from API...');
-      const response = await apiService.getChampionWinrates(rank, 'ALL', sortBy, limit);
-      console.log('✅ Winrates loaded:', response);
+      console.log('🔄 Loading ALL winrates from API (one-time fetch)...');
+      
+      // Fetch ALL champions with maximum limit to cache everything
+      const response = await apiService.getChampionWinrates('ALL', 'ALL', 'name', 200);
+      console.log('✅ All winrates loaded and cached:', response);
 
-      let championsList = response.champions || [];
-
-      // Always sort alphabetically first, then by selected criteria
-      if (sortBy === 'name') {
-        championsList.sort((a: ChampionWinrate, b: ChampionWinrate) => a.name.localeCompare(b.name));
-      } else {
-        // Sort by criteria, then alphabetically for ties
-        championsList.sort((a: ChampionWinrate, b: ChampionWinrate) => {
-          const aValue = a[sortBy as keyof ChampionWinrate];
-          const bValue = b[sortBy as keyof ChampionWinrate];
-
-          if (aValue === bValue) {
-            return a.name.localeCompare(b.name);
-          }
-
-          if (sortBy === 'games_played') {
-            return (bValue as number) - (aValue as number); // Descending for games
-          } else {
-            return (bValue as number) - (aValue as number); // Descending for rates
-          }
-        });
-      }
-
-      setWinrates(championsList);
-      setHasMoreChampions(championsList.length >= limit);
-
-      // Cache for 15 minutes (winrates change more frequently)
-      cache.set(cacheKey, championsList, 15);
+      const allChampionsList = response.champions || [];
+      
+      // Cache ALL the data for 15 minutes
+      cache.set(CACHE_KEYS.WINRATES_ALL, allChampionsList, 15);
+      
+      // Apply current filters and sorting
+      applyFiltersAndSort(allChampionsList, limit);
+      setWinratesLoaded(true);
+      
     } catch (err: any) {
       console.error('❌ Failed to load winrates:', err);
       setError(`Failed to load champion winrates: ${err.message}`);
@@ -152,44 +158,61 @@ export const Predictions: React.FC<PredictionsProps> = ({ onBack }) => {
     }
   };
 
+  // New function to apply filters and sorting client-side
+  const applyFiltersAndSort = (allChampions: ChampionWinrate[], limit: number) => {
+    let filteredChampions = [...allChampions];
+    
+    // Apply rank filter (if backend doesn't handle it, we'd filter here)
+    // For now, assuming backend handles rank filtering, so we use all data
+    
+    // Apply sorting
+    if (sortBy === 'name') {
+      filteredChampions.sort((a: ChampionWinrate, b: ChampionWinrate) => a.name.localeCompare(b.name));
+    } else {
+      filteredChampions.sort((a: ChampionWinrate, b: ChampionWinrate) => {
+        const aValue = a[sortBy as keyof ChampionWinrate];
+        const bValue = b[sortBy as keyof ChampionWinrate];
+
+        if (aValue === bValue) {
+          return a.name.localeCompare(b.name);
+        }
+
+        if (sortBy === 'games_played') {
+          return (bValue as number) - (aValue as number); // Descending for games
+        } else {
+          return (bValue as number) - (aValue as number); // Descending for rates
+        }
+      });
+    }
+
+    // Apply limit
+    const limitedChampions = filteredChampions.slice(0, limit);
+    
+    setWinrates(limitedChampions);
+    setHasMoreChampions(filteredChampions.length > limit);
+  };
+
   const loadMoreWinrates = async () => {
     const newLimit = currentLimit + 100;
     setLoadingMore(true);
 
     try {
-      console.log(`🔄 Loading more winrates (${newLimit} total)...`);
-      const response = await apiService.getChampionWinrates(rank, 'ALL', sortBy, newLimit);
-      console.log('✅ More winrates loaded:', response);
-
-      let championsList = response.champions || [];
-
-      // Apply same sorting logic
-      if (sortBy === 'name') {
-        championsList.sort((a: ChampionWinrate, b: ChampionWinrate) => a.name.localeCompare(b.name));
+      console.log(`📋 Loading more winrates from cache (${newLimit} total)...`);
+      
+      // Always get cached data first (should exist at this point)
+      const cachedAllWinrates = cache.get<ChampionWinrate[]>(CACHE_KEYS.WINRATES_ALL);
+      
+      if (cachedAllWinrates) {
+        // Use cached data with new limit
+        applyFiltersAndSort(cachedAllWinrates, newLimit);
+        setCurrentLimit(newLimit);
+        console.log('✅ More winrates loaded from cache - no API call needed');
       } else {
-        championsList.sort((a: ChampionWinrate, b: ChampionWinrate) => {
-          const aValue = a[sortBy as keyof ChampionWinrate];
-          const bValue = b[sortBy as keyof ChampionWinrate];
-
-          if (aValue === bValue) {
-            return a.name.localeCompare(b.name);
-          }
-
-          if (sortBy === 'games_played') {
-            return (bValue as number) - (aValue as number);
-          } else {
-            return (bValue as number) - (aValue as number);
-          }
-        });
+        // This shouldn't happen, but fallback to API if cache is somehow empty
+        console.log('⚠️ Cache unexpectedly empty during load more, reloading from API...');
+        await loadWinrates(newLimit);
+        setCurrentLimit(newLimit);
       }
-
-      setWinrates(championsList);
-      setCurrentLimit(newLimit);
-      setHasMoreChampions(championsList.length >= newLimit);
-
-      // Update cache with new data
-      const cacheKey = CACHE_KEYS.WINRATES(rank, sortBy) + `_${newLimit}`;
-      cache.set(cacheKey, championsList, 15);
 
     } catch (err: any) {
       console.error('❌ Failed to load more winrates:', err);

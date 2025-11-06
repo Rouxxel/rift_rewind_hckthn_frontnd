@@ -103,6 +103,7 @@ export const cache = new CacheManager();
 export const CACHE_KEYS = {
   CHAMPIONS: 'champions',
   ITEMS: 'items',
-  WINRATES: (rank: string, sortBy: string) => `winrates_${rank}_${sortBy}`,
+  WINRATES_ALL: 'winrates_all_data', // Single cache for all winrates data
+  WINRATES: (rank: string, sortBy: string) => `winrates_${rank}_${sortBy}`, // Legacy, kept for compatibility
   CHAMPION_ABILITIES: (championName: string) => `abilities_${championName}`,
 } as const;
