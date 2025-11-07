@@ -298,14 +298,158 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
     }
   };
 
-  // Function to normalize champion names for API calls
-  const normalizeChampionName = (championName: string): string => {
-    // Remove apostrophes and normalize common champion name issues
+  // Function to split camelCase/PascalCase champion names by capital letters
+  const splitByCapitals = (championName: string): string => {
+    // Split by capital letters but keep the capital with the following word
+    // "MissFortune" -> "Miss Fortune", "LeeSin" -> "Lee Sin"
     return championName
-      .replace(/'/g, '') // Remove apostrophes: Kha'Zix -> KhaZix, Kai'Sa -> KaiSa
-      .replace(/\s+/g, '') // Remove spaces: Aurelion Sol -> AurelionSol
-      .replace(/\./g, '') // Remove dots: Dr. Mundo -> DrMundo
-      .trim();
+      .replace(/([A-Z])/g, ' $1') // Add space before each capital
+      .trim() // Remove leading space
+      .replace(/\s+/g, ' '); // Normalize multiple spaces to single space
+  };
+
+  // Function to try adding apostrophes at capital letter positions
+  const addApostrophes = (championName: string): string => {
+    // For names like "KSante" -> "K'Sante", "KhaZix" -> "Kha'Zix"
+    // Add apostrophe before capital letters (except the first one)
+    return championName
+      .replace(/([a-z])([A-Z])/g, "$1'$2"); // Add apostrophe between lowercase and uppercase
+  };
+
+  // Function to try different champion name formats
+  const getChampionNameVariations = (championName: string): string[] => {
+    const variations: string[] = [];
+    
+    // 1. Split by capitals first (most common case): "MissFortune" -> "Miss Fortune", "KSante" -> "K Sante"
+    const splitName = splitByCapitals(championName);
+    variations.push(splitName);
+    
+    // 2. If split name is different, try with apostrophes: "K Sante" -> "K'Sante"
+    if (splitName !== championName) {
+      const splitWithApostrophe = splitName.replace(/\s+/g, "'");
+      if (splitWithApostrophe !== splitName) {
+        variations.push(splitWithApostrophe);
+      }
+    }
+    
+    // 3. Try original name as fallback
+    if (!variations.includes(championName)) {
+      variations.push(championName);
+    }
+    
+    // 4. Try adding apostrophes to original: "KSante" -> "K'Sante" (without space first)
+    const apostropheName = addApostrophes(championName);
+    if (apostropheName !== championName && !variations.includes(apostropheName)) {
+      variations.push(apostropheName);
+    }
+    
+    return variations;
+  };
+
+  // Smart retry mechanism for champion name resolution
+  const tryPredictionWithNameResolution = async (
+    winningTeamOriginal: string[],
+    losingTeamOriginal: string[]
+  ): Promise<{ success: boolean; response?: any; winningTeam?: string[]; losingTeam?: string[]; error?: string }> => {
+    // Generate all possible name variations for each champion
+    const winningVariations = winningTeamOriginal.map(name => getChampionNameVariations(name));
+    const losingVariations = losingTeamOriginal.map(name => getChampionNameVariations(name));
+
+    console.log('🔄 Champion name variations:', { winningVariations, losingVariations });
+
+    // Try all combinations (starting with most likely: all split by capitals)
+    const maxAttempts = 50; // Limit total attempts to avoid infinite loops
+    let attemptCount = 0;
+
+    // Helper function to generate next combination
+    const tryNextCombination = async (
+      winningIndices: number[],
+      losingIndices: number[]
+    ): Promise<{ success: boolean; response?: any; winningTeam?: string[]; losingTeam?: string[]; error?: string }> => {
+      if (attemptCount >= maxAttempts) {
+        return { success: false, error: 'Maximum retry attempts reached' };
+      }
+
+      attemptCount++;
+
+      const winningTeam = winningIndices.map((idx, i) => winningVariations[i][idx]);
+      const losingTeam = losingIndices.map((idx, i) => losingVariations[i][idx]);
+
+      console.log(`🔄 Attempt ${attemptCount}: Trying combination:`, { winningTeam, losingTeam });
+
+      try {
+        const response = await apiService.getMatchOutcome(winningTeam, losingTeam, 'CLASSIC', 'GOLD');
+        console.log(`✅ Success on attempt ${attemptCount}!`);
+        return { success: true, response, winningTeam, losingTeam };
+      } catch (err: any) {
+        // Check if it's a rate limit error
+        if (err.status === 429 || err.message.includes('rate limit') || err.message.includes('Too Many Requests')) {
+          console.error('⚠️ Rate limit hit, stopping retries');
+          return { success: false, error: 'Rate limit reached. Please try again later.' };
+        }
+
+        // Check if it's a 404 (champion not found) - we can retry
+        if (err.status === 404 || err.message.includes('not found')) {
+          // Extract champion name from error message
+          const championMatch = err.message.match(/Champion '([^']+)' not found/);
+          const notFoundChampion = championMatch ? championMatch[1] : 'unknown';
+          
+          console.log(`❌ Attempt ${attemptCount} failed: Champion '${notFoundChampion}' not found (tried: ${winningTeam.join(', ')} vs ${losingTeam.join(', ')})`);
+          
+          // Try next combination
+          const nextCombination = getNextCombination(winningIndices, losingIndices, winningVariations, losingVariations);
+          
+          if (nextCombination) {
+            return await tryNextCombination(nextCombination.winningIndices, nextCombination.losingIndices);
+          } else {
+            return { success: false, error: `Could not resolve champion names after ${attemptCount} attempts. Last failed champion: '${notFoundChampion}'` };
+          }
+        }
+
+        // Other errors (network, server, etc.) - don't retry
+        console.error('❌ Non-retryable error:', err);
+        return { success: false, error: err.message };
+      }
+    };
+
+    // Helper to get next combination (increment indices like a counter)
+    const getNextCombination = (
+      winningIndices: number[],
+      losingIndices: number[],
+      winningVars: string[][],
+      losingVars: string[][]
+    ): { winningIndices: number[]; losingIndices: number[] } | null => {
+      // Try incrementing winning team indices first
+      const newWinningIndices = [...winningIndices];
+      for (let i = newWinningIndices.length - 1; i >= 0; i--) {
+        if (newWinningIndices[i] < winningVars[i].length - 1) {
+          newWinningIndices[i]++;
+          return { winningIndices: newWinningIndices, losingIndices };
+        } else {
+          newWinningIndices[i] = 0;
+        }
+      }
+
+      // If all winning combinations exhausted, try next losing combination
+      const newLosingIndices = [...losingIndices];
+      for (let i = newLosingIndices.length - 1; i >= 0; i--) {
+        if (newLosingIndices[i] < losingVars[i].length - 1) {
+          newLosingIndices[i]++;
+          return { winningIndices: Array(winningIndices.length).fill(0), losingIndices: newLosingIndices };
+        } else {
+          newLosingIndices[i] = 0;
+        }
+      }
+
+      // All combinations exhausted
+      return null;
+    };
+
+    // Start with all indices at 0 (first variation for each champion)
+    const initialWinningIndices = Array(winningTeamOriginal.length).fill(0);
+    const initialLosingIndices = Array(losingTeamOriginal.length).fill(0);
+
+    return await tryNextCombination(initialWinningIndices, initialLosingIndices);
   };
 
   const loadTeamComposition = async (participants: MatchParticipant[]) => {
@@ -314,27 +458,24 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
     setLoadingStates(prev => ({ ...prev, composition: true }));
 
     try {
-      // Split into teams by win/loss status (use normalized champion names for API)
-      const winningTeam = participants.filter(p => p.win === true).map(p => normalizeChampionName(p.championName));
-      const losingTeam = participants.filter(p => p.win === false).map(p => normalizeChampionName(p.championName));
+      // Split into teams by win/loss status (get original names)
+      const winningTeamOriginal = participants.filter(p => p.win === true).map(p => p.championName);
+      const losingTeamOriginal = participants.filter(p => p.win === false).map(p => p.championName);
 
-      if (winningTeam.length > 0 && losingTeam.length > 0 && winningTeam.length === losingTeam.length) {
-        // Check cache first
-        const cacheKey = CACHE_KEYS.TEAM_COMPOSITION(winningTeam);
-        let cachedComposition = cache.get<TeamComposition>(cacheKey);
+      if (winningTeamOriginal.length > 0 && losingTeamOriginal.length > 0 && winningTeamOriginal.length === losingTeamOriginal.length) {
+        // Try to get composition with smart name resolution
+        const result = await tryCompositionWithNameResolution(winningTeamOriginal, losingTeamOriginal);
+        
+        if (result.success) {
+          console.log('✅ Team composition analysis loaded:', result.response);
+          setTeamComposition(result.response);
 
-        if (cachedComposition) {
-          console.log('✅ Using cached team composition analysis');
-          setTeamComposition(cachedComposition);
+          // Cache for 30 minutes using the successful names
+          const cacheKey = CACHE_KEYS.TEAM_COMPOSITION(result.winningTeam!);
+          cache.set(cacheKey, result.response, 30);
         } else {
-          console.log('🔄 Loading team composition analysis...');
-          const response = await apiService.getTeamComposition(winningTeam, losingTeam, 'all');
-          console.log('✅ Team composition analysis loaded:', response);
-
-          setTeamComposition(response);
-
-          // Cache for 30 minutes
-          cache.set(cacheKey, response, 30);
+          console.error('❌ Failed to resolve champion names for composition:', result.error);
+          // Don't set error for team composition as it's not critical
         }
       }
 
@@ -344,6 +485,99 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
     } finally {
       setLoadingStates(prev => ({ ...prev, composition: false }));
     }
+  };
+
+  // Smart retry mechanism for team composition name resolution
+  const tryCompositionWithNameResolution = async (
+    winningTeamOriginal: string[],
+    losingTeamOriginal: string[]
+  ): Promise<{ success: boolean; response?: any; winningTeam?: string[]; losingTeam?: string[]; error?: string }> => {
+    // Generate all possible name variations for each champion
+    const winningVariations = winningTeamOriginal.map(name => getChampionNameVariations(name));
+    const losingVariations = losingTeamOriginal.map(name => getChampionNameVariations(name));
+
+    const maxAttempts = 50;
+    let attemptCount = 0;
+
+    const tryNextCombination = async (
+      winningIndices: number[],
+      losingIndices: number[]
+    ): Promise<{ success: boolean; response?: any; winningTeam?: string[]; losingTeam?: string[]; error?: string }> => {
+      if (attemptCount >= maxAttempts) {
+        return { success: false, error: 'Maximum retry attempts reached' };
+      }
+
+      attemptCount++;
+
+      const winningTeam = winningIndices.map((idx, i) => winningVariations[i][idx]);
+      const losingTeam = losingIndices.map((idx, i) => losingVariations[i][idx]);
+
+      console.log(`🔄 Composition attempt ${attemptCount}:`, { winningTeam, losingTeam });
+
+      try {
+        const response = await apiService.getTeamComposition(winningTeam, losingTeam, 'all');
+        console.log(`✅ Composition success on attempt ${attemptCount}!`);
+        return { success: true, response, winningTeam, losingTeam };
+      } catch (err: any) {
+        if (err.status === 429 || err.message.includes('rate limit') || err.message.includes('Too Many Requests')) {
+          console.error('⚠️ Rate limit hit, stopping composition retries');
+          return { success: false, error: 'Rate limit reached' };
+        }
+
+        if (err.status === 404 || err.message.includes('not found')) {
+          // Extract champion name from error message
+          const championMatch = err.message.match(/Champion '([^']+)' not found/);
+          const notFoundChampion = championMatch ? championMatch[1] : 'unknown';
+          
+          console.log(`❌ Composition attempt ${attemptCount} failed: Champion '${notFoundChampion}' not found (tried: ${winningTeam.join(', ')} vs ${losingTeam.join(', ')})`);
+          
+          const nextCombination = getNextCombinationHelper(winningIndices, losingIndices, winningVariations, losingVariations);
+          
+          if (nextCombination) {
+            return await tryNextCombination(nextCombination.winningIndices, nextCombination.losingIndices);
+          } else {
+            return { success: false, error: `Could not resolve champion names after ${attemptCount} attempts. Last failed champion: '${notFoundChampion}'` };
+          }
+        }
+
+        console.error('❌ Non-retryable composition error:', err);
+        return { success: false, error: err.message };
+      }
+    };
+
+    const getNextCombinationHelper = (
+      winningIndices: number[],
+      losingIndices: number[],
+      winningVars: string[][],
+      losingVars: string[][]
+    ): { winningIndices: number[]; losingIndices: number[] } | null => {
+      const newWinningIndices = [...winningIndices];
+      for (let i = newWinningIndices.length - 1; i >= 0; i--) {
+        if (newWinningIndices[i] < winningVars[i].length - 1) {
+          newWinningIndices[i]++;
+          return { winningIndices: newWinningIndices, losingIndices };
+        } else {
+          newWinningIndices[i] = 0;
+        }
+      }
+
+      const newLosingIndices = [...losingIndices];
+      for (let i = newLosingIndices.length - 1; i >= 0; i--) {
+        if (newLosingIndices[i] < losingVars[i].length - 1) {
+          newLosingIndices[i]++;
+          return { winningIndices: Array(winningIndices.length).fill(0), losingIndices: newLosingIndices };
+        } else {
+          newLosingIndices[i] = 0;
+        }
+      }
+
+      return null;
+    };
+
+    const initialWinningIndices = Array(winningTeamOriginal.length).fill(0);
+    const initialLosingIndices = Array(losingTeamOriginal.length).fill(0);
+
+    return await tryNextCombination(initialWinningIndices, initialLosingIndices);
   };
 
   const loadMatchPrediction = async (participants: MatchParticipant[]) => {
@@ -356,27 +590,27 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
     setError(null); // Clear any previous errors
 
     try {
-      // Split into teams by win/loss status (use normalized champion names for API)
-      const winningTeam = participants.filter(p => p.win === true).map(p => normalizeChampionName(p.championName));
-      const losingTeam = participants.filter(p => p.win === false).map(p => normalizeChampionName(p.championName));
+      // Split into teams by win/loss status (get original names)
+      const winningTeamOriginal = participants.filter(p => p.win === true).map(p => p.championName);
+      const losingTeamOriginal = participants.filter(p => p.win === false).map(p => p.championName);
 
-      console.log('🔍 Teams for prediction:', { winningTeam, losingTeam });
+      console.log('🔍 Original teams:', { winningTeamOriginal, losingTeamOriginal });
 
-      if (winningTeam.length === 0 || losingTeam.length === 0) {
+      if (winningTeamOriginal.length === 0 || losingTeamOriginal.length === 0) {
         console.warn('⚠️ Invalid team composition for prediction');
         setError('Invalid team composition - no winners or losers found');
         return;
       }
 
-      if (winningTeam.length !== losingTeam.length) {
+      if (winningTeamOriginal.length !== losingTeamOriginal.length) {
         console.warn('⚠️ Unequal team sizes for prediction');
-        setError(`Unequal team sizes: ${winningTeam.length}v${losingTeam.length}`);
+        setError(`Unequal team sizes: ${winningTeamOriginal.length}v${losingTeamOriginal.length}`);
         return;
       }
 
-      if (winningTeam.length !== 5 || losingTeam.length !== 5) {
+      if (winningTeamOriginal.length !== 5 || losingTeamOriginal.length !== 5) {
         console.warn('⚠️ Match prediction only supports 5v5 matches');
-        setError(`Match prediction only supports 5v5 matches. This match has ${winningTeam.length}v${losingTeam.length} teams.`);
+        setError(`Match prediction only supports 5v5 matches. This match has ${winningTeamOriginal.length}v${losingTeamOriginal.length} teams.`);
         return;
       }
 
@@ -387,24 +621,18 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
         return;
       }
 
-      // Check cache first
-      const cacheKey = `match_prediction_${winningTeam.sort().join('_')}_vs_${losingTeam.sort().join('_')}`;
-      let cachedPrediction = cache.get<any>(cacheKey);
+      // Try to get prediction with smart name resolution
+      const result = await tryPredictionWithNameResolution(winningTeamOriginal, losingTeamOriginal);
+      
+      if (result.success && result.winningTeam && result.losingTeam) {
+        console.log('✅ Match prediction analysis loaded:', result.response);
+        setMatchPrediction(result.response);
 
-      if (cachedPrediction) {
-        console.log('✅ Using cached match prediction analysis');
-        setMatchPrediction(cachedPrediction);
+        // Cache for 30 minutes using the successful names
+        const cacheKey = `match_prediction_${result.winningTeam.sort().join('_')}_vs_${result.losingTeam.sort().join('_')}`;
+        cache.set(cacheKey, result.response, 30);
       } else {
-        console.log('🔄 Loading match prediction analysis...');
-        console.log(`📊 Analyzing: ${winningTeam.join(', ')} vs ${losingTeam.join(', ')}`);
-
-        const response = await apiService.getMatchOutcome(winningTeam, losingTeam, 'CLASSIC', 'GOLD');
-        console.log('✅ Match prediction analysis loaded:', response);
-
-        setMatchPrediction(response);
-
-        // Cache for 30 minutes
-        cache.set(cacheKey, response, 30);
+        throw new Error(result.error || 'Failed to resolve champion names');
       }
 
     } catch (err: any) {
