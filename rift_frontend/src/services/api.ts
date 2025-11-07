@@ -78,9 +78,28 @@ export const apiService = {
   },
 
   // Get champion mastery
-  getChampionMastery: async (puuid: string, region: string) => {
+  getChampionMastery: async (puuid: string, region: string, championId?: number, top?: number, totalScore?: boolean) => {
     const params = new URLSearchParams({ puuid, region });
+    if (championId) params.append('champion_id', championId.toString());
+    if (top) params.append('top', top.toString());
+    if (totalScore) params.append('total_score', totalScore.toString());
     return apiRequest(`${API_CONFIG.endpoints.getChampionMastery}?${params}`);
+  },
+
+  // Get summoner spells analysis
+  getSummonerSpellsAnalysis: async (puuid: string, region: string, championName?: string, matchCount?: number) => {
+    const params = new URLSearchParams({ puuid, region });
+    if (championName) params.append('champion_name', championName);
+    if (matchCount) params.append('match_count', matchCount.toString());
+    return apiRequest(`${API_CONFIG.endpoints.getSummonerSpellsAnalysis}?${params}`);
+  },
+
+  // Get rune masteries
+  getRuneMasteries: async (puuid: string, region: string, championName?: string, matchCount?: number) => {
+    const params = new URLSearchParams({ puuid, region });
+    if (championName) params.append('champion_name', championName);
+    if (matchCount) params.append('match_count', matchCount.toString());
+    return apiRequest(`${API_CONFIG.endpoints.getRuneMasteries}?${params}`);
   },
 
   // Get match IDs

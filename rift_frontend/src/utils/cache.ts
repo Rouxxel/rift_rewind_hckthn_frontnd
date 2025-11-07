@@ -112,4 +112,9 @@ export const CACHE_KEYS = {
   MATCH_PARTICIPANTS: (matchId: string) => `match_participants_${matchId}`,
   MATCH_TIMELINE: (matchId: string) => `match_timeline_${matchId}`,
   TEAM_COMPOSITION: (champions: string[]) => `team_comp_${champions.sort().join('_')}`,
+  // Performance Analysis cache keys
+  PLAYER_PERFORMANCE: (puuid: string) => `player_performance_${puuid}`,
+  CHAMPION_MASTERY: (puuid: string) => `champion_mastery_${puuid}`,
+  SUMMONER_SPELLS: (puuid: string) => `summoner_spells_${puuid}`,
+  RUNE_MASTERIES: (puuid: string) => `rune_masteries_${puuid}`,
 } as const;

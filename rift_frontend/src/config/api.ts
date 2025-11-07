@@ -8,6 +8,8 @@ export const API_CONFIG = {
     getMatchIds: '/user/get_lol_match_ids',
     getChampionMastery: '/user/get_champion_mastery',
     getRankedStats: '/user/get_ranked_stats',
+    getSummonerSpellsAnalysis: '/user/get_summoner_spells_analysis',
+    getRuneMasteries: '/user/get_runes_masteries',
     getMatchDetails: '/match/get_lol_match_details',
     getPlayerPerformance: '/analytics/get_player_performance',
     // Game Assets endpoints
@@ -28,7 +30,7 @@ export const API_CONFIG = {
 // Regions mapping for the backend
 export const REGIONS = {
   'North America': 'americas',
-  'Europe': 'europe', 
+  'Europe': 'europe',
   'Asia': 'asia',
   'Southeast Asia': 'sea'
 } as const;

@@ -4,6 +4,7 @@ import { apiService } from '../services/api';
 import { GameAssets } from './GameAssets';
 import { Predictions } from './Predictions';
 import { MatchHistory } from './MatchHistory';
+import { PerformanceAnalysis } from './PerformanceAnalysis';
 import type { RiotUser } from '../types/user';
 
 interface DashboardProps {
@@ -20,6 +21,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ puuid, onLogout }) => {
   const [showGameAssets, setShowGameAssets] = useState(false);
   const [showPredictions, setShowPredictions] = useState(false);
   const [showMatchHistory, setShowMatchHistory] = useState(false);
+  const [showPerformanceAnalysis, setShowPerformanceAnalysis] = useState(false);
 
   useEffect(() => {
     loadUserData();
@@ -81,6 +83,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ puuid, onLogout }) => {
   // If showing Match History, render that instead of the dashboard
   if (showMatchHistory) {
     return <MatchHistory onBack={() => setShowMatchHistory(false)} />;
+  }
+
+  // If showing Performance Analysis, render that instead of the dashboard
+  if (showPerformanceAnalysis) {
+    return <PerformanceAnalysis onBack={() => setShowPerformanceAnalysis(false)} />;
   }
 
   if (loading) {
@@ -145,17 +152,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ puuid, onLogout }) => {
         <div className="coaching-sections">
           <div className="section-card">
             <h3>🎯 Performance Analysis</h3>
-            <p>Analyze your recent matches and identify improvement areas</p>
-            <button className="section-button" disabled>
-              Coming Soon
-            </button>
-          </div>
-
-          <div className="section-card">
-            <h3>🏆 Champion Mastery</h3>
-            <p>Review your champion performance and get recommendations</p>
-            <button className="section-button" disabled>
-              Coming Soon
+            <p>Analyze your performance, champion mastery, summoner spells, and runes</p>
+            <button
+              className="section-button"
+              onClick={() => setShowPerformanceAnalysis(true)}
+            >
+              View Performance
             </button>
           </div>
 
