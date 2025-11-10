@@ -5351,3 +5351,11 @@ gend */
     font-size: 1.5rem;
   }
 }
+
+
+/* No Data Styling */
+.no-data {
+  color: #a09b8c;
+  font-style: italic;
+  opacity: 0.8;
+}

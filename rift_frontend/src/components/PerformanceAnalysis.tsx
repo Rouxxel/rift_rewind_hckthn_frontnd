@@ -275,12 +275,27 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
   };
 
   const getKeystoneName = (keystoneId: number): string => {
-    if (keystoneId === 0) return 'No Keystone Recorded';
-    return KEYSTONE_NAMES[keystoneId] || `Unknown Keystone (${keystoneId})`;
+    if (keystoneId === 0) return 'Not Selected';
+    return KEYSTONE_NAMES[keystoneId] || 'Not Applicable';
   };
 
   const isUnknownSpell = (spellName: string): boolean => {
-    return spellName.includes('Unknown_') || spellName.includes('Unknown,');
+    return spellName.includes('Unknown_') || spellName.includes('Unknown,') || spellName.toLowerCase().includes('unknown');
+  };
+
+  const formatSpellName = (spellName: string): string => {
+    if (isUnknownSpell(spellName)) {
+      return 'Not Selected';
+    }
+    return spellName;
+  };
+
+  const formatRuneTreeName = (treeName: string): string => {
+    // Check if it's an unknown or invalid tree name
+    if (treeName.toLowerCase().includes('unknown') || treeName === '0' || treeName === 'Unknown_0') {
+      return 'Not Selected';
+    }
+    return treeName;
   };
 
   return (
@@ -626,10 +641,9 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
                       <h4>Most Used Combinations</h4>
                       <div className="combinations-list">
                         {Object.entries(summonerSpells.overall_stats.most_used_combinations)
-                          .filter(([combo]) => !isUnknownSpell(combo))
                           .map(([combo, count], index) => (
                             <div key={index} className="combination-item">
-                              <span>{combo}</span>
+                              <span>{formatSpellName(combo)}</span>
                               <span className="count">{count} games</span>
                             </div>
                           ))}
@@ -646,10 +660,9 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
                           <div className="table-cell">Win Rate</div>
                         </div>
                         {Object.entries(summonerSpells.overall_stats.spell_effectiveness)
-                          .filter(([combo]) => !isUnknownSpell(combo))
                           .map(([combo, stats], index) => (
                             <div key={index} className={`table-row ${index % 2 === 0 ? 'even' : 'odd'}`}>
-                              <div className="table-cell">{combo}</div>
+                              <div className="table-cell">{formatSpellName(combo)}</div>
                               <div className="table-cell">{stats.games}</div>
                               <div className="table-cell">{stats.wins}</div>
                               <div className="table-cell">
@@ -677,10 +690,9 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
                               <h4>{champion}</h4>
                               <div className="breakdown-spells-list">
                                 {Object.entries(spells)
-                                  .filter(([combo]) => !isUnknownSpell(combo))
                                   .map(([combo, stats], idx) => (
                                     <div key={idx} className="breakdown-spell-item">
-                                      <span className="spell-combo">{combo}</span>
+                                      <span className="spell-combo">{formatSpellName(combo)}</span>
                                       <div className="spell-stats">
                                         <span>{stats.games}G</span>
                                         <span>{stats.wins}W</span>
@@ -737,7 +749,7 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
                           <div className="runes-list">
                             {Object.entries(runeMasteries.overall_stats.most_used_primary_trees).map(([tree, count], index) => (
                               <div key={index} className="rune-item">
-                                <span>{tree}</span>
+                                <span>{formatRuneTreeName(tree)}</span>
                                 <span className="count">{count} games</span>
                               </div>
                             ))}
@@ -749,7 +761,7 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
                           <div className="runes-list">
                             {Object.entries(runeMasteries.overall_stats.most_used_secondary_trees).map(([tree, count], index) => (
                               <div key={index} className="rune-item">
-                                <span>{tree}</span>
+                                <span>{formatRuneTreeName(tree)}</span>
                                 <span className="count">{count} games</span>
                               </div>
                             ))}
@@ -759,14 +771,21 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
                         <div>
                           <h4>Most Used Keystones</h4>
                           <div className="runes-list">
-                            {Object.entries(runeMasteries.overall_stats.most_used_keystones)
-                              .filter(([keystoneId]) => parseInt(keystoneId) !== 0)
-                              .map(([keystoneId, count], index) => (
-                                <div key={index} className="rune-item">
-                                  <span>{getKeystoneName(parseInt(keystoneId))}</span>
-                                  <span className="count">{count} games</span>
-                                </div>
-                              ))}
+                            {Object.entries(runeMasteries.overall_stats.most_used_keystones).length === 0 ||
+                              Object.entries(runeMasteries.overall_stats.most_used_keystones).every(([keystoneId]) => parseInt(keystoneId) === 0) ? (
+                              <div className="rune-item">
+                                <span className="no-data">No Keystone</span>
+                              </div>
+                            ) : (
+                              Object.entries(runeMasteries.overall_stats.most_used_keystones)
+                                .filter(([keystoneId]) => parseInt(keystoneId) !== 0)
+                                .map(([keystoneId, count], index) => (
+                                  <div key={index} className="rune-item">
+                                    <span>{getKeystoneName(parseInt(keystoneId))}</span>
+                                    <span className="count">{count} games</span>
+                                  </div>
+                                ))
+                            )}
                           </div>
                         </div>
                       </div>
@@ -786,7 +805,7 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
                                 <div className="breakdown-list">
                                   {Object.entries(data.primary_trees).map(([tree, count], idx) => (
                                     <div key={idx} className="breakdown-item-small">
-                                      <span>{tree}</span>
+                                      <span>{formatRuneTreeName(tree)}</span>
                                       <span className="count">{count}</span>
                                     </div>
                                   ))}
@@ -798,7 +817,7 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
                                 <div className="breakdown-list">
                                   {Object.entries(data.secondary_trees).map(([tree, count], idx) => (
                                     <div key={idx} className="breakdown-item-small">
-                                      <span>{tree}</span>
+                                      <span>{formatRuneTreeName(tree)}</span>
                                       <span className="count">{count}</span>
                                     </div>
                                   ))}
@@ -808,14 +827,21 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
                               <div className="breakdown-section">
                                 <h5>Keystones</h5>
                                 <div className="breakdown-list">
-                                  {Object.entries(data.keystones)
-                                    .filter(([keystoneId]) => parseInt(keystoneId) !== 0)
-                                    .map(([keystoneId, count], idx) => (
-                                      <div key={idx} className="breakdown-item-small">
-                                        <span>{getKeystoneName(parseInt(keystoneId))}</span>
-                                        <span className="count">{count}</span>
-                                      </div>
-                                    ))}
+                                  {Object.entries(data.keystones).length === 0 ||
+                                    Object.entries(data.keystones).every(([keystoneId]) => parseInt(keystoneId) === 0) ? (
+                                    <div className="breakdown-item-small">
+                                      <span className="no-data">No Keystone</span>
+                                    </div>
+                                  ) : (
+                                    Object.entries(data.keystones)
+                                      .filter(([keystoneId]) => parseInt(keystoneId) !== 0)
+                                      .map(([keystoneId, count], idx) => (
+                                        <div key={idx} className="breakdown-item-small">
+                                          <span>{getKeystoneName(parseInt(keystoneId))}</span>
+                                          <span className="count">{count}</span>
+                                        </div>
+                                      ))
+                                  )}
                                 </div>
                               </div>
                             </div>
