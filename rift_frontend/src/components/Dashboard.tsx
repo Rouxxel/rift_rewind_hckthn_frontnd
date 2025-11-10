@@ -163,7 +163,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ puuid, onLogout }) => {
 
           <div className="section-card">
             <h3>📊 Match History</h3>
-            <p>Deep dive into your recent games with detailed insights and team composition analysis</p>
+            <p>Deep dive into your recent games with detailed insights and team composition</p>
             <button
               className="section-button"
               onClick={() => setShowMatchHistory(true)}
