@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { apiService } from '../services/api';
 import { cache, CACHE_KEYS } from '../utils/cache';
-import logo from '../assets/logo.png';
 
 interface MatchHistoryProps {
   onBack: () => void;
@@ -320,11 +319,11 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
   // Function to try different champion name formats
   const getChampionNameVariations = (championName: string): string[] => {
     const variations: string[] = [];
-    
+
     // 1. Split by capitals first (most common case): "MissFortune" -> "Miss Fortune", "KSante" -> "K Sante"
     const splitName = splitByCapitals(championName);
     variations.push(splitName);
-    
+
     // 2. If split name is different, try with apostrophes: "K Sante" -> "K'Sante"
     if (splitName !== championName) {
       const splitWithApostrophe = splitName.replace(/\s+/g, "'");
@@ -332,18 +331,18 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
         variations.push(splitWithApostrophe);
       }
     }
-    
+
     // 3. Try original name as fallback
     if (!variations.includes(championName)) {
       variations.push(championName);
     }
-    
+
     // 4. Try adding apostrophes to original: "KSante" -> "K'Sante" (without space first)
     const apostropheName = addApostrophes(championName);
     if (apostropheName !== championName && !variations.includes(apostropheName)) {
       variations.push(apostropheName);
     }
-    
+
     return variations;
   };
 
@@ -394,12 +393,12 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
           // Extract champion name from error message
           const championMatch = err.message.match(/Champion '([^']+)' not found/);
           const notFoundChampion = championMatch ? championMatch[1] : 'unknown';
-          
+
           console.log(`❌ Attempt ${attemptCount} failed: Champion '${notFoundChampion}' not found (tried: ${winningTeam.join(', ')} vs ${losingTeam.join(', ')})`);
-          
+
           // Try next combination
           const nextCombination = getNextCombination(winningIndices, losingIndices, winningVariations, losingVariations);
-          
+
           if (nextCombination) {
             return await tryNextCombination(nextCombination.winningIndices, nextCombination.losingIndices);
           } else {
@@ -466,7 +465,7 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
       if (winningTeamOriginal.length > 0 && losingTeamOriginal.length > 0 && winningTeamOriginal.length === losingTeamOriginal.length) {
         // Try to get composition with smart name resolution
         const result = await tryCompositionWithNameResolution(winningTeamOriginal, losingTeamOriginal);
-        
+
         if (result.success) {
           console.log('✅ Team composition analysis loaded:', result.response);
           setTeamComposition(result.response);
@@ -529,11 +528,11 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
           // Extract champion name from error message
           const championMatch = err.message.match(/Champion '([^']+)' not found/);
           const notFoundChampion = championMatch ? championMatch[1] : 'unknown';
-          
+
           console.log(`❌ Composition attempt ${attemptCount} failed: Champion '${notFoundChampion}' not found (tried: ${winningTeam.join(', ')} vs ${losingTeam.join(', ')})`);
-          
+
           const nextCombination = getNextCombinationHelper(winningIndices, losingIndices, winningVariations, losingVariations);
-          
+
           if (nextCombination) {
             return await tryNextCombination(nextCombination.winningIndices, nextCombination.losingIndices);
           } else {
@@ -624,7 +623,7 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
 
       // Try to get prediction with smart name resolution
       const result = await tryPredictionWithNameResolution(winningTeamOriginal, losingTeamOriginal);
-      
+
       if (result.success && result.winningTeam && result.losingTeam) {
         console.log('✅ Match prediction analysis loaded:', result.response);
         setMatchPrediction(result.response);
@@ -749,7 +748,6 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
       <div className="match-history-page">
         <div className="match-history-header">
           <div className="header-content">
-            <img src={logo} alt="Rift Rewind" className="header-logo" />
             <button onClick={onBack} className="back-button">
               Back to Dashboard
             </button>
@@ -771,7 +769,6 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
     <div className="match-history-page">
       <div className="match-history-header">
         <div className="header-content">
-          <img src={logo} alt="Rift Rewind" className="header-logo" />
           <button onClick={onBack} className="back-button">
             Back to Dashboard
           </button>
@@ -1174,11 +1171,10 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
                         <div className="predicted-winner">
                           <strong>AI Predicted Winner: {matchPrediction.prediction.predicted_winner}</strong>
                           <br />
-                          <span className={`actual-result ${
-                            matchPrediction.prediction.predicted_winner === 'Blue Team' ? 'correct' : 'incorrect'
-                          }`}>
-                            {matchPrediction.prediction.predicted_winner === 'Blue Team' 
-                              ? '✅ Prediction was CORRECT!' 
+                          <span className={`actual-result ${matchPrediction.prediction.predicted_winner === 'Blue Team' ? 'correct' : 'incorrect'
+                            }`}>
+                            {matchPrediction.prediction.predicted_winner === 'Blue Team'
+                              ? '✅ Prediction was CORRECT!'
                               : '❌ Prediction was WRONG - Blue Team actually won'
                             }
                           </span>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { apiService } from '../services/api';
+import { storage } from '../utils/storage';
 import { cache, CACHE_KEYS } from '../utils/cache';
 
 interface PredictionsProps {
@@ -50,6 +51,10 @@ export const Predictions: React.FC<PredictionsProps> = ({ onBack }) => {
   const [championSearch, setChampionSearch] = useState('');
   const [searchResults, setSearchResults] = useState<string[]>([]);
   const [selectedTeam, setSelectedTeam] = useState<'blue' | 'red'>('blue');
+
+  // User data
+  const userData = storage.getUserData();
+  const userCredentials = storage.getUserCredentials();
 
   useEffect(() => {
     // Load champions on mount (check cache first)
@@ -266,31 +271,197 @@ export const Predictions: React.FC<PredictionsProps> = ({ onBack }) => {
       setLoading(true);
       setError(null);
 
-      // Normalize champion names before sending to API
-      const normalizedBlueTeam = blueTeam.map(normalizeChampionName);
-      const normalizedRedTeam = redTeam.map(normalizeChampionName);
+      console.log('🔮 [Predictions] Starting match prediction');
+      console.log('🔵 [Predictions] Blue team:', blueTeam);
+      console.log('🔴 [Predictions] Red team:', redTeam);
+      console.log('⚙️ [Predictions] Game mode:', gameMode, '| Rank:', averageRank);
 
-      console.log('Original teams:', { blueTeam, redTeam });
-      console.log('Normalized teams:', { normalizedBlueTeam, normalizedRedTeam });
+      // Try prediction with smart name resolution
+      const result = await tryPredictionWithSmartRetry(blueTeam, redTeam);
 
-      const response = await apiService.getMatchOutcome(normalizedBlueTeam, normalizedRedTeam, gameMode, averageRank);
-      setPrediction(response);
+      if (result.success && result.response) {
+        console.log('✅ [Predictions] Prediction successful!');
+        console.log('📊 [Predictions] Result:', result.response);
+        setPrediction(result.response);
+
+        // Cache the prediction with a fixed key (always overwrites previous prediction)
+        const cacheKey = 'rift_rewind_cache_current_match_prediction';
+        const cacheData = {
+          data: result.response,
+          blue_team: result.blueTeam,
+          red_team: result.redTeam,
+          game_mode: gameMode,
+          average_rank: averageRank,
+          timestamp: Date.now(),
+          expiresIn: 30 * 60 * 1000 // 30 minutes
+        };
+        localStorage.setItem(cacheKey, JSON.stringify(cacheData));
+        console.log('💾 [Predictions] Cached current prediction:', cacheKey);
+        console.log('📦 [Predictions] Cache data:', cacheData);
+      } else {
+        throw new Error(result.error || 'Failed to predict match outcome');
+      }
     } catch (err: any) {
-      console.error('Failed to predict match:', err);
+      console.error('❌ [Predictions] Prediction failed:', err);
       setError(`Failed to predict match outcome: ${err.message}`);
     } finally {
       setLoading(false);
     }
   };
 
-  // Function to normalize champion names for API calls
-  const normalizeChampionName = (championName: string): string => {
-    // Remove apostrophes and normalize common champion name issues
-    return championName
-      .replace(/'/g, '') // Remove apostrophes: Kha'Zix -> KhaZix, Kai'Sa -> KaiSa
-      .replace(/\s+/g, '') // Remove spaces: Aurelion Sol -> AurelionSol
-      .replace(/\./g, '') // Remove dots: Dr. Mundo -> DrMundo
-      .trim();
+  // Smart retry mechanism for champion name resolution
+  const tryPredictionWithSmartRetry = async (
+    blueTeamOriginal: string[],
+    redTeamOriginal: string[]
+  ): Promise<{ success: boolean; response?: any; blueTeam?: string[]; redTeam?: string[]; error?: string }> => {
+    console.log('🔄 [Predictions] Starting smart retry mechanism');
+
+    // Generate all possible name variations for each champion
+    const blueVariations = blueTeamOriginal.map(name => getChampionNameVariations(name));
+    const redVariations = redTeamOriginal.map(name => getChampionNameVariations(name));
+
+    console.log('🎭 [Predictions] Blue team variations:', blueVariations);
+    console.log('🎭 [Predictions] Red team variations:', redVariations);
+
+    const maxAttempts = 50;
+    let attemptCount = 0;
+
+    const tryNextCombination = async (
+      blueIndices: number[],
+      redIndices: number[]
+    ): Promise<{ success: boolean; response?: any; blueTeam?: string[]; redTeam?: string[]; error?: string }> => {
+      if (attemptCount >= maxAttempts) {
+        console.error('❌ [Predictions] Max attempts reached');
+        return { success: false, error: 'Maximum retry attempts reached' };
+      }
+
+      attemptCount++;
+
+      const blueTeam = blueIndices.map((idx, i) => blueVariations[i][idx]);
+      const redTeam = redIndices.map((idx, i) => redVariations[i][idx]);
+
+      console.log(`🔄 [Predictions] Attempt ${attemptCount}:`, { blueTeam, redTeam });
+
+      try {
+        const response = await apiService.getMatchOutcome(blueTeam, redTeam, gameMode, averageRank);
+        console.log(`✅ [Predictions] Success on attempt ${attemptCount}!`);
+        return { success: true, response, blueTeam, redTeam };
+      } catch (err: any) {
+        console.warn(`⚠️ [Predictions] Attempt ${attemptCount} failed:`, err.message);
+
+        // Check if it's a rate limit error
+        if (err.status === 429 || err.message.includes('rate limit') || err.message.includes('Too Many Requests')) {
+          console.error('⚠️ [Predictions] Rate limit hit, stopping retries');
+          return { success: false, error: 'Rate limit reached. Please try again later.' };
+        }
+
+        // Check if it's a 404 (champion not found) - we can retry
+        if (err.status === 404 || err.message.includes('not found')) {
+          const championMatch = err.message.match(/Champion '([^']+)' not found/);
+          const notFoundChampion = championMatch ? championMatch[1] : 'unknown';
+
+          console.log(`❌ [Predictions] Champion '${notFoundChampion}' not found`);
+
+          // Try next combination
+          const nextCombination = getNextCombination(blueIndices, redIndices, blueVariations, redVariations);
+
+          if (nextCombination) {
+            return await tryNextCombination(nextCombination.blueIndices, nextCombination.redIndices);
+          } else {
+            return { success: false, error: `Could not resolve champion names after ${attemptCount} attempts. Last failed champion: '${notFoundChampion}'` };
+          }
+        }
+
+        // Other errors (network, server, etc.) - don't retry
+        console.error('❌ [Predictions] Non-retryable error:', err);
+        return { success: false, error: err.message };
+      }
+    };
+
+    // Helper to get next combination
+    const getNextCombination = (
+      blueIndices: number[],
+      redIndices: number[],
+      blueVars: string[][],
+      redVars: string[][]
+    ): { blueIndices: number[]; redIndices: number[] } | null => {
+      // Try incrementing blue team indices first
+      const newBlueIndices = [...blueIndices];
+      for (let i = newBlueIndices.length - 1; i >= 0; i--) {
+        if (newBlueIndices[i] < blueVars[i].length - 1) {
+          newBlueIndices[i]++;
+          return { blueIndices: newBlueIndices, redIndices };
+        } else {
+          newBlueIndices[i] = 0;
+        }
+      }
+
+      // If all blue combinations exhausted, try next red combination
+      const newRedIndices = [...redIndices];
+      for (let i = newRedIndices.length - 1; i >= 0; i--) {
+        if (newRedIndices[i] < redVars[i].length - 1) {
+          newRedIndices[i]++;
+          return { blueIndices: Array(blueIndices.length).fill(0), redIndices: newRedIndices };
+        } else {
+          newRedIndices[i] = 0;
+        }
+      }
+
+      // All combinations exhausted
+      return null;
+    };
+
+    // Start with all indices at 0 (first variation for each champion)
+    const initialBlueIndices = Array(blueTeamOriginal.length).fill(0);
+    const initialRedIndices = Array(redTeamOriginal.length).fill(0);
+
+    return await tryNextCombination(initialBlueIndices, initialRedIndices);
+  };
+
+  // Generate champion name variations
+  const getChampionNameVariations = (championName: string): string[] => {
+    console.log('🔍 [Predictions] Generating variations for:', championName);
+    const variations: string[] = [];
+
+    // 1. Original name
+    variations.push(championName);
+
+    // 2. Remove all spaces and special characters (ChoGath, KhaZix)
+    const noSpaces = championName.replace(/[\s'.-]/g, '');
+    if (noSpaces !== championName) {
+      variations.push(noSpaces);
+    }
+
+    // 3. Add space before capital letters (Cho Gath, Kha Zix)
+    const withSpaces = championName.replace(/([a-z])([A-Z])/g, '$1 $2');
+    if (withSpaces !== championName && !variations.includes(withSpaces)) {
+      variations.push(withSpaces);
+    }
+
+    // 4. Add apostrophe before capital letters (Cho'Gath, Kha'Zix)
+    const withApostrophe = championName.replace(/([a-z])([A-Z])/g, "$1'$2");
+    if (withApostrophe !== championName && !variations.includes(withApostrophe)) {
+      variations.push(withApostrophe);
+    }
+
+    // 5. If name has spaces, try without spaces
+    if (championName.includes(' ')) {
+      const noSpace = championName.replace(/\s+/g, '');
+      if (!variations.includes(noSpace)) {
+        variations.push(noSpace);
+      }
+    }
+
+    // 6. If name has apostrophe, try without it
+    if (championName.includes("'")) {
+      const noApostrophe = championName.replace(/'/g, '');
+      if (!variations.includes(noApostrophe)) {
+        variations.push(noApostrophe);
+      }
+    }
+
+    console.log('✨ [Predictions] Generated variations:', variations);
+    return variations;
   };
 
   const clearTeams = () => {
@@ -315,6 +486,7 @@ export const Predictions: React.FC<PredictionsProps> = ({ onBack }) => {
           </button>
           <div className="header-center">
             <h2>🔮 Match Predictions & Analytics</h2>
+            <p>{userData?.gameName}#{userData?.tagLine}</p>
           </div>
           <div className="header-spacer"></div>
         </div>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { apiService } from '../services/api';
+import { storage } from '../utils/storage';
 import { ChampionDetails } from './ChampionDetails';
 import { ItemDetails } from './ItemDetails';
 import { cache, CACHE_KEYS } from '../utils/cache';
@@ -44,6 +45,10 @@ export const GameAssets: React.FC<GameAssetsProps> = ({ onBack }) => {
   const [selectedItemForDetails, setSelectedItemForDetails] = useState<string | null>(null);
   const [championsLoaded, setChampionsLoaded] = useState(false);
   const [itemsLoaded, setItemsLoaded] = useState(false);
+
+  // User data
+  const userData = storage.getUserData();
+  const userCredentials = storage.getUserCredentials();
 
   useEffect(() => {
     // Load both champions and items when component mounts (check cache first)
@@ -138,6 +143,7 @@ export const GameAssets: React.FC<GameAssetsProps> = ({ onBack }) => {
           </button>
           <div className="header-center">
             <h2>🎮 Game Assets Explorer</h2>
+            <p>{userData?.gameName}#{userData?.tagLine}</p>
           </div>
           <div className="header-spacer"></div>
         </div>

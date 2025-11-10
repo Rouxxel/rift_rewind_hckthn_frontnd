@@ -247,4 +247,24 @@ export const apiService = {
       body: JSON.stringify(body),
     });
   },
+
+  // AI Assistant API methods
+  // Get AI response for chat
+  getAIResponse: async (
+    prompt: string,
+    contextData?: any,
+    conversationHistory?: Array<{ role: string; content: string }>
+  ) => {
+    const body: any = {
+      prompt
+    };
+
+    if (contextData) body.context_data = contextData;
+    if (conversationHistory) body.conversation_history = conversationHistory;
+
+    return apiRequest('/ai/generate_ai_response', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+  },
 };

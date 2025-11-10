@@ -5,6 +5,7 @@ import { GameAssets } from './GameAssets';
 import { Predictions } from './Predictions';
 import { MatchHistory } from './MatchHistory';
 import { PerformanceAnalysis } from './PerformanceAnalysis';
+import { AIAssistant } from './AIAssistant';
 import type { RiotUser } from '../types/user';
 import logo from '../assets/logo.png';
 
@@ -73,22 +74,42 @@ export const Dashboard: React.FC<DashboardProps> = ({ puuid, onLogout }) => {
 
   // If showing Game Assets, render that instead of the dashboard
   if (showGameAssets) {
-    return <GameAssets onBack={() => setShowGameAssets(false)} />;
+    return (
+      <>
+        <GameAssets onBack={() => setShowGameAssets(false)} />
+        <AIAssistant currentPage="game-assets" />
+      </>
+    );
   }
 
   // If showing Predictions, render that instead of the dashboard
   if (showPredictions) {
-    return <Predictions onBack={() => setShowPredictions(false)} />;
+    return (
+      <>
+        <Predictions onBack={() => setShowPredictions(false)} />
+        <AIAssistant currentPage="predictions" />
+      </>
+    );
   }
 
   // If showing Match History, render that instead of the dashboard
   if (showMatchHistory) {
-    return <MatchHistory onBack={() => setShowMatchHistory(false)} />;
+    return (
+      <>
+        <MatchHistory onBack={() => setShowMatchHistory(false)} />
+        <AIAssistant currentPage="match-history" />
+      </>
+    );
   }
 
   // If showing Performance Analysis, render that instead of the dashboard
   if (showPerformanceAnalysis) {
-    return <PerformanceAnalysis onBack={() => setShowPerformanceAnalysis(false)} />;
+    return (
+      <>
+        <PerformanceAnalysis onBack={() => setShowPerformanceAnalysis(false)} />
+        <AIAssistant currentPage="performance" />
+      </>
+    );
   }
 
   if (loading) {
@@ -221,6 +242,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ puuid, onLogout }) => {
           </div>
         )}
       </div>
+
+      <AIAssistant currentPage="dashboard" />
     </div>
   );
 };
