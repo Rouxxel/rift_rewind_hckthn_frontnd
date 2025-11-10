@@ -13,6 +13,9 @@ services:
     restart: unless-stopped
     networks:
       - rift-rewind-network
+    # Uncomment if running backend in Docker (Option B)
+    # depends_on:
+    #   - backend
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
       interval: 30s
