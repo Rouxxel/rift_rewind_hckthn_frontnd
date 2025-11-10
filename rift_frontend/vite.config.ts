@@ -7,7 +7,8 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://rift-rewind-hckthn-backend.onrender.com',
+        // Use environment variable or fallback to localhost
+        target: process.env.VITE_API_BASE_URL || 'http://localhost:8000',
         changeOrigin: true,
         rewrite: (path) => {
           // Strip /api prefix - backend doesn't expect it
@@ -15,7 +16,7 @@ export default defineConfig({
           console.log(`Proxying ${path} -> ${newPath}`);
           return newPath;
         },
-        secure: true,
+        secure: false, // Set to false for localhost, true for https
         configure: (proxy) => {
           proxy.on('error', (err) => {
             console.log('Proxy error:', err);

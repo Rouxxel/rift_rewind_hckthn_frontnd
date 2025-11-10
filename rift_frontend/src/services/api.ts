@@ -12,8 +12,112 @@ export class ApiError extends Error {
   }
 }
 
+// Smart backend URL detection with fallback
+let cachedBackendURL: string | null = null;
+
+// Export function to reset backend detection (useful for testing)
+export const resetBackendURL = () => {
+  console.log('🔄 Resetting backend URL cache');
+  cachedBackendURL = null;
+};
+
+const getBackendURL = async (): Promise<string> => {
+  // If we already found a working backend, use it
+  if (cachedBackendURL) {
+    return cachedBackendURL;
+  }
+
+  // Check localStorage for previously working backend
+  try {
+    const storedURL = localStorage.getItem('rift_backend_url');
+    if (storedURL) {
+      console.log(`💾 Trying cached backend: ${storedURL}`);
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        
+        const response = await fetch(`${storedURL}/`, {
+          method: 'GET',
+          signal: controller.signal,
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (response.ok) {
+          console.log(`✅ Cached backend still works: ${storedURL}`);
+          cachedBackendURL = storedURL;
+          return storedURL;
+        }
+      } catch (e) {
+        console.log(`❌ Cached backend no longer works, trying alternatives...`);
+        localStorage.removeItem('rift_backend_url');
+      }
+    }
+  } catch (e) {
+    // Ignore localStorage errors
+  }
+
+  // List of backend URLs to try (in order of preference)
+  // Priority: Render backend (most likely) → localhost (for local dev)
+  const backendURLs = [
+    'https://rift-rewind-hckthn-backend.onrender.com', // Production backend (try first)
+    'http://localhost:8000',                            // Local backend (fallback for dev)
+    import.meta.env.VITE_API_BASE_URL,                 // Environment variable (last resort)
+  ].filter((url, index, self) => url && self.indexOf(url) === index); // Remove duplicates and undefined
+
+  console.log('🔍 Detecting available backend...');
+
+  // Try each backend URL
+  for (const url of backendURLs) {
+    try {
+      console.log(`⏳ Trying backend: ${url}`);
+      const controller = new AbortController();
+      
+      // Longer timeout for Render (cold start can take ~30s)
+      const timeout = url.includes('render.com') ? 35000 : 3000;
+      const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+      const response = await fetch(`${url}/`, {
+        method: 'GET',
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (response.ok) {
+        console.log(`✅ Backend found at: ${url}`);
+        cachedBackendURL = url;
+        
+        // Store in localStorage for faster subsequent loads
+        try {
+          localStorage.setItem('rift_backend_url', url);
+        } catch (e) {
+          // Ignore localStorage errors
+        }
+        
+        return url;
+      }
+    } catch (error: any) {
+      if (error.name === 'AbortError') {
+        console.log(`⏱️ Backend timeout at: ${url}`);
+      } else {
+        console.log(`❌ Backend not available at: ${url}`);
+      }
+      // Continue to next URL
+    }
+  }
+
+  // If no backend is available, use the configured one and let it fail naturally
+  const fallbackURL = API_CONFIG.baseURL;
+  console.warn(`⚠️ No backend detected, using fallback: ${fallbackURL}`);
+  cachedBackendURL = fallbackURL;
+  return fallbackURL;
+};
+
 const apiRequest = async (endpoint: string, options: RequestInit = {}): Promise<any> => {
-  const url = `${API_CONFIG.baseURL}${endpoint}`;
+  // Get the working backend URL (with smart detection)
+  const baseURL = await getBackendURL();
+  const url = `${baseURL}${endpoint}`;
   
   const defaultOptions: RequestInit = {
     mode: 'cors',
