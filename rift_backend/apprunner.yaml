@@ -1,0 +1,25 @@
+version: 1.0
+runtime: python3
+build:
+  commands:
+    build:
+      - echo "Installing dependencies for App Runner"
+      - pip install --upgrade pip
+      - pip install -r requirements.txt
+      - echo "Build completed successfully"
+  env:
+    - name: PYTHONUNBUFFERED
+      value: "1"
+run:
+  runtime-version: 3.12
+  command: uvicorn main:app --host 0.0.0.0 --port 8000 --workers 2
+  network:
+    port: 8000
+    env: PORT
+  env:
+    - name: RIOT_API_KEY
+      value: "RGAPI-f5cd07fb-64c4-473d-a1fa-23c193d1a793"
+    - name: PYTHONPATH
+      value: "/app"
+    - name: PYTHONUNBUFFERED
+      value: "1"

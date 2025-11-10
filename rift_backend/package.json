@@ -1,0 +1,20 @@
+{
+  "name": "rift-rewind-backend",
+  "version": "1.0.0",
+  "description": "Serverless deployment configuration for Rift Rewind Backend",
+  "main": "lambda_handler.py",
+  "scripts": {
+    "deploy": "serverless deploy",
+    "deploy-dev": "serverless deploy --stage dev",
+    "deploy-prod": "serverless deploy --stage prod",
+    "remove": "serverless remove",
+    "logs": "serverless logs -f api -t",
+    "info": "serverless info"
+  },
+  "devDependencies": {
+    "serverless": "^3.38.0",
+    "serverless-python-requirements": "^6.0.0"
+  },
+  "author": "Sebastian Russo",
+  "license": "MIT"
+}

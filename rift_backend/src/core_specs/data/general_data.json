@@ -1,0 +1,151 @@
+{
+    "metadata": {
+        "hackathon": "rift-rewind-2025",
+        "maintainer": "Sebastian Russo",
+        "data_dragon": {
+            "items_url_template": "https://ddragon.leagueoflegends.com/cdn/{version}/data/{language}/item.json",
+            "latest_versions_url": "https://ddragon.leagueoflegends.com/api/versions.json",
+            "latest_versions": "15.19.1",
+            "chosen_lang": "en_US",
+            "languages_supported": [
+                "en_US",
+                "es_ES",
+                "fr_FR",
+                "de_DE",
+                "ko_KR"
+            ],
+            "working_url_item": "https://ddragon.leagueoflegends.com/cdn/15.19.1/data/en_US/item.json",
+            "working_url_chmp": "https://ddragon.leagueoflegends.com/cdn/15.19.1/data/en_US/champion.json",
+            "note": "Replace {version} with patch version (e.g., 15.19.1) and {language} with desired language code."
+        }
+    },
+    "regions": {
+        "regional_routings": [
+            "americas",
+            "europe",
+            "asia",
+            "sea"
+        ],
+        "platform_regions": [
+            "na1",
+            "br1",
+            "la1",
+            "la2",
+            "euw1",
+            "eun1",
+            "tr1",
+            "ru",
+            "kr",
+            "jp1",
+            "oc1",
+            "ph2",
+            "sg2",
+            "th2",
+            "tw2",
+            "vn2"
+        ],
+        "americas": {
+            "platforms": [
+                "BR1",
+                "LA1",
+                "LA2",
+                "NA1"
+            ],
+            "description": "North and South America regions (Brazil, LAN, LAS, NA).",
+            "timezone": "America/New_York",
+            "rate_limit": {
+                "requests_per_second": 20
+            },
+            "regional_host": "https://americas.api.riotgames.com"
+        },
+        "europe": {
+            "platforms": [
+                "EUN1",
+                "EUW1",
+                "RU",
+                "TR1"
+            ],
+            "description": "Europe regions (EUW, EUNE, Russia, Turkey).",
+            "timezone": "Europe/Berlin",
+            "rate_limit": {
+                "requests_per_second": 20
+            },
+            "regional_host": "https://europe.api.riotgames.com"
+        },
+        "asia": {
+            "platforms": [
+                "KR",
+                "JP1"
+            ],
+            "description": "Asia regions (Korea, Japan).",
+            "timezone": "Asia/Seoul",
+            "rate_limit": {
+                "requests_per_second": 20
+            },
+            "regional_host": "https://asia.api.riotgames.com"
+        },
+        "sea": {
+            "platforms": [
+                "OC1",
+                "PH2",
+                "SG2",
+                "TH2",
+                "TW2",
+                "VN2"
+            ],
+            "description": "Southeast Asia and Oceania regions (OCE, PH, SG, TH, TW, VN).",
+            "timezone": "Asia/Singapore",
+            "rate_limit": {
+                "requests_per_second": 20
+            },
+            "regional_host": "https://sea.api.riotgames.com"
+        }
+    },
+    "queue_types": {
+        "ranked": [
+            420,
+            440
+        ],
+        "normal": [
+            430
+        ],
+        "aram": [
+            450
+        ]
+    },
+    "languages": [
+        "en_US",
+        "es_ES",
+        "fr_FR",
+        "de_DE",
+        "ko_KR"
+    ],
+    "available_gemini_models":[
+        "gemini-2.5-pro",
+        "gemini-2.5-flash",
+        "gemini-2.5-flash-lite-preview-06-17",
+        "gemini-2.5-flash-preview-native-audio-dialog",
+        "gemini-2.5-flash-exp-native-audio-thinking-dialog",
+        "gemini-2.5-flash-preview-tts",
+        "gemini-2.5-pro-preview-tts",
+        "gemini-live-2.5-flash-preview",
+        "gemini-2.0-flash",
+        "gemini-2.0-flash-preview-image-generation",
+        "gemini-2.0-flash-lite",
+        "gemini-2.0-flash-lite",
+        "gemini-2.0-flash-live-001",
+        "gemini-1.5-flash",
+        "gemini-1.5-flash-8b",
+        "gemini-1.5-pro",
+        "gemini-embedding-exp",
+        "imagen-4.0-generate-preview-06-06",
+        "imagen-4.0-ultra-generate-preview-06-06",
+        "imagen-4.0-ultra-generate-preview-06-06",
+        "imagen-3.0-generate-002",
+        "veo-2.0-generate-001"
+    ],
+    "available_chatgpt_models":[],
+    "available_claude_models":[],
+    "available_xai_models":[],
+    "available_mistral_models":[]
+}

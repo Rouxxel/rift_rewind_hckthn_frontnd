@@ -1,0 +1,33 @@
+#Byte-compiled / cache files
+__pycache__/
+*.pyc
+*.py[cod]
+*$py.class
+echo '__pycache__/\n*.pyc\n*.log\n.env\ngit\n.gitignore' > .dockerignore
+
+#Virtual environment
+venv/
+.env/
+.env.*
+
+#macOS files
+.DS_Store
+
+#Git
+.git/
+.gitignore
+
+#Docker files themselves
+Dockerfile
+.dockerignore
+
+#IDE/editor folders
+.vscode/
+.idea/
+
+#Logs
+*.log
+logs/
+
+#Test folders
+tests/

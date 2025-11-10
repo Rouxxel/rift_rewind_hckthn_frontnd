@@ -1,0 +1,160 @@
+{
+    "defaults":{
+        "ai_model":"gemini-2.0-flash",
+        "ai_response_time.s":10.0,
+        "general_data_path":"src/data/general_data.json"
+    },
+    
+    "logging":{
+        "logging_level":"debug",
+        "dir_name":"logs",
+        "log_file_name":"rift_analyzer_bcknd"
+    },
+    "email_validation":{
+        "allowed_providers":["gmail","outlook","yahoo","hotmail","icloud","protonmail","aol","zoho","gmx","mail"],
+        "allowed_tlds":["com", "org", "net", "co", "io", "edu", "gov"]
+    },
+
+    "network":{
+        "uvicorn_app_reference": "main:app",
+        "server_port":8000,
+        "host": "0.0.0.0",
+        "reload": false,
+        "workers": 1,
+        "proxy_headers": true
+    },
+
+    "endpoints": {
+        "root_directory_endpoint":{
+            "request_limit":25,
+            "unit_of_time_for_limit":"m",
+            "endpoint_prefix": "",
+            "endpoint_tag":"root",
+            "endpoint_route": "/"
+        },
+        
+        "get_puuid_endpoint": {
+            "request_limit": 3,
+            "unit_of_time_for_limit": "m",
+            "endpoint_prefix": "/user",
+            "endpoint_tag": "user",
+            "endpoint_route": "/get_riot_puuid"
+        },
+        "get_match_ids_by_puuid_endpoint":{
+            "endpoint_prefix": "/user",
+            "endpoint_route": "/get_lol_match_ids",
+            "endpoint_tag": "user",
+            "request_limit": 8,
+            "unit_of_time_for_limit": "minute"
+        },
+        "get_summoner_info_endpoint": {
+            "request_limit": 5,
+            "unit_of_time_for_limit": "minute",
+            "endpoint_prefix": "/user",
+            "endpoint_tag": "user",
+            "endpoint_route": "/get_summoner_info"
+        },
+        "get_champion_mastery_endpoint": {
+            "endpoint_prefix": "/user",
+            "endpoint_route": "/get_champion_mastery",
+            "endpoint_tag": "user",
+            "request_limit": 10,
+            "unit_of_time_for_limit": "minute"
+        },
+        "get_ranked_stats_endpoint": {
+            "request_limit": 8,
+            "unit_of_time_for_limit": "minute",
+            "endpoint_prefix": "/user",
+            "endpoint_tag": "user",
+            "endpoint_route": "/get_ranked_stats"
+        },
+
+        "get_match_details_by_id_endpoint": {
+            "request_limit": 10,
+            "unit_of_time_for_limit": "m",
+            "endpoint_prefix": "/match",
+            "endpoint_tag": "match",
+            "endpoint_route": "/get_lol_match_details"
+        },
+        "get_match_participants_info_endpoint": {
+            "request_limit": 10,
+            "unit_of_time_for_limit": "minute",
+            "endpoint_prefix": "/match",
+            "endpoint_tag": "match",
+            "endpoint_route": "/get_lol_match_participants_info"
+        },
+
+        "get_champions_endpoint": {
+            "request_limit": 10,
+            "unit_of_time_for_limit": "minute",
+            "endpoint_prefix": "/game_assets",
+            "endpoint_tag": "game_assets",
+            "endpoint_route": "/get_lol_champions"
+        },
+        "get_items_endpoint": {
+            "request_limit": 10,
+            "unit_of_time_for_limit": "minute",
+            "endpoint_prefix": "/game_assets",
+            "endpoint_tag": "game_assets",
+            "endpoint_route": "/get_lol_items"
+        },
+
+        "get_match_timeline_endpoint": {
+            "request_limit": 5,
+            "unit_of_time_for_limit": "minute",
+            "endpoint_prefix": "/match",
+            "endpoint_tag": "match",
+            "endpoint_route": "/get_match_timeline"
+        },
+        "get_player_performance_endpoint": {
+            "request_limit": 3,
+            "unit_of_time_for_limit": "minute",
+            "endpoint_prefix": "/analytics",
+            "endpoint_tag": "analytics",
+            "endpoint_route": "/get_player_performance"
+        },
+        "get_champion_winrates_endpoint": {
+            "request_limit": 35,
+            "unit_of_time_for_limit": "minute",
+            "endpoint_prefix": "/analytics",
+            "endpoint_tag": "analytics",
+            "endpoint_route": "/get_champion_winrates"
+        },
+        "get_match_outcome_endpoint": {
+            "request_limit": 5,
+            "unit_of_time_for_limit": "minute",
+            "endpoint_prefix": "/predictions",
+            "endpoint_tag": "predictions",
+            "endpoint_route": "/get_match_outcome"
+        },
+        "get_team_composition_endpoint": {
+            "request_limit": 5,
+            "unit_of_time_for_limit": "minute",
+            "endpoint_prefix": "/analysis",
+            "endpoint_tag": "analysis",
+            "endpoint_route": "/get_team_composition"
+        },
+        "get_runes_masteries_endpoint": {
+            "request_limit": 10,
+            "unit_of_time_for_limit": "minute",
+            "endpoint_prefix": "/user",
+            "endpoint_tag": "user",
+            "endpoint_route": "/get_runes_masteries"
+        },
+        "get_summoner_spells_analysis_endpoint": {
+            "request_limit": 8,
+            "unit_of_time_for_limit": "minute",
+            "endpoint_prefix": "/user",
+            "endpoint_tag": "user",
+            "endpoint_route": "/get_summoner_spells_analysis"
+        },
+
+        "ai_model_call_endpoint":{
+            "request_limit":20,
+            "unit_of_time_for_limit":"m",
+            "endpoint_prefix":"/ai",
+            "endpoint_tag":"ai",
+            "endpoint_route":"/generate_ai_response"
+        }
+    }
+}

@@ -1,0 +1,21 @@
+version: "3.9"
+services:
+  backend:
+    build: .
+    container_name: rift_rewind_backend
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --workers 4
+    env_file: .env
+    ports:
+      - "8000:8000"
+    restart: always
+    # depends_on:
+    #   - redis  #just in case to add Redis for caching or Celery
+    # volumes:
+    #   - .:/app  #just in case for live code reload during dev
+
+  # redis:
+  #   image: redis:alpine
+  #   container_name: rift_redis
+  #   ports:
+  #     - "6379:6379"
+  #   restart: always

@@ -1,0 +1,60 @@
+{
+  "family": "rift-rewind-backend",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": [
+    "FARGATE"
+  ],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::YOUR_ACCOUNT_ID:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::YOUR_ACCOUNT_ID:role/ecsTaskRole",
+  "containerDefinitions": [
+    {
+      "name": "rift-rewind-backend",
+      "image": "YOUR_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/rift-rewind-backend:latest",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 8000,
+          "protocol": "tcp",
+          "name": "http"
+        }
+      ],
+      "environment": [
+        {
+          "name": "PYTHONUNBUFFERED",
+          "value": "1"
+        },
+        {
+          "name": "PYTHONPATH",
+          "value": "/app"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "RIOT_API_KEY",
+          "valueFrom": "arn:aws:ssm:us-east-1:YOUR_ACCOUNT_ID:parameter/rift-rewind/riot-api-key"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/rift-rewind-backend",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "ecs",
+          "awslogs-create-group": "true"
+        }
+      },
+      "healthCheck": {
+        "command": [
+          "CMD-SHELL",
+          "curl -f http://localhost:8000/ || exit 1"
+        ],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 60
+      }
+    }
+  ]
+}
