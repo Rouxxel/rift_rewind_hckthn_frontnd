@@ -3,6 +3,7 @@ import { REGIONS } from '../config/api';
 import type { UserCredentials } from '../types/user';
 import { apiService } from '../services/api';
 import { storage } from '../utils/storage';
+import logo from '../assets/logo.png';
 
 interface UserAuthProps {
   onAuthSuccess: (puuid: string) => void;
@@ -66,6 +67,7 @@ export const UserAuth: React.FC<UserAuthProps> = ({ onAuthSuccess }) => {
   return (
     <div className="auth-container">
       <div className="auth-card">
+        <img src={logo} alt="Rift Rewind" className="auth-logo" />
         <h1>Rift Rewind Coach</h1>
         <p>Enter your Riot ID to get personalized coaching insights</p>
         

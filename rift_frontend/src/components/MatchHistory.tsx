@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { apiService } from '../services/api';
 import { cache, CACHE_KEYS } from '../utils/cache';
+import logo from '../assets/logo.png';
 
 interface MatchHistoryProps {
   onBack: () => void;
@@ -748,6 +749,7 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
       <div className="match-history-page">
         <div className="match-history-header">
           <div className="header-content">
+            <img src={logo} alt="Rift Rewind" className="header-logo" />
             <button onClick={onBack} className="back-button">
               Back to Dashboard
             </button>
@@ -769,6 +771,7 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
     <div className="match-history-page">
       <div className="match-history-header">
         <div className="header-content">
+          <img src={logo} alt="Rift Rewind" className="header-logo" />
           <button onClick={onBack} className="back-button">
             Back to Dashboard
           </button>

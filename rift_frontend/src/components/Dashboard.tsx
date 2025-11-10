@@ -6,6 +6,7 @@ import { Predictions } from './Predictions';
 import { MatchHistory } from './MatchHistory';
 import { PerformanceAnalysis } from './PerformanceAnalysis';
 import type { RiotUser } from '../types/user';
+import logo from '../assets/logo.png';
 
 interface DashboardProps {
   puuid: string;
@@ -117,6 +118,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ puuid, onLogout }) => {
   return (
     <div className="dashboard">
       <header className="dashboard-header">
+        <img src={logo} alt="Rift Rewind" className="header-logo" />
         <div className="user-info">
           <h1>Welcome, {userData?.gameName} #{userData?.tagLine}</h1>
           {summonerInfo && (

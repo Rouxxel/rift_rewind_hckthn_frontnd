@@ -159,6 +159,22 @@
   align-items: center;
 }
 
+/* Logo Styles */
+.header-logo {
+  height: 40px;
+  width: auto;
+  margin-right: 1rem;
+  object-fit: contain;
+}
+
+.auth-logo {
+  height: 80px;
+  width: auto;
+  margin: 0 auto 1.5rem;
+  display: block;
+  object-fit: contain;
+}
+
 .user-info h1 {
   color: #c89b3c;
   margin: 0 0 0.5rem 0;
