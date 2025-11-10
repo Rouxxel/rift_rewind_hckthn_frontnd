@@ -34,23 +34,144 @@
 .auth-container {
   min-height: 100vh;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, #0a1428 0%, #1e2328 100%);
-  padding: 2rem;
+  padding: 3rem 2rem;
+  overflow-y: auto;
 }
 
+/* Landing Hero Section */
+.landing-hero {
+  text-align: center;
+  margin-bottom: 3rem;
+  animation: fadeInDown 0.8s ease-out;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hero-logo {
+  width: auto;
+  height: 120px;
+  max-width: 90%;
+  margin-bottom: 1.5rem;
+  filter: drop-shadow(0 4px 12px rgba(200, 155, 60, 0.4));
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.hero-title {
+  color: #c89b3c;
+  font-size: 3.5rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 2px 8px rgba(200, 155, 60, 0.3);
+}
+
+.hero-subtitle {
+  color: #f0e6d2;
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  font-weight: 500;
+}
+
+.hero-description {
+  color: #a09b8c;
+  font-size: 1.1rem;
+  max-width: 600px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+/* Features Grid */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  max-width: 1200px;
+  width: 100%;
+  margin-bottom: 3rem;
+  animation: fadeInUp 0.8s ease-out 0.2s both;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.feature-card {
+  background: linear-gradient(145deg, #1e2328 0%, #2a2d35 100%);
+  border: 2px solid #463714;
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  transition: all 0.3s ease;
+  cursor: default;
+}
+
+.feature-card:hover {
+  transform: translateY(-5px);
+  border-color: #c89b3c;
+  box-shadow: 0 8px 24px rgba(200, 155, 60, 0.2);
+}
+
+.feature-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.feature-card h3 {
+  color: #c89b3c;
+  font-size: 1.3rem;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+}
+
+.feature-card p {
+  color: #a09b8c;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Auth Card */
 .auth-card {
   background: linear-gradient(145deg, #1e2328 0%, #3c3c41 100%);
   border: 2px solid #463714;
   border-radius: 12px;
   padding: 2.5rem;
-  max-width: 400px;
+  max-width: 450px;
   width: 100%;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  animation: fadeInUp 0.8s ease-out 0.4s both;
 }
 
-.auth-card h1 {
+.auth-card h2 {
   color: #c89b3c;
   text-align: center;
   margin-bottom: 0.5rem;
@@ -58,10 +179,25 @@
   font-weight: bold;
 }
 
-.auth-card p {
+.auth-card-subtitle {
   color: #a09b8c;
   text-align: center;
   margin-bottom: 2rem;
+  font-size: 0.95rem;
+}
+
+.auth-footer {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #463714;
+  text-align: center;
+}
+
+.auth-footer p {
+  color: #5bc0de;
+  font-size: 0.85rem;
+  margin: 0;
+  line-height: 1.6;
 }
 
 /* Form Styles */
@@ -5122,6 +5258,28 @@ gend */
     bottom: 1rem;
     right: 1rem;
   }
+
+  /* Landing page responsive */
+  .hero-title {
+    font-size: 2.5rem;
+  }
+
+  .hero-subtitle {
+    font-size: 1.2rem;
+  }
+
+  .hero-description {
+    font-size: 1rem;
+  }
+
+  .features-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .auth-card {
+    padding: 2rem;
+  }
 }
 
 @media (max-height: 700px) {
@@ -5143,6 +5301,53 @@ gend */
     bottom: 0.5rem;
     width: 50px;
     height: 50px;
+    font-size: 1.5rem;
+  }
+
+  /* Landing page mobile */
+  .auth-container {
+    padding: 2rem 1rem;
+  }
+
+  .hero-logo {
+    width: auto;
+    height: 80px;
+    max-width: 90%;
+  }
+
+  .hero-title {
+    font-size: 2rem;
+  }
+
+  .hero-subtitle {
+    font-size: 1rem;
+  }
+
+  .hero-description {
+    font-size: 0.9rem;
+  }
+
+  .feature-card {
+    padding: 1.5rem;
+  }
+
+  .feature-icon {
+    font-size: 2.5rem;
+  }
+
+  .feature-card h3 {
+    font-size: 1.1rem;
+  }
+
+  .feature-card p {
+    font-size: 0.9rem;
+  }
+
+  .auth-card {
+    padding: 1.5rem;
+  }
+
+  .auth-card h2 {
     font-size: 1.5rem;
   }
 }

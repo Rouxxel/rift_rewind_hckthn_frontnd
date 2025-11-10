@@ -34,14 +34,14 @@ export const UserAuth: React.FC<UserAuthProps> = ({ onAuthSuccess }) => {
 
       // Call API to get PUUID
       const userData = await apiService.getRiotPuuid(formData);
-      
+
       // Save to localStorage
       storage.saveUserCredentials(formData);
       storage.saveUserData(userData);
-      
+
       // Notify parent component
       onAuthSuccess(userData.puuid);
-      
+
     } catch (err: any) {
       console.error('Authentication failed:', err);
       if (err.status === 404) {
@@ -66,11 +66,48 @@ export const UserAuth: React.FC<UserAuthProps> = ({ onAuthSuccess }) => {
 
   return (
     <div className="auth-container">
+      {/* Hero Section */}
+      <div className="landing-hero">
+        <img src={logo} alt="Rift Rewind" className="hero-logo" />
+        <h1 className="hero-title">Rift Rewind</h1>
+        <p className="hero-subtitle">Your AI-Powered League of Legends Coach</p>
+        <p className="hero-description">
+          Unlock comprehensive performance analysis, match predictions, and AI-powered insights to elevate your gameplay
+        </p>
+      </div>
+
+      {/* Features Grid */}
+      <div className="features-grid">
+        <div className="feature-card">
+          <div className="feature-icon">🎯</div>
+          <h3>Performance Analysis</h3>
+          <p>Track champion mastery, summoner spells, and rune choices with detailed win rate breakdowns</p>
+        </div>
+
+        <div className="feature-card">
+          <div className="feature-icon">📊</div>
+          <h3>Match History</h3>
+          <p>Deep dive into your games with team composition analysis, timelines, and AI predictions</p>
+        </div>
+
+        <div className="feature-card">
+          <div className="feature-icon">🔮</div>
+          <h3>Match Predictions</h3>
+          <p>Get AI-powered predictions for custom team compositions and real-time champion winrates</p>
+        </div>
+
+        <div className="feature-card">
+          <div className="feature-icon">🤖</div>
+          <h3>AI Assistant</h3>
+          <p>Context-aware chatbot that helps you understand your data and navigate the platform</p>
+        </div>
+      </div>
+
+      {/* Login Card */}
       <div className="auth-card">
-        <img src={logo} alt="Rift Rewind" className="auth-logo" />
-        <h1>Rift Rewind Coach</h1>
-        <p>Enter your Riot ID to get personalized coaching insights</p>
-        
+        <h2>Get Started</h2>
+        <p className="auth-card-subtitle">Enter your Riot ID to unlock personalized coaching insights</p>
+
         <form onSubmit={handleSubmit} className="auth-form">
           <div className="form-group">
             <label htmlFor="gameName">Game Name</label>
@@ -124,14 +161,18 @@ export const UserAuth: React.FC<UserAuthProps> = ({ onAuthSuccess }) => {
             </div>
           )}
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className="submit-button"
             disabled={loading}
           >
             {loading ? 'Connecting...' : 'Start Coaching'}
           </button>
         </form>
+
+        <div className="auth-footer">
+          <p>🎮 Free to use • 🔒 Secure • ⚡ Powered by Riot Games API & Google Gemini AI</p>
+        </div>
       </div>
     </div>
   );
