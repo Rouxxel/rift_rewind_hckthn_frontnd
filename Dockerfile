@@ -14,7 +14,10 @@ RUN npm ci --only=production
 # Copy source code
 COPY rift_frontend/ ./
 
-# Build the application
+# Copy environment file for Docker builds
+COPY rift_frontend/.env.docker .env.production
+
+# Build the application (will use .env.production)
 RUN npm run build
 
 # Stage 2: Serve with Nginx

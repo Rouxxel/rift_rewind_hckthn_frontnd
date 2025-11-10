@@ -11,12 +11,11 @@ build
 rift_frontend/dist
 rift_frontend/build
 
-# Environment files
+# Environment files (allow .env.docker for Docker builds)
 .env
 .env.local
 .env.development
-.env.production
-*.env
+!rift_frontend/.env.docker
 
 # Git
 .git
