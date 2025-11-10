@@ -65,6 +65,21 @@
 - Python 3.9+
 - Riot Games API Key
 - Google Gemini API Key
+- Docker (optional, for containerized deployment)
+
+### Quick Start with Docker 🐳
+
+The fastest way to get started:
+
+```bash
+# Build and run with Docker Compose
+docker-compose up -d
+
+# Access the application
+open http://localhost:3000
+```
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed Docker instructions.
 
 ### Frontend Setup
 
@@ -197,6 +212,40 @@ Automatically handles champion names with special characters:
 
 ---
 
+## 🐳 Docker Deployment
+
+### Quick Start
+
+```bash
+# Build and run
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop
+docker-compose down
+```
+
+### Manual Docker Build
+
+```bash
+# Build image
+docker build -t rift-rewind-frontend .
+
+# Run container
+docker run -d -p 3000:80 rift-rewind-frontend
+```
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for complete deployment guide including:
+- Docker configuration
+- Vercel deployment
+- AWS deployment
+- Netlify deployment
+- CI/CD pipelines
+
+---
+
 ## 🐛 Debugging
 
 ### Console Logs
@@ -222,6 +271,10 @@ console.log filter: "[Predictions]"
 **Issue: Data not loading**
 - Check: RIOT_API_KEY is valid and not rate-limited
 - Check: Network tab in DevTools for API errors
+
+**Issue: Docker container won't start**
+- Check: `docker logs rift-rewind-frontend`
+- Verify: Port 3000 is not already in use
 
 ---
 
