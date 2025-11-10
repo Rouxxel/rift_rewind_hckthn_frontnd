@@ -16,6 +16,7 @@ interface DashboardProps {
 
 export const Dashboard: React.FC<DashboardProps> = ({ puuid, onLogout }) => {
   const [userData, setUserData] = useState<RiotUser | null>(null);
+  const [userCredentials, setUserCredentials] = useState<any>(null);
   const [summonerInfo, setSummonerInfo] = useState<any>(null);
   const [rankedStats, setRankedStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -43,6 +44,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ puuid, onLogout }) => {
       }
 
       setUserData(storedUserData);
+      setUserCredentials(storedCredentials);
 
       // Try to fetch additional data from API (handle CORS gracefully)
       try {
@@ -159,16 +161,45 @@ export const Dashboard: React.FC<DashboardProps> = ({ puuid, onLogout }) => {
 
       <div className="dashboard-content">
         {!summonerInfo && !rankedStats && (
-          <div className="cors-notice">
-            <h3>⚠️ Limited Data Available</h3>
-            <p>
-              Some features are currently limited due to CORS restrictions.
-              Your account ({userData?.gameName}#{userData?.tagLine}) is authenticated,
-              but additional stats require backend CORS configuration.
-            </p>
-            <p>
-              <strong>PUUID:</strong> {userData?.puuid}
-            </p>
+          <div className="retry-auth-container">
+            <div className="retry-auth-card">
+              <h3>⚠️ Connection Issue</h3>
+              <p className="retry-message">
+                We couldn't fetch your data. This might be due to:
+              </p>
+              <ul className="retry-reasons">
+                <li>Backend is starting up (cold start - wait ~30 seconds)</li>
+                <li>Network connectivity issue</li>
+                <li>Incorrect Riot ID or region</li>
+              </ul>
+              
+              <div className="retry-info">
+                <p><strong>Current Account:</strong> {userData?.gameName}#{userData?.tagLine}</p>
+                <p><strong>Region:</strong> {userCredentials?.region}</p>
+                <p><strong>PUUID:</strong> {userData?.puuid?.substring(0, 20)}...</p>
+              </div>
+
+              <div className="retry-actions">
+                <button 
+                  className="retry-button primary"
+                  onClick={loadUserData}
+                  disabled={loading}
+                >
+                  {loading ? '🔄 Retrying...' : '🔄 Retry Connection'}
+                </button>
+                
+                <button 
+                  className="retry-button secondary"
+                  onClick={handleLogout}
+                >
+                  🔑 Try Different Account
+                </button>
+              </div>
+
+              <div className="retry-tip">
+                <p>💡 <strong>Tip:</strong> If this is your first load, the backend might be waking up. Wait 30 seconds and click "Retry Connection".</p>
+              </div>
+            </div>
           </div>
         )}
 
