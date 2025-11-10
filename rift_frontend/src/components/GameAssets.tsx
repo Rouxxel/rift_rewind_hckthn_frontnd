@@ -48,7 +48,6 @@ export const GameAssets: React.FC<GameAssetsProps> = ({ onBack }) => {
 
   // User data
   const userData = storage.getUserData();
-  const userCredentials = storage.getUserCredentials();
 
   useEffect(() => {
     // Load both champions and items when component mounts (check cache first)

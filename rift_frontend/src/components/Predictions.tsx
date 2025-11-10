@@ -54,7 +54,6 @@ export const Predictions: React.FC<PredictionsProps> = ({ onBack }) => {
 
   // User data
   const userData = storage.getUserData();
-  const userCredentials = storage.getUserCredentials();
 
   useEffect(() => {
     // Load champions on mount (check cache first)
