@@ -377,7 +377,7 @@
 
 /* CORS Notice */
 .cors-notice {
-  background: linear-gradient(145deg, #463714 0%, #5bc0de 20%);
+  background: black;
   border: 2px solid #c89b3c;
   border-radius: 12px;
   padding: 1.5rem;
@@ -4464,6 +4464,21 @@ Filters Card */
   font-weight: 500;
 }
 
+.filter-description {
+  color: #a09b8c;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.filter-hint {
+  color: #5bc0de;
+  font-size: 0.8rem;
+  font-style: italic;
+  margin-top: 0.25rem;
+  display: block;
+}
+
 .filter-group input,
 .filter-group select {
   padding: 0.75rem;
@@ -4586,4 +4601,178 @@ Filters Card */
   .runes-stats-grid {
     grid-template-columns: 1fr;
   }
+}
+/* Total 
+Score Display */
+.total-score-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 3rem;
+  gap: 1rem;
+}
+
+.total-score-value {
+  font-size: 4rem;
+  font-weight: 700;
+  color: #c89b3c;
+  text-shadow: 0 2px 8px rgba(200, 155, 60, 0.3);
+}
+
+.total-score-label {
+  font-size: 1.2rem;
+  color: #a09b8c;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+/*
+ Champion Breakdown Grid */
+.champion-breakdown-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.champion-breakdown-item {
+  background: linear-gradient(145deg, #3c3c41 0%, #1e2328 100%);
+  border: 2px solid #463714;
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.champion-breakdown-item h4 {
+  color: #c89b3c;
+  margin: 0 0 0.5rem 0;
+  font-size: 1.2rem;
+}
+
+.games-played {
+  color: #5bc0de;
+  font-size: 0.9rem;
+  margin: 0 0 1rem 0;
+}
+
+.breakdown-spells-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.breakdown-spell-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background: rgba(30, 35, 40, 0.5);
+  border-radius: 6px;
+  border: 1px solid #463714;
+}
+
+.spell-combo {
+  color: #f0e6d2;
+  font-weight: 500;
+  flex: 1;
+}
+
+.spell-stats {
+  display: flex;
+  gap: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.spell-stats span {
+  color: #a09b8c;
+}
+
+.spell-stats span.positive {
+  color: #5cb85c;
+  font-weight: 600;
+}
+
+.spell-stats span.negative {
+  color: #d9534f;
+  font-weight: 600;
+}
+
+.breakdown-section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #463714;
+}
+
+.breakdown-section h5 {
+  color: #5bc0de;
+  margin: 0 0 0.75rem 0;
+  font-size: 0.95rem;
+}
+
+.breakdown-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.breakdown-item-small {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  background: rgba(30, 35, 40, 0.3);
+  border-radius: 4px;
+}
+
+.breakdown-item-small span:first-child {
+  color: #f0e6d2;
+}
+
+.breakdown-item-small .count {
+  color: #5bc0de;
+  font-weight: 600;
+}
+
+/* Responsive Design for Breakdown */
+@media (max-width: 768px) {
+  .champion-breakdown-grid {
+    grid-template-columns: 1fr;
+  }
+}
+/* Le
+gend */
+.legend {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background: rgba(91, 192, 222, 0.1);
+  border: 1px solid #5bc0de;
+  border-radius: 6px;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+}
+
+.legend-label {
+  color: #5bc0de;
+  font-weight: 600;
+}
+
+.legend-item {
+  color: #a09b8c;
+}
+
+/* Section Divider */
+.section-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, #463714 50%, transparent 100%);
+  margin: 1.5rem 0;
+}
+
+/* Stat Card Headings */
+.stat-card h4 {
+  color: #5bc0de;
+  margin: 1.5rem 0 1rem 0;
+  font-size: 1.1rem;
+}
+
+.stat-card h4:first-of-type {
+  margin-top: 0;
 }

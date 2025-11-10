@@ -29,13 +29,21 @@ const apiRequest = async (endpoint: string, options: RequestInit = {}): Promise<
     const response = await fetch(url, defaultOptions);
     
     if (!response.ok) {
+      // Clone the response so we can read it multiple times if needed
+      const clonedResponse = response.clone();
       let errorText;
+      
       try {
         const errorJson = await response.json();
         errorText = errorJson.detail || errorJson.message || JSON.stringify(errorJson);
       } catch {
-        errorText = await response.text();
+        try {
+          errorText = await clonedResponse.text();
+        } catch {
+          errorText = `HTTP ${response.status}`;
+        }
       }
+      
       throw new ApiError(response.status, errorText || `HTTP ${response.status}`);
     }
 

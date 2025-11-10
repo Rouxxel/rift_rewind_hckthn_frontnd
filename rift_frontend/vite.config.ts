@@ -10,6 +10,7 @@ export default defineConfig({
         target: 'https://rift-rewind-hckthn-backend.onrender.com',
         changeOrigin: true,
         rewrite: (path) => {
+          // Strip /api prefix - backend doesn't expect it
           const newPath = path.replace(/^\/api/, '');
           console.log(`Proxying ${path} -> ${newPath}`);
           return newPath;

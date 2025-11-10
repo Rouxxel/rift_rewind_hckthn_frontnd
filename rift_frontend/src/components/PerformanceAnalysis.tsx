@@ -169,17 +169,17 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
     try {
       const championId = masteryFilters.championId ? parseInt(masteryFilters.championId) : undefined;
       const top = masteryFilters.top ? parseInt(masteryFilters.top) : undefined;
-      
+
       console.log('🔄 Loading champion mastery with filters:', { championId, top, totalScore: masteryFilters.totalScore });
       const response = await apiService.getChampionMastery(
-        userData.puuid, 
+        userData.puuid,
         userCredentials.region,
         championId,
         top,
         masteryFilters.totalScore
       );
       console.log('✅ Champion mastery response:', response);
-      
+
       const masteryData = response.mastery_data || response.data?.mastery_data || [];
       setChampionMastery(Array.isArray(masteryData) ? masteryData : [masteryData]);
     } catch (err: any) {
@@ -199,7 +199,7 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
     try {
       const championName = spellsFilters.championName || undefined;
       const matchCount = spellsFilters.matchCount ? parseInt(spellsFilters.matchCount) : undefined;
-      
+
       console.log('🔄 Loading summoner spells analysis with filters:', { championName, matchCount });
       const response = await apiService.getSummonerSpellsAnalysis(
         userData.puuid,
@@ -226,7 +226,7 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
     try {
       const championName = runesFilters.championName || undefined;
       const matchCount = runesFilters.matchCount ? parseInt(runesFilters.matchCount) : undefined;
-      
+
       console.log('🔄 Loading rune masteries with filters:', { championName, matchCount });
       const response = await apiService.getRuneMasteries(
         userData.puuid,
@@ -258,6 +258,29 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
 
   const formatDate = (timestamp: number): string => {
     return new Date(timestamp).toLocaleDateString();
+  };
+
+  // Keystone mapping
+  const KEYSTONE_NAMES: Record<number, string> = {
+    8005: 'Press the Attack',
+    8008: 'Lethal Tempo',
+    8021: 'Fleet Footwork',
+    8010: 'Conqueror',
+    8112: 'Electrocute',
+    8128: 'Dark Harvest',
+    9923: 'Hail of Blades',
+    8351: 'Glacial Augment',
+    8360: 'Unsealed Spellbook',
+    8369: 'First Strike'
+  };
+
+  const getKeystoneName = (keystoneId: number): string => {
+    if (keystoneId === 0) return 'No Keystone Recorded';
+    return KEYSTONE_NAMES[keystoneId] || `Unknown Keystone (${keystoneId})`;
+  };
+
+  const isUnknownSpell = (spellName: string): boolean => {
+    return spellName.includes('Unknown_') || spellName.includes('Unknown,');
   };
 
   return (
@@ -443,8 +466,8 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
                           <div key={index} className="role-item">
                             <span className="role-name">{role}</span>
                             <div className="role-bar-container">
-                              <div 
-                                className="role-bar" 
+                              <div
+                                className="role-bar"
                                 style={{ width: `${(count / playerPerformance.matches_analyzed) * 100}%` }}
                               ></div>
                             </div>
@@ -497,26 +520,21 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
               <div className="mastery-section">
                 <div className="filters-card">
                   <h3>Champion Mastery Filters</h3>
+                  <p className="filter-description">
+                    View your champion mastery data. Leave Champion ID empty to see multiple champions, or enter a specific champion ID to see details for that champion only.
+                  </p>
                   <div className="filters-grid">
-                    <div className="filter-group">
-                      <label>Champion ID (optional):</label>
-                      <input
-                        type="number"
-                        placeholder="e.g., 266 for Aatrox"
-                        value={masteryFilters.championId}
-                        onChange={(e) => setMasteryFilters({ ...masteryFilters, championId: e.target.value })}
-                      />
-                    </div>
                     <div className="filter-group">
                       <label>Top N Champions:</label>
                       <select
                         value={masteryFilters.top}
                         onChange={(e) => setMasteryFilters({ ...masteryFilters, top: e.target.value })}
+                        disabled={masteryFilters.championId !== '' || masteryFilters.totalScore}
                       >
                         <option value="5">Top 5</option>
                         <option value="10">Top 10</option>
                         <option value="20">Top 20</option>
-                        <option value="">All</option>
+                        <option value="">All Champions</option>
                       </select>
                     </div>
                     <div className="filter-group checkbox-group">
@@ -526,7 +544,7 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
                           checked={masteryFilters.totalScore}
                           onChange={(e) => setMasteryFilters({ ...masteryFilters, totalScore: e.target.checked })}
                         />
-                        Get Total Score Only
+                        Get Total Mastery Score Only
                       </label>
                     </div>
                   </div>
@@ -535,7 +553,7 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
                   </button>
                 </div>
 
-                {championMastery.length > 0 && (
+                {championMastery.length > 0 && !masteryFilters.totalScore && (
                   <div className="mastery-grid">
                     {championMastery.map((mastery, index) => (
                       <div key={index} className="mastery-card">
@@ -559,6 +577,16 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
                     ))}
                   </div>
                 )}
+
+                {masteryFilters.totalScore && championMastery.length > 0 && (
+                  <div className="stat-card">
+                    <h3>Total Mastery Score</h3>
+                    <div className="total-score-display">
+                      <span className="total-score-value">{formatNumber(championMastery[0] as any)}</span>
+                      <span className="total-score-label">Total Mastery Points</span>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -567,15 +595,6 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
                 <div className="filters-card">
                   <h3>Summoner Spells Analysis Filters</h3>
                   <div className="filters-grid">
-                    <div className="filter-group">
-                      <label>Champion Name (optional):</label>
-                      <input
-                        type="text"
-                        placeholder="e.g., Ahri"
-                        value={spellsFilters.championName}
-                        onChange={(e) => setSpellsFilters({ ...spellsFilters, championName: e.target.value })}
-                      />
-                    </div>
                     <div className="filter-group">
                       <label>Match Count:</label>
                       <select
@@ -601,16 +620,22 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
                       <h3>Overall Statistics</h3>
                       <p>Matches Analyzed: {summonerSpells.matches_analyzed}</p>
                       {summonerSpells.champion_filter && <p>Champion Filter: {summonerSpells.champion_filter}</p>}
-                      
+
+                      <div className="section-divider"></div>
+
                       <h4>Most Used Combinations</h4>
                       <div className="combinations-list">
-                        {Object.entries(summonerSpells.overall_stats.most_used_combinations).map(([combo, count], index) => (
-                          <div key={index} className="combination-item">
-                            <span>{combo}</span>
-                            <span className="count">{count} games</span>
-                          </div>
-                        ))}
+                        {Object.entries(summonerSpells.overall_stats.most_used_combinations)
+                          .filter(([combo]) => !isUnknownSpell(combo))
+                          .map(([combo, count], index) => (
+                            <div key={index} className="combination-item">
+                              <span>{combo}</span>
+                              <span className="count">{count} games</span>
+                            </div>
+                          ))}
                       </div>
+
+                      <div className="section-divider"></div>
 
                       <h4>Spell Effectiveness</h4>
                       <div className="spells-table">
@@ -620,20 +645,57 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
                           <div className="table-cell">Wins</div>
                           <div className="table-cell">Win Rate</div>
                         </div>
-                        {Object.entries(summonerSpells.overall_stats.spell_effectiveness).map(([combo, stats], index) => (
-                          <div key={index} className={`table-row ${index % 2 === 0 ? 'even' : 'odd'}`}>
-                            <div className="table-cell">{combo}</div>
-                            <div className="table-cell">{stats.games}</div>
-                            <div className="table-cell">{stats.wins}</div>
-                            <div className="table-cell">
-                              <span className={stats.win_rate >= 50 ? 'positive' : 'negative'}>
-                                {stats.win_rate}%
-                              </span>
+                        {Object.entries(summonerSpells.overall_stats.spell_effectiveness)
+                          .filter(([combo]) => !isUnknownSpell(combo))
+                          .map(([combo, stats], index) => (
+                            <div key={index} className={`table-row ${index % 2 === 0 ? 'even' : 'odd'}`}>
+                              <div className="table-cell">{combo}</div>
+                              <div className="table-cell">{stats.games}</div>
+                              <div className="table-cell">{stats.wins}</div>
+                              <div className="table-cell">
+                                <span className={stats.win_rate >= 50 ? 'positive' : 'negative'}>
+                                  {stats.win_rate}%
+                                </span>
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          ))}
                       </div>
                     </div>
+
+                    {Object.keys(summonerSpells.champion_breakdown).length > 0 && (
+                      <div className="stat-card">
+                        <h3>Champion Breakdown</h3>
+                        <div className="legend">
+                          <span className="legend-label">Legend:</span>
+                          <span className="legend-item">G = Games</span>
+                          <span className="legend-item">W = Wins</span>
+                          <span className="legend-item">% = Win Rate</span>
+                        </div>
+                        <div className="champion-breakdown-grid">
+                          {Object.entries(summonerSpells.champion_breakdown).map(([champion, spells], index) => (
+                            <div key={index} className="champion-breakdown-item">
+                              <h4>{champion}</h4>
+                              <div className="breakdown-spells-list">
+                                {Object.entries(spells)
+                                  .filter(([combo]) => !isUnknownSpell(combo))
+                                  .map(([combo, stats], idx) => (
+                                    <div key={idx} className="breakdown-spell-item">
+                                      <span className="spell-combo">{combo}</span>
+                                      <div className="spell-stats">
+                                        <span>{stats.games}G</span>
+                                        <span>{stats.wins}W</span>
+                                        <span className={stats.win_rate >= 50 ? 'positive' : 'negative'}>
+                                          {stats.win_rate}%
+                                        </span>
+                                      </div>
+                                    </div>
+                                  ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -644,15 +706,6 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
                 <div className="filters-card">
                   <h3>Runes Analysis Filters</h3>
                   <div className="filters-grid">
-                    <div className="filter-group">
-                      <label>Champion Name (optional):</label>
-                      <input
-                        type="text"
-                        placeholder="e.g., Ahri"
-                        value={runesFilters.championName}
-                        onChange={(e) => setRunesFilters({ ...runesFilters, championName: e.target.value })}
-                      />
-                    </div>
                     <div className="filter-group">
                       <label>Match Count:</label>
                       <select
@@ -677,7 +730,7 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
                       <h3>Overall Statistics</h3>
                       <p>Matches Analyzed: {runeMasteries.matches_analyzed}</p>
                       {runeMasteries.champion_filter && <p>Champion Filter: {runeMasteries.champion_filter}</p>}
-                      
+
                       <div className="runes-stats-grid">
                         <div>
                           <h4>Most Used Primary Trees</h4>
@@ -706,16 +759,70 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
                         <div>
                           <h4>Most Used Keystones</h4>
                           <div className="runes-list">
-                            {Object.entries(runeMasteries.overall_stats.most_used_keystones).map(([keystoneId, count], index) => (
-                              <div key={index} className="rune-item">
-                                <span>Keystone #{keystoneId}</span>
-                                <span className="count">{count} games</span>
-                              </div>
-                            ))}
+                            {Object.entries(runeMasteries.overall_stats.most_used_keystones)
+                              .filter(([keystoneId]) => parseInt(keystoneId) !== 0)
+                              .map(([keystoneId, count], index) => (
+                                <div key={index} className="rune-item">
+                                  <span>{getKeystoneName(parseInt(keystoneId))}</span>
+                                  <span className="count">{count} games</span>
+                                </div>
+                              ))}
                           </div>
                         </div>
                       </div>
                     </div>
+
+                    {Object.keys(runeMasteries.champion_breakdown).length > 0 && (
+                      <div className="stat-card">
+                        <h3>Champion Breakdown</h3>
+                        <div className="champion-breakdown-grid">
+                          {Object.entries(runeMasteries.champion_breakdown).map(([champion, data], index) => (
+                            <div key={index} className="champion-breakdown-item">
+                              <h4>{champion}</h4>
+                              <p className="games-played">{data.games_played} games played</p>
+
+                              <div className="breakdown-section">
+                                <h5>Primary Trees</h5>
+                                <div className="breakdown-list">
+                                  {Object.entries(data.primary_trees).map(([tree, count], idx) => (
+                                    <div key={idx} className="breakdown-item-small">
+                                      <span>{tree}</span>
+                                      <span className="count">{count}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+
+                              <div className="breakdown-section">
+                                <h5>Secondary Trees</h5>
+                                <div className="breakdown-list">
+                                  {Object.entries(data.secondary_trees).map(([tree, count], idx) => (
+                                    <div key={idx} className="breakdown-item-small">
+                                      <span>{tree}</span>
+                                      <span className="count">{count}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+
+                              <div className="breakdown-section">
+                                <h5>Keystones</h5>
+                                <div className="breakdown-list">
+                                  {Object.entries(data.keystones)
+                                    .filter(([keystoneId]) => parseInt(keystoneId) !== 0)
+                                    .map(([keystoneId, count], idx) => (
+                                      <div key={idx} className="breakdown-item-small">
+                                        <span>{getKeystoneName(parseInt(keystoneId))}</span>
+                                        <span className="count">{count}</span>
+                                      </div>
+                                    ))}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
