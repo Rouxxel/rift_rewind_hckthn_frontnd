@@ -470,6 +470,33 @@ export const Predictions: React.FC<PredictionsProps> = ({ onBack }) => {
     setPrediction(null);
   };
 
+  const fillRandomTeam = (team: 'blue' | 'red' | 'both') => {
+    const championNames = Object.values(champions).map((champ: any) => champ.name);
+    
+    if (championNames.length < 5) {
+      setError('Not enough champions loaded to create random teams');
+      return;
+    }
+
+    const getRandomChampions = (count: number, exclude: string[] = []): string[] => {
+      const available = championNames.filter(name => !exclude.includes(name));
+      const shuffled = [...available].sort(() => Math.random() - 0.5);
+      return shuffled.slice(0, count);
+    };
+
+    if (team === 'red') {
+      const randomRed = getRandomChampions(5, blueTeam);
+      setRedTeam(randomRed);
+    } else if (team === 'both') {
+      const randomBlue = getRandomChampions(5);
+      const randomRed = getRandomChampions(5, randomBlue);
+      setBlueTeam(randomBlue);
+      setRedTeam(randomRed);
+    }
+    
+    setPrediction(null); // Clear previous prediction
+  };
+
   // Filter winrates based on search term
   const filteredWinrates = winrates.filter(champion =>
     champion.name.toLowerCase().includes(winrateSearch.toLowerCase()) ||
@@ -772,6 +799,12 @@ export const Predictions: React.FC<PredictionsProps> = ({ onBack }) => {
                       className="predict-button"
                     >
                       Predict Match Outcome
+                    </button>
+                    <button onClick={() => fillRandomTeam('red')} className="random-button">
+                      🎲 Random Red Team
+                    </button>
+                    <button onClick={() => fillRandomTeam('both')} className="random-button">
+                      🎲 Random Both Teams
                     </button>
                     <button onClick={clearTeams} className="clear-button">
                       Clear Teams
