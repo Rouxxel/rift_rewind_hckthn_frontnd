@@ -101,6 +101,7 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
   // Data states
   const [playerPerformance, setPlayerPerformance] = useState<PlayerPerformance | null>(null);
   const [championMastery, setChampionMastery] = useState<ChampionMastery[]>([]);
+  const [masteryUnavailable, setMasteryUnavailable] = useState(false);
   const [summonerSpells, setSummonerSpells] = useState<SummonerSpellsResponse | null>(null);
   const [runeMasteries, setRuneMasteries] = useState<RuneMasteriesResponse | null>(null);
 
@@ -165,6 +166,7 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
 
     setLoading(true);
     setError(null);
+    setMasteryUnavailable(false);
 
     try {
       const championId = masteryFilters.championId ? parseInt(masteryFilters.championId) : undefined;
@@ -184,7 +186,9 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
       setChampionMastery(Array.isArray(masteryData) ? masteryData : [masteryData]);
     } catch (err: any) {
       console.error('❌ Failed to load champion mastery:', err);
-      setError(`Failed to load champion mastery: ${err.message}`);
+      // Mark as unavailable instead of showing error
+      setMasteryUnavailable(true);
+      setChampionMastery([]);
     } finally {
       setLoading(false);
     }
@@ -532,9 +536,14 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
             )}
 
             {activeTab === 'mastery' && (
-              <div className="mastery-section">
+              <div className={`mastery-section ${masteryUnavailable ? 'unavailable' : ''}`}>
                 <div className="filters-card">
                   <h3>Champion Mastery Filters</h3>
+                  {masteryUnavailable && (
+                    <div className="unavailable-notice">
+                      ⚠️ Champion mastery data is currently unavailable for this account. This may be due to API limitations or account restrictions.
+                    </div>
+                  )}
                   <p className="filter-description">
                     View your champion mastery data. Leave Champion ID empty to see multiple champions, or enter a specific champion ID to see details for that champion only.
                   </p>
@@ -544,7 +553,7 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
                       <select
                         value={masteryFilters.top}
                         onChange={(e) => setMasteryFilters({ ...masteryFilters, top: e.target.value })}
-                        disabled={masteryFilters.championId !== '' || masteryFilters.totalScore}
+                        disabled={masteryFilters.championId !== '' || masteryFilters.totalScore || masteryUnavailable}
                       >
                         <option value="5">Top 5</option>
                         <option value="10">Top 10</option>
@@ -558,13 +567,14 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
                           type="checkbox"
                           checked={masteryFilters.totalScore}
                           onChange={(e) => setMasteryFilters({ ...masteryFilters, totalScore: e.target.checked })}
+                          disabled={masteryUnavailable}
                         />
                         Get Total Mastery Score Only
                       </label>
                     </div>
                   </div>
-                  <button onClick={loadChampionMastery} disabled={loading} className="analyze-button">
-                    {loading ? 'Loading...' : 'Analyze Mastery'}
+                  <button onClick={loadChampionMastery} disabled={loading || masteryUnavailable} className="analyze-button">
+                    {loading ? 'Loading...' : masteryUnavailable ? 'Unavailable' : 'Analyze Mastery'}
                   </button>
                 </div>
 

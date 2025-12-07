@@ -69,25 +69,64 @@ async def get_champion_mastery(
             detail=f"Invalid region '{region}'. Must be one of: {list(REGION_DATA.keys())}"
         )
 
-    #Use the first platform region (e.g., euw1, na1)
+    # Get all platforms for this region
     platforms = REGION_DATA[region_lower]["platforms"]
-    platform_region = platforms[0].lower()
-    base_url = f"https://{platform_region}.api.riotgames.com/lol/champion-mastery/v4"
-
-    #Determine API endpoint
-    if total_score:
-        url = f"{base_url}/scores/by-puuid/{puuid}"
-    elif champion_id is not None:
-        url = f"{base_url}/champion-masteries/by-puuid/{puuid}/by-champion/{champion_id}"
-    elif top is not None:
-        url = f"{base_url}/champion-masteries/by-puuid/{puuid}/top?count={top}"
-    else:
-        url = f"{base_url}/champion-masteries/by-puuid/{puuid}"
-
+    
     headers = {"X-Riot-Token": RIOT_API_KEY}
 
     try:
         async with httpx.AsyncClient() as client:
+            # Try each platform in the region to find the summoner
+            # PUUID is region-wide, but summoner data is platform-specific
+            summoner_id = None
+            platform_region = None
+            
+            for platform in platforms:
+                platform_lower = platform.lower()
+                summoner_url = f"https://{platform_lower}.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/{puuid}"
+                
+                try:
+                    log_handler.info(f"Trying platform {platform_lower} for summoner lookup")
+                    summoner_response = await client.get(summoner_url, headers=headers, timeout=10.0)
+                    
+                    if summoner_response.status_code == 200:
+                        summoner_data = summoner_response.json()
+                        summoner_id = summoner_data.get("id")
+                        platform_region = platform_lower
+                        log_handler.info(f"Found summoner on platform {platform_lower}: {summoner_id}")
+                        break
+                    elif summoner_response.status_code == 404:
+                        log_handler.debug(f"Summoner not found on platform {platform_lower}, trying next...")
+                        continue
+                    else:
+                        summoner_response.raise_for_status()
+                        
+                except httpx.HTTPStatusError as e:
+                    if e.response.status_code == 404:
+                        continue
+                    raise
+            
+            if not summoner_id or not platform_region:
+                raise HTTPException(
+                    status_code=404, 
+                    detail=f"Summoner not found on any platform in region {region}. Tried: {', '.join(platforms)}"
+                )
+            
+            # Now fetch champion mastery using summoner ID
+            base_url = f"https://{platform_region}.api.riotgames.com/lol/champion-mastery/v4"
+            
+            #Determine API endpoint
+            if total_score:
+                url = f"{base_url}/scores/by-summoner/{summoner_id}"
+            elif champion_id is not None:
+                url = f"{base_url}/champion-masteries/by-summoner/{summoner_id}/by-champion/{champion_id}"
+            elif top is not None:
+                url = f"{base_url}/champion-masteries/by-summoner/{summoner_id}/top?count={top}"
+            else:
+                url = f"{base_url}/champion-masteries/by-summoner/{summoner_id}"
+            
+            log_handler.info(f"Champion Mastery API URL: {url}")
+            
             response = await client.get(url, headers=headers, timeout=10.0)
             response.raise_for_status()
 

@@ -5743,3 +5743,35 @@ gend */
   transform: translateY(0);
   box-shadow: 0 2px 8px rgba(91, 192, 222, 0.3);
 }
+/*
+ Champion Mastery Unavailable State */
+.mastery-section.unavailable {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.mastery-section.unavailable .filters-card {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+  border: 1px solid #444;
+}
+
+.unavailable-notice {
+  background: rgba(255, 193, 7, 0.1);
+  border: 1px solid rgba(255, 193, 7, 0.3);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  color: #ffc107;
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+.mastery-section.unavailable .analyze-button {
+  background: #555;
+  cursor: not-allowed;
+}
+
+.mastery-section.unavailable .analyze-button:hover {
+  background: #555;
+  transform: none;
+}
