@@ -146,12 +146,13 @@ async def get_match_participants_full_info(
                 enriched_participant["items_detailed"] = items_detailed
                 detailed_participants.append(enriched_participant)
 
-            return {
-                "match_id": match_id,
-                "region": region,
-                "num_participants": len(detailed_participants),
-                "participants": detailed_participants
-            }
+        # Return after processing ALL participants (not inside the loop!)
+        return {
+            "match_id": match_id,
+            "region": region,
+            "num_participants": len(detailed_participants),
+            "participants": detailed_participants
+        }
 
     except httpx.RequestError as e:
         log_handler.error(f"Riot API request failed: {e}")
