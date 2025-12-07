@@ -116,12 +116,12 @@ async def get_champions(
             log_handler.info(f"Fetched basic info for champion '{champion_name}' from Data Dragon")
             return {"champion": found_champion}
 
-            # Return all champions if no specific champion is requested
-            if detailed:
-                raise HTTPException(status_code=400, detail="Detailed information is only available for specific champions. Please specify champion_name.")
-            
-            log_handler.info(f"Fetched {len(champions_data)} champions from Data Dragon")
-            return {"champions": champions_data}
+        # Return all champions if no specific champion is requested
+        if detailed:
+            raise HTTPException(status_code=400, detail="Detailed information is only available for specific champions. Please specify champion_name.")
+        
+        log_handler.info(f"Fetched {len(champions_data)} champions from Data Dragon")
+        return {"champions": champions_data}
 
     except httpx.RequestError as e:
         log_handler.error(f"Failed to fetch champions from Data Dragon: {e}")
