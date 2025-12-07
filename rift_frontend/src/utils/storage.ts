@@ -30,10 +30,25 @@ export const storage = {
     return stored ? JSON.parse(stored) : null;
   },
 
-  // Clear all user data
+  // Clear all user data and cached information
   clearUserData: (): void => {
+    // Clear user-specific data
     localStorage.removeItem(STORAGE_KEYS.USER_CREDENTIALS);
     localStorage.removeItem(STORAGE_KEYS.USER_DATA);
+    
+    // Clear all cached data (backend URL, API responses, etc.)
+    // Remove all items that start with 'rift_'
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('rift_')) {
+        keysToRemove.push(key);
+      }
+    }
+    
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+    
+    console.log('🧹 Cleared all cached data and user information');
   },
 
   // Check if user is authenticated (has PUUID)

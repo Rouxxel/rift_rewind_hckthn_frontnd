@@ -110,6 +110,27 @@ export const Predictions: React.FC<PredictionsProps> = ({ onBack }) => {
       cache.set(CACHE_KEYS.CHAMPIONS, championsData, 60);
     } catch (err: any) {
       console.error('❌ Failed to load champions:', err);
+      
+      // If it's a rate limit error, wait and retry once
+      if (err.message?.includes('rate limit')) {
+        console.log('⏳ Rate limited, waiting 2 seconds before retry...');
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        try {
+          console.log('🔄 Retrying champion load...');
+          const response = await apiService.getChampions();
+          const championsData = response.champions || {};
+          setChampions(championsData);
+          setChampionsLoaded(true);
+          cache.set(CACHE_KEYS.CHAMPIONS, championsData, 60);
+          console.log('✅ Champions loaded on retry');
+        } catch (retryErr: any) {
+          console.error('❌ Retry failed:', retryErr);
+          setError('Failed to load champions. Please try again later.');
+        }
+      } else {
+        setError('Failed to load champions. Please refresh the page.');
+      }
     }
   };
 
@@ -469,7 +490,19 @@ export const Predictions: React.FC<PredictionsProps> = ({ onBack }) => {
     setPrediction(null);
   };
 
-  const fillRandomTeam = (team: 'blue' | 'red' | 'both') => {
+  const fillRandomTeam = async (team: 'blue' | 'red' | 'both') => {
+    // If champions aren't loaded, try loading them first
+    if (!championsLoaded || Object.keys(champions).length === 0) {
+      setError('Loading champions, please wait...');
+      await loadChampions();
+      
+      // Check again after loading
+      if (Object.keys(champions).length === 0) {
+        setError('Failed to load champions. Please try again.');
+        return;
+      }
+    }
+    
     const championNames = Object.values(champions).map((champ: any) => champ.name);
     
     if (championNames.length < 5) {
@@ -493,6 +526,7 @@ export const Predictions: React.FC<PredictionsProps> = ({ onBack }) => {
       setRedTeam(randomRed);
     }
     
+    setError(null); // Clear error on success
     setPrediction(null); // Clear previous prediction
   };
 
@@ -799,11 +833,21 @@ export const Predictions: React.FC<PredictionsProps> = ({ onBack }) => {
                     >
                       Predict Match Outcome
                     </button>
-                    <button onClick={() => fillRandomTeam('red')} className="random-button">
-                      🎲 Random Red Team
+                    <button 
+                      onClick={() => fillRandomTeam('red')} 
+                      className="random-button"
+                      disabled={loading || !championsLoaded}
+                      title={!championsLoaded ? 'Loading champions...' : 'Fill red team with random champions'}
+                    >
+                      {!championsLoaded ? '⏳ Loading...' : '🎲 Random Red Team'}
                     </button>
-                    <button onClick={() => fillRandomTeam('both')} className="random-button">
-                      🎲 Random Both Teams
+                    <button 
+                      onClick={() => fillRandomTeam('both')} 
+                      className="random-button"
+                      disabled={loading || !championsLoaded}
+                      title={!championsLoaded ? 'Loading champions...' : 'Fill both teams with random champions'}
+                    >
+                      {!championsLoaded ? '⏳ Loading...' : '🎲 Random Both Teams'}
                     </button>
                     <button onClick={clearTeams} className="clear-button">
                       Clear Teams
