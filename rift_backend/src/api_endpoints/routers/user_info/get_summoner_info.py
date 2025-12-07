@@ -18,7 +18,7 @@ from typing import Dict, Any
 
 # Third-party imports
 from fastapi import APIRouter, Request, HTTPException, Query
-import requests
+import httpx
 
 # Other file imports
 from src.utils.custom_logger import log_handler
@@ -83,28 +83,29 @@ async def get_summoner_info(
     successful_platform = None
     last_error = None
     
-    for platform in platforms:
-        platform_lower = platform.lower()
-        url = f"https://{platform_lower}.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/{puuid}"
-        
-        try:
-            response = requests.get(url, headers=headers)
-            if response.status_code == 200:
-                summoner_data = response.json()
-                successful_platform = platform_lower
-                log_handler.info(f"Found summoner on platform: {platform_lower}")
-                break
-            elif response.status_code == 404:
-                # Summoner not found on this platform, try next one
+    async with httpx.AsyncClient() as client:
+        for platform in platforms:
+            platform_lower = platform.lower()
+            url = f"https://{platform_lower}.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/{puuid}"
+            
+            try:
+                response = await client.get(url, headers=headers)
+                if response.status_code == 200:
+                    summoner_data = response.json()
+                    successful_platform = platform_lower
+                    log_handler.info(f"Found summoner on platform: {platform_lower}")
+                    break
+                elif response.status_code == 404:
+                    # Summoner not found on this platform, try next one
+                    continue
+                else:
+                    # Other error, store it but continue trying
+                    last_error = f"Platform {platform_lower}: {response.status_code} - {response.text}"
+                    continue
+                    
+            except httpx.RequestError as e:
+                last_error = f"Platform {platform_lower}: Connection error - {str(e)}"
                 continue
-            else:
-                # Other error, store it but continue trying
-                last_error = f"Platform {platform_lower}: {response.status_code} - {response.text}"
-                continue
-                
-        except requests.RequestException as e:
-            last_error = f"Platform {platform_lower}: Connection error - {str(e)}"
-            continue
     
     # Check if we found the summoner
     if not summoner_data:

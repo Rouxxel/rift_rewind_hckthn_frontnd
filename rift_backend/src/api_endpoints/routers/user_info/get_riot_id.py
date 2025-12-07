@@ -17,7 +17,7 @@ from typing import Dict, Any
 
 #Third-party imports
 from fastapi import APIRouter, Body, Request, HTTPException
-import requests
+import httpx
 
 #Other files imports
 from src.utils.custom_logger import log_handler
@@ -75,15 +75,16 @@ async def get_puuid_endpoint(
     headers = {"X-Riot-Token": RIOT_API_KEY}
 
     try:
-        response = requests.get(url, headers=headers)
-        if response.status_code == 200:
-            data = response.json()
-            log_handler.info(f"Found user: {data['gameName']}#{data['tagLine']} | PUUID: {data['puuid']}")
-            return data
-        elif response.status_code == 404:
-            raise HTTPException(status_code=404, detail="User not found.")
-        else:
-            raise HTTPException(status_code=response.status_code, detail=response.text)
-    except requests.RequestException as e:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url, headers=headers)
+            if response.status_code == 200:
+                data = response.json()
+                log_handler.info(f"Found user: {data['gameName']}#{data['tagLine']} | PUUID: {data['puuid']}")
+                return data
+            elif response.status_code == 404:
+                raise HTTPException(status_code=404, detail="User not found.")
+            else:
+                raise HTTPException(status_code=response.status_code, detail=response.text)
+    except httpx.RequestError as e:
         log_handler.error(f"Riot API request failed: {e}")
         raise HTTPException(status_code=500, detail="Failed to connect to Riot API.")

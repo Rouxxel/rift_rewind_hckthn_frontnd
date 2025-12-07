@@ -19,7 +19,7 @@ from typing import Dict, Any, List
 
 #Third-party imports
 from fastapi import APIRouter, Body, Request, HTTPException
-import requests
+import httpx
 
 #Other file imports
 from src.utils.custom_logger import log_handler
@@ -76,42 +76,43 @@ async def get_match_participants_full_info(
         raise
 
     try:
-        #Fetch match details
-        match_url = f"https://{region_lower}.api.riotgames.com/lol/match/v5/matches/{match_id}"
-        headers = {"X-Riot-Token": RIOT_API_KEY}
-        match_response = requests.get(match_url, headers=headers)
+        async with httpx.AsyncClient() as client:
+            #Fetch match details
+            match_url = f"https://{region_lower}.api.riotgames.com/lol/match/v5/matches/{match_id}"
+            headers = {"X-Riot-Token": RIOT_API_KEY}
+            match_response = await client.get(match_url, headers=headers)
 
-        if not match_response.content:
-            raise HTTPException(status_code=500, detail="Empty response from Riot API")
-        if match_response.status_code != 200:
-            if match_response.status_code == 403:
-                raise HTTPException(status_code=403, detail="Forbidden: Invalid or expired Riot API key.")
-            elif match_response.status_code == 404:
-                raise HTTPException(status_code=404, detail="Match not found for this ID.")
+            if not match_response.content:
+                raise HTTPException(status_code=500, detail="Empty response from Riot API")
+            if match_response.status_code != 200:
+                if match_response.status_code == 403:
+                    raise HTTPException(status_code=403, detail="Forbidden: Invalid or expired Riot API key.")
+                elif match_response.status_code == 404:
+                    raise HTTPException(status_code=404, detail="Match not found for this ID.")
+                else:
+                    raise HTTPException(status_code=match_response.status_code, detail=match_response.text)
+
+            match_details = match_response.json()
+            participants = match_details.get('info', {}).get('participants', [])
+            if not participants:
+                raise HTTPException(status_code=500, detail="No participants found in match data.")
+
+            #Select participants
+            if num_participants == -1:
+                selected_participants = participants
+            elif 0 < num_participants <= len(participants):
+                selected_participants = participants[:num_participants]
             else:
-                raise HTTPException(status_code=match_response.status_code, detail=match_response.text)
+                raise HTTPException(status_code=400, detail=f"num_participants must be -1 (all) or between 1 and {len(participants)}")
 
-        match_details = match_response.json()
-        participants = match_details.get('info', {}).get('participants', [])
-        if not participants:
-            raise HTTPException(status_code=500, detail="No participants found in match data.")
-
-        #Select participants
-        if num_participants == -1:
-            selected_participants = participants
-        elif 0 < num_participants <= len(participants):
-            selected_participants = participants[:num_participants]
-        else:
-            raise HTTPException(status_code=400, detail=f"num_participants must be -1 (all) or between 1 and {len(participants)}")
-
-        #Fetch Data Dragon items
-        try:
-            items_response = requests.get(DATA_DRAGON_ITEMS_URL)
-            items_response.raise_for_status()
-            item_data = items_response.json().get('data', {})
-        except requests.RequestException:
-            log_handler.warning("Failed to fetch Data Dragon items")
-            item_data = {}
+            #Fetch Data Dragon items
+            try:
+                items_response = await client.get(DATA_DRAGON_ITEMS_URL)
+                items_response.raise_for_status()
+                item_data = items_response.json().get('data', {})
+            except httpx.RequestError:
+                log_handler.warning("Failed to fetch Data Dragon items")
+                item_data = {}
 
         detailed_participants: List[Dict[str, Any]] = []
         for participant in selected_participants:
@@ -145,13 +146,13 @@ async def get_match_participants_full_info(
                 enriched_participant["items_detailed"] = items_detailed
                 detailed_participants.append(enriched_participant)
 
-        return {
-            "match_id": match_id,
-            "region": region,
-            "num_participants": len(detailed_participants),
-            "participants": detailed_participants
-        }
+            return {
+                "match_id": match_id,
+                "region": region,
+                "num_participants": len(detailed_participants),
+                "participants": detailed_participants
+            }
 
-    except requests.RequestException as e:
+    except httpx.RequestError as e:
         log_handler.error(f"Riot API request failed: {e}")
         raise HTTPException(status_code=500, detail="Failed to connect to Riot API.")

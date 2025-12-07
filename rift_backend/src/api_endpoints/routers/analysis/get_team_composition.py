@@ -16,7 +16,7 @@ from typing import Dict, Any, List
 
 #Third-party imports
 from fastapi import APIRouter, Body, Request, HTTPException
-import requests
+import httpx
 
 #Other file imports
 from src.utils.custom_logger import log_handler
@@ -74,9 +74,10 @@ async def get_team_composition(
 
     try:
         # Fetch champion data
-        response = requests.get(DATA_DRAGON_CHAMPIONS_URL)
-        response.raise_for_status()
-        champions_data = response.json().get("data", {})
+        async with httpx.AsyncClient() as client:
+            response = await client.get(DATA_DRAGON_CHAMPIONS_URL)
+            response.raise_for_status()
+            champions_data = response.json().get("data", {})
 
         def get_champion_info(champion_name):
             for champ_id, champ_info in champions_data.items():
@@ -299,9 +300,9 @@ async def get_team_composition(
             
             result["matchup_analysis"] = matchup_analysis
 
-        log_handler.info(f"Analyzed team composition: {team_archetype} archetype with {len(champions)} champions")
-        return result
+            log_handler.info(f"Analyzed team composition: {team_archetype} archetype with {len(champions)} champions")
+            return result
 
-    except requests.RequestException as e:
+    except httpx.RequestError as e:
         log_handler.error(f"Failed to fetch champion data: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch champion data for analysis.")

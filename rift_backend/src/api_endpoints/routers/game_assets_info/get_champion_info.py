@@ -15,7 +15,7 @@ from typing import Dict, Any, Optional
 
 # Third-party imports
 from fastapi import APIRouter, Request, HTTPException, Query
-import requests
+import httpx
 
 # Other file imports
 from src.utils.custom_logger import log_handler
@@ -63,10 +63,11 @@ async def get_champions(
     - dict containing champion data (basic or detailed based on parameters)
     """
     try:
-        response = requests.get(DATA_DRAGON_CHAMPIONS_URL)
-        response.raise_for_status()
+        async with httpx.AsyncClient() as client:
+            response = await client.get(DATA_DRAGON_CHAMPIONS_URL)
+            response.raise_for_status()
 
-        champions_data = response.json().get("data", {})
+            champions_data = response.json().get("data", {})
 
         # If a specific champion is requested
         if champion_name:
@@ -95,7 +96,7 @@ async def get_champions(
                 )
                 
                 try:
-                    detailed_response = requests.get(detailed_url)
+                    detailed_response = await client.get(detailed_url)
                     detailed_response.raise_for_status()
                     detailed_data = detailed_response.json().get("data", {})
                     
@@ -108,21 +109,21 @@ async def get_champions(
                         log_handler.warning(f"Detailed data not found for champion '{champion_name}', falling back to basic")
                         return {"champion": found_champion}
                         
-                except requests.RequestException as e:
+                except httpx.RequestError as e:
                     log_handler.warning(f"Failed to fetch detailed data for champion '{champion_name}': {e}, falling back to basic")
                     return {"champion": found_champion}
             
             log_handler.info(f"Fetched basic info for champion '{champion_name}' from Data Dragon")
             return {"champion": found_champion}
 
-        # Return all champions if no specific champion is requested
-        if detailed:
-            raise HTTPException(status_code=400, detail="Detailed information is only available for specific champions. Please specify champion_name.")
-        
-        log_handler.info(f"Fetched {len(champions_data)} champions from Data Dragon")
-        return {"champions": champions_data}
+            # Return all champions if no specific champion is requested
+            if detailed:
+                raise HTTPException(status_code=400, detail="Detailed information is only available for specific champions. Please specify champion_name.")
+            
+            log_handler.info(f"Fetched {len(champions_data)} champions from Data Dragon")
+            return {"champions": champions_data}
 
-    except requests.RequestException as e:
+    except httpx.RequestError as e:
         log_handler.error(f"Failed to fetch champions from Data Dragon: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch champion data from Data Dragon.")
 

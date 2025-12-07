@@ -15,7 +15,7 @@ from typing import Dict, Any, Optional
 
 #Third-party imports
 from fastapi import APIRouter, Request, HTTPException, Query
-import requests
+import httpx
 
 #Other file imports
 from src.utils.custom_logger import log_handler
@@ -61,60 +61,61 @@ async def get_items(
     - dict containing item data (basic or detailed based on parameters)
     """
     try:
-        response = requests.get(DATA_DRAGON_ITEMS_URL)
-        response.raise_for_status()
+        async with httpx.AsyncClient() as client:
+            response = await client.get(DATA_DRAGON_ITEMS_URL)
+            response.raise_for_status()
 
-        items_data = response.json().get("data", {})
+            items_data = response.json().get("data", {})
 
-        # If a specific item is requested
-        if item_name_or_id:
-            found_item = None
-            item_key = None
+            # If a specific item is requested
+            if item_name_or_id:
+                found_item = None
+                item_key = None
+                
+                for item_id, item_info in items_data.items():
+                    if (str(item_id) == str(item_name_or_id) or 
+                        item_info.get("name", "").lower() == item_name_or_id.lower()):
+                        found_item = item_info
+                        item_key = item_id
+                        break
+
+                if not found_item:
+                    raise HTTPException(status_code=404, detail=f"Item '{item_name_or_id}' not found")
+
+                # Return detailed information if requested
+                if detailed:
+                    result = parse_detailed_item_data(found_item, item_key, items_data, include_recipe, include_stats)
+                    log_handler.info(f"Fetched detailed info for item '{item_name_or_id}' from Data Dragon")
+                    return {"item": result}
+                else:
+                    log_handler.info(f"Fetched basic info for item '{item_name_or_id}' from Data Dragon")
+                    return {"item": found_item}
+
+            # Filter by category if specified
+            filtered_items = items_data
+            if category:
+                filtered_items = {}
+                for item_id, item_info in items_data.items():
+                    item_tags = item_info.get("tags", [])
+                    if category.lower() in [tag.lower() for tag in item_tags]:
+                        filtered_items[item_id] = item_info
+
+            # Return all items (or filtered) if no specific item is requested
+            if detailed and len(filtered_items) > 50:
+                raise HTTPException(status_code=400, detail="Detailed information is only available for specific items or smaller filtered sets (max 50 items).")
             
-            for item_id, item_info in items_data.items():
-                if (str(item_id) == str(item_name_or_id) or 
-                    item_info.get("name", "").lower() == item_name_or_id.lower()):
-                    found_item = item_info
-                    item_key = item_id
-                    break
-
-            if not found_item:
-                raise HTTPException(status_code=404, detail=f"Item '{item_name_or_id}' not found")
-
-            # Return detailed information if requested
             if detailed:
-                result = parse_detailed_item_data(found_item, item_key, items_data, include_recipe, include_stats)
-                log_handler.info(f"Fetched detailed info for item '{item_name_or_id}' from Data Dragon")
-                return {"item": result}
+                detailed_items = {}
+                for item_id, item_info in list(filtered_items.items())[:50]:  # Limit to 50 for performance
+                    detailed_items[item_id] = parse_detailed_item_data(item_info, item_id, items_data, include_recipe, include_stats)
+                
+                log_handler.info(f"Fetched detailed info for {len(detailed_items)} items from Data Dragon")
+                return {"items": detailed_items, "total_count": len(filtered_items)}
             else:
-                log_handler.info(f"Fetched basic info for item '{item_name_or_id}' from Data Dragon")
-                return {"item": found_item}
+                log_handler.info(f"Fetched {len(filtered_items)} items from Data Dragon")
+                return {"items": filtered_items, "total_count": len(filtered_items)}
 
-        # Filter by category if specified
-        filtered_items = items_data
-        if category:
-            filtered_items = {}
-            for item_id, item_info in items_data.items():
-                item_tags = item_info.get("tags", [])
-                if category.lower() in [tag.lower() for tag in item_tags]:
-                    filtered_items[item_id] = item_info
-
-        # Return all items (or filtered) if no specific item is requested
-        if detailed and len(filtered_items) > 50:
-            raise HTTPException(status_code=400, detail="Detailed information is only available for specific items or smaller filtered sets (max 50 items).")
-        
-        if detailed:
-            detailed_items = {}
-            for item_id, item_info in list(filtered_items.items())[:50]:  # Limit to 50 for performance
-                detailed_items[item_id] = parse_detailed_item_data(item_info, item_id, items_data, include_recipe, include_stats)
-            
-            log_handler.info(f"Fetched detailed info for {len(detailed_items)} items from Data Dragon")
-            return {"items": detailed_items, "total_count": len(filtered_items)}
-        else:
-            log_handler.info(f"Fetched {len(filtered_items)} items from Data Dragon")
-            return {"items": filtered_items, "total_count": len(filtered_items)}
-
-    except requests.RequestException as e:
+    except httpx.RequestError as e:
         log_handler.error(f"Failed to fetch items from Data Dragon: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch item data from Data Dragon.")
 

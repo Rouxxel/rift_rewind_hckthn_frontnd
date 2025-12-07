@@ -17,7 +17,7 @@ from typing import Dict, Any, Optional
 
 #Third-party imports
 from fastapi import APIRouter, Request, HTTPException, Query
-import requests
+import httpx
 
 #Other file imports
 from src.utils.custom_logger import log_handler
@@ -50,27 +50,28 @@ async def get_summoner_id_from_puuid(puuid: str, region: str) -> str:
     platforms = REGION_DATA[region]["platforms"]
     headers = {"X-Riot-Token": RIOT_API_KEY}
     
-    for platform in platforms:
-        platform_lower = platform.lower()
-        url = f"https://{platform_lower}.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/{puuid}"
-        
-        try:
-            response = requests.get(url, headers=headers)
-            if response.status_code == 200:
-                summoner_data = response.json()
-                summoner_id = summoner_data.get("id")
-                if summoner_id:
-                    log_handler.info(f"Found summoner_id on platform {platform_lower}: {summoner_id}")
-                    return summoner_id
-            elif response.status_code == 404:
-                continue  # Try next platform
-            else:
-                log_handler.warning(f"Platform {platform_lower} returned {response.status_code}: {response.text}")
+    async with httpx.AsyncClient() as client:
+        for platform in platforms:
+            platform_lower = platform.lower()
+            url = f"https://{platform_lower}.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/{puuid}"
+            
+            try:
+                response = await client.get(url, headers=headers)
+                if response.status_code == 200:
+                    summoner_data = response.json()
+                    summoner_id = summoner_data.get("id")
+                    if summoner_id:
+                        log_handler.info(f"Found summoner_id on platform {platform_lower}: {summoner_id}")
+                        return summoner_id
+                elif response.status_code == 404:
+                    continue  # Try next platform
+                else:
+                    log_handler.warning(f"Platform {platform_lower} returned {response.status_code}: {response.text}")
+                    continue
+                    
+            except httpx.RequestError as e:
+                log_handler.warning(f"Platform {platform_lower} connection error: {e}")
                 continue
-                
-        except requests.RequestException as e:
-            log_handler.warning(f"Platform {platform_lower} connection error: {e}")
-            continue
     
     # If we get here, summoner not found on any platform
     raise HTTPException(
@@ -145,28 +146,29 @@ async def get_ranked_stats(
     successful_platform = None
     last_error = None
     
-    for platform in platforms:
-        platform_lower = platform.lower()
-        url = f"https://{platform_lower}.api.riotgames.com/lol/league/v4/entries/by-summoner/{summoner_id}"
-        
-        try:
-            response = requests.get(url, headers=headers)
-            if response.status_code == 200:
-                ranked_data = response.json()
-                successful_platform = platform_lower
-                log_handler.info(f"Found ranked data on platform: {platform_lower}")
-                break
-            elif response.status_code == 404:
-                # Summoner not found on this platform, try next one
+    async with httpx.AsyncClient() as client:
+        for platform in platforms:
+            platform_lower = platform.lower()
+            url = f"https://{platform_lower}.api.riotgames.com/lol/league/v4/entries/by-summoner/{summoner_id}"
+            
+            try:
+                response = await client.get(url, headers=headers)
+                if response.status_code == 200:
+                    ranked_data = response.json()
+                    successful_platform = platform_lower
+                    log_handler.info(f"Found ranked data on platform: {platform_lower}")
+                    break
+                elif response.status_code == 404:
+                    # Summoner not found on this platform, try next one
+                    continue
+                else:
+                    # Other error, store it but continue trying
+                    last_error = f"Platform {platform_lower}: {response.status_code} - {response.text}"
+                    continue
+                    
+            except httpx.RequestError as e:
+                last_error = f"Platform {platform_lower}: Connection error - {str(e)}"
                 continue
-            else:
-                # Other error, store it but continue trying
-                last_error = f"Platform {platform_lower}: {response.status_code} - {response.text}"
-                continue
-                
-        except requests.RequestException as e:
-            last_error = f"Platform {platform_lower}: Connection error - {str(e)}"
-            continue
     
     # Check if we found the ranked data
     if ranked_data is None:

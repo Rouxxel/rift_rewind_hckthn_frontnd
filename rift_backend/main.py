@@ -95,7 +95,7 @@ app.add_middleware(
         "http://localhost:5173",      # Vite default
         "http://localhost:5174",      # Vite alternate
         "https://*.vercel.app",       # All Vercel preview deployments
-        "https://your-app.vercel.app", # Your production domain (update this!)
+        "https://rift-rewind-hckthn-frontnd.vercel.app/",
         "*"                           # Allow all origins (remove in production for security)
     ],
     allow_credentials=True,

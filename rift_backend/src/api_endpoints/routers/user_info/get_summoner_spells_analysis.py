@@ -18,7 +18,7 @@ from collections import Counter
 
 #Third-party imports
 from fastapi import APIRouter, Request, HTTPException, Query
-import requests
+import httpx
 
 #Other file imports
 from src.utils.custom_logger import log_handler
@@ -90,99 +90,100 @@ async def get_summoner_spells_analysis(
     headers = {"X-Riot-Token": RIOT_API_KEY}
 
     try:
-        # Get recent match IDs
-        match_url = f"https://{region_lower}.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids"
-        match_params = {"start": 0, "count": match_count}
-        
-        match_response = requests.get(match_url, headers=headers, params=match_params)
-        match_response.raise_for_status()
-        match_ids = match_response.json()
+        async with httpx.AsyncClient() as client:
+            # Get recent match IDs
+            match_url = f"https://{region_lower}.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids"
+            match_params = {"start": 0, "count": match_count}
+            
+            match_response = await client.get(match_url, headers=headers, params=match_params)
+            match_response.raise_for_status()
+            match_ids = match_response.json()
 
-        if not match_ids:
-            raise HTTPException(status_code=404, detail="No recent matches found for this player.")
+            if not match_ids:
+                raise HTTPException(status_code=404, detail="No recent matches found for this player.")
 
-        # Analyze summoner spells from matches
-        spell_combinations = Counter()
-        spell_wins = Counter()
-        spell_games = Counter()
-        champion_spells = {}
-        role_spells = {}
+            # Analyze summoner spells from matches
+            spell_combinations = Counter()
+            spell_wins = Counter()
+            spell_games = Counter()
+            champion_spells = {}
+            role_spells = {}
 
-        for match_id in match_ids:
-            try:
-                # Get match details
-                match_detail_url = f"https://{region_lower}.api.riotgames.com/lol/match/v5/matches/{match_id}"
-                match_detail_response = requests.get(match_detail_url, headers=headers)
-                match_detail_response.raise_for_status()
-                
-                match_data = match_detail_response.json()
-                participants = match_data.get("info", {}).get("participants", [])
-                
-                # Find player's data in this match
-                player_data = None
-                for participant in participants:
-                    if participant.get("puuid") == puuid:
-                        player_data = participant
-                        break
-                
-                if not player_data:
+            for match_id in match_ids:
+                try:
+                    # Get match details
+                    match_detail_url = f"https://{region_lower}.api.riotgames.com/lol/match/v5/matches/{match_id}"
+                    match_detail_response = await client.get(match_detail_url, headers=headers)
+                    match_detail_response.raise_for_status()
+                    
+                    match_data = match_detail_response.json()
+                    participants = match_data.get("info", {}).get("participants", [])
+                    
+                    # Find player's data in this match
+                    player_data = None
+                    for participant in participants:
+                        if participant.get("puuid") == puuid:
+                            player_data = participant
+                            break
+                    
+                    if not player_data:
+                        continue
+
+                    champion = player_data.get("championName", "Unknown")
+                    role = player_data.get("teamPosition", "UNKNOWN")
+                    
+                    # Skip if filtering by champion and this doesn't match
+                    if champion_name and champion.lower() != champion_name.lower():
+                        continue
+
+                    # Extract summoner spell data
+                    spell1_id = player_data.get("summoner1Id")
+                    spell2_id = player_data.get("summoner2Id")
+                    
+                    spell1_name = SUMMONER_SPELLS.get(spell1_id, f"Unknown_{spell1_id}")
+                    spell2_name = SUMMONER_SPELLS.get(spell2_id, f"Unknown_{spell2_id}")
+                    
+                    # Create consistent spell combination (alphabetical order)
+                    spell_combo = tuple(sorted([spell1_name, spell2_name]))
+                    spell_combinations[spell_combo] += 1
+                    spell_games[spell_combo] += 1
+                    
+                    win = player_data.get("win", False)
+                    if win:
+                        spell_wins[spell_combo] += 1
+
+                    # Track by champion
+                    if champion not in champion_spells:
+                        champion_spells[champion] = {
+                            "combinations": Counter(),
+                            "wins": Counter(),
+                            "games": Counter()
+                        }
+                    
+                    champion_spells[champion]["combinations"][spell_combo] += 1
+                    champion_spells[champion]["games"][spell_combo] += 1
+                    if win:
+                        champion_spells[champion]["wins"][spell_combo] += 1
+
+                    # Track by role
+                    if role not in role_spells:
+                        role_spells[role] = {
+                            "combinations": Counter(),
+                            "wins": Counter(),
+                            "games": Counter()
+                        }
+                    
+                    role_spells[role]["combinations"][spell_combo] += 1
+                    role_spells[role]["games"][spell_combo] += 1
+                    if win:
+                        role_spells[role]["wins"][spell_combo] += 1
+
+                except httpx.RequestError as e:
+                    log_handler.warning(f"Failed to fetch match {match_id}: {e}")
                     continue
 
-                champion = player_data.get("championName", "Unknown")
-                role = player_data.get("teamPosition", "UNKNOWN")
-                
-                # Skip if filtering by champion and this doesn't match
-                if champion_name and champion.lower() != champion_name.lower():
-                    continue
-
-                # Extract summoner spell data
-                spell1_id = player_data.get("summoner1Id")
-                spell2_id = player_data.get("summoner2Id")
-                
-                spell1_name = SUMMONER_SPELLS.get(spell1_id, f"Unknown_{spell1_id}")
-                spell2_name = SUMMONER_SPELLS.get(spell2_id, f"Unknown_{spell2_id}")
-                
-                # Create consistent spell combination (alphabetical order)
-                spell_combo = tuple(sorted([spell1_name, spell2_name]))
-                spell_combinations[spell_combo] += 1
-                spell_games[spell_combo] += 1
-                
-                win = player_data.get("win", False)
-                if win:
-                    spell_wins[spell_combo] += 1
-
-                # Track by champion
-                if champion not in champion_spells:
-                    champion_spells[champion] = {
-                        "combinations": Counter(),
-                        "wins": Counter(),
-                        "games": Counter()
-                    }
-                
-                champion_spells[champion]["combinations"][spell_combo] += 1
-                champion_spells[champion]["games"][spell_combo] += 1
-                if win:
-                    champion_spells[champion]["wins"][spell_combo] += 1
-
-                # Track by role
-                if role not in role_spells:
-                    role_spells[role] = {
-                        "combinations": Counter(),
-                        "wins": Counter(),
-                        "games": Counter()
-                    }
-                
-                role_spells[role]["combinations"][spell_combo] += 1
-                role_spells[role]["games"][spell_combo] += 1
-                if win:
-                    role_spells[role]["wins"][spell_combo] += 1
-
-            except requests.RequestException as e:
-                log_handler.warning(f"Failed to fetch match {match_id}: {e}")
-                continue
-
-        if not spell_combinations:
-            raise HTTPException(status_code=404, detail="No summoner spell data found in recent matches.")
+            if not spell_combinations:
+                raise HTTPException(status_code=404, detail="No summoner spell data found in recent matches.")
 
         # Calculate win rates
         spell_stats = {}
@@ -237,9 +238,9 @@ async def get_summoner_spells_analysis(
         log_handler.info(f"Analyzed summoner spells from matches for PUUID: {puuid}")
         return result
 
-    except requests.HTTPError as e:
+    except httpx.HTTPStatusError as e:
         log_handler.error(f"HTTP Error: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch match data from Riot API.")
-    except requests.RequestException as e:
+    except httpx.RequestError as e:
         log_handler.error(f"Request failed: {e}")
         raise HTTPException(status_code=500, detail="Failed to connect to Riot API.")

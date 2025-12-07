@@ -16,7 +16,7 @@ from typing import Dict, Any
 
 #Third-party imports
 from fastapi import APIRouter, Body, Request, HTTPException
-import requests
+import httpx
 
 #Other file imports
 from src.utils.custom_logger import log_handler
@@ -68,31 +68,33 @@ async def get_match_details(
         #Build the Riot API request URL
         url = f"https://{region_lower}.api.riotgames.com/lol/match/v5/matches/{match_id}"
         headers = {"X-Riot-Token": RIOT_API_KEY}
-        response = requests.get(url, headers=headers)
+        
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url, headers=headers)
 
-        if not response.content:
-            raise HTTPException(status_code=500, detail="Empty response from Riot API")
+            if not response.content:
+                raise HTTPException(status_code=500, detail="Empty response from Riot API")
 
-        if response.status_code == 200:
-            match_data = response.json()
+            if response.status_code == 200:
+                match_data = response.json()
 
-            #Keep only match-level info (exclude participants)
-            match_info_only = {k: v for k, v in match_data.get("info", {}).items() if k != "participants"}
+                #Keep only match-level info (exclude participants)
+                match_info_only = {k: v for k, v in match_data.get("info", {}).items() if k != "participants"}
 
-            log_handler.info(f"Fetched match info (no participants) for match ID: {match_id}")
-            return {
-                "match_id": match_id,
-                "region": region,
-                "match_info": match_info_only
-            }
+                log_handler.info(f"Fetched match info (no participants) for match ID: {match_id}")
+                return {
+                    "match_id": match_id,
+                    "region": region,
+                    "match_info": match_info_only
+                }
 
-        elif response.status_code == 403:
-            raise HTTPException(status_code=403, detail="Forbidden: Invalid or expired Riot API key.")
-        elif response.status_code == 404:
-            raise HTTPException(status_code=404, detail="Match not found for this ID.")
-        else:
-            raise HTTPException(status_code=response.status_code, detail=response.text)
+            elif response.status_code == 403:
+                raise HTTPException(status_code=403, detail="Forbidden: Invalid or expired Riot API key.")
+            elif response.status_code == 404:
+                raise HTTPException(status_code=404, detail="Match not found for this ID.")
+            else:
+                raise HTTPException(status_code=response.status_code, detail=response.text)
 
-    except requests.RequestException as e:
+    except httpx.RequestError as e:
         log_handler.error(f"Riot API request failed: {e}")
         raise HTTPException(status_code=500, detail="Failed to connect to Riot API.")

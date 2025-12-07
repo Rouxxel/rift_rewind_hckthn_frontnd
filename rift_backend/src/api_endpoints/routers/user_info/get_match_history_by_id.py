@@ -17,7 +17,7 @@ from typing import Dict, Any, List
 
 #Third-party imports
 from fastapi import APIRouter, Body, Request, HTTPException
-import requests
+import httpx
 
 #Other file imports
 from src.utils.custom_logger import log_handler
@@ -73,26 +73,27 @@ async def get_match_ids_by_puuid(
         url = f"https://{region_lower}.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids?count={count}"
         headers = {"X-Riot-Token": RIOT_API_KEY}
     
-        response = requests.get(url, headers=headers)
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url, headers=headers)
 
-        #Handle no response
-        if not response.content:
-            raise HTTPException(status_code=500, detail="Empty response from Riot API")
+            #Handle no response
+            if not response.content:
+                raise HTTPException(status_code=500, detail="Empty response from Riot API")
 
-        #Successful fetch
-        if response.status_code == 200:
-            match_ids: List[str] = response.json()
-            log_handler.info(f"Fetched {len(match_ids)} matches for PUUID: {puuid}")
-            return {"puuid": puuid, "region": region, "match_ids": match_ids}
+            #Successful fetch
+            if response.status_code == 200:
+                match_ids: List[str] = response.json()
+                log_handler.info(f"Fetched {len(match_ids)} matches for PUUID: {puuid}")
+                return {"puuid": puuid, "region": region, "match_ids": match_ids}
 
-        #Handle common Riot API errors
-        elif response.status_code == 403:
-            raise HTTPException(status_code=403, detail="Forbidden: Invalid or expired Riot API key.")
-        elif response.status_code == 404:
-            raise HTTPException(status_code=404, detail="No matches found for this PUUID.")
-        else:
-            raise HTTPException(status_code=response.status_code, detail=response.text)
+            #Handle common Riot API errors
+            elif response.status_code == 403:
+                raise HTTPException(status_code=403, detail="Forbidden: Invalid or expired Riot API key.")
+            elif response.status_code == 404:
+                raise HTTPException(status_code=404, detail="No matches found for this PUUID.")
+            else:
+                raise HTTPException(status_code=response.status_code, detail=response.text)
 
-    except requests.RequestException as e:
+    except httpx.RequestError as e:
         log_handler.error(f"Riot API request failed: {e}")
         raise HTTPException(status_code=500, detail="Failed to connect to Riot API.")

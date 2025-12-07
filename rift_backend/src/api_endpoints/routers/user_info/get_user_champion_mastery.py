@@ -17,7 +17,7 @@ from typing import Dict, Any, Optional
 
 #Third-party imports
 from fastapi import APIRouter, Request, HTTPException, Query
-import requests
+import httpx
 
 #Other file imports
 from src.utils.custom_logger import log_handler
@@ -87,32 +87,33 @@ async def get_champion_mastery(
     headers = {"X-Riot-Token": RIOT_API_KEY}
 
     try:
-        response = requests.get(url, headers=headers, timeout=10)
-        response.raise_for_status()
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url, headers=headers, timeout=10.0)
+            response.raise_for_status()
 
-        mastery_data = response.json()
-        
-        # Calculate count based on response type
-        if total_score:
-            count = 1
-            log_handler.info(f"Fetched total mastery score for PUUID {puuid}")
-        elif isinstance(mastery_data, list):
-            count = len(mastery_data)
-            log_handler.info(f"Fetched {count} mastery entries for PUUID {puuid}")
-        else:
-            count = 1
-            log_handler.info(f"Fetched mastery for champion {champion_id} for PUUID {puuid}")
+            mastery_data = response.json()
+            
+            # Calculate count based on response type
+            if total_score:
+                count = 1
+                log_handler.info(f"Fetched total mastery score for PUUID {puuid}")
+            elif isinstance(mastery_data, list):
+                count = len(mastery_data)
+                log_handler.info(f"Fetched {count} mastery entries for PUUID {puuid}")
+            else:
+                count = 1
+                log_handler.info(f"Fetched mastery for champion {champion_id} for PUUID {puuid}")
 
-        return {
-            "region": region,
-            "puuid": puuid,
-            "entries_count": count,
-            "mastery_data": mastery_data
-        }
+            return {
+                "region": region,
+                "puuid": puuid,
+                "entries_count": count,
+                "mastery_data": mastery_data
+            }
 
-    except requests.HTTPError as e:
-        log_handler.error(f"HTTP Error: {e} | Response: {response.text}")
-        raise HTTPException(status_code=response.status_code, detail=response.text)
-    except requests.RequestException as e:
+    except httpx.HTTPStatusError as e:
+        log_handler.error(f"HTTP Error: {e} | Response: {e.response.text}")
+        raise HTTPException(status_code=e.response.status_code, detail=e.response.text)
+    except httpx.RequestError as e:
         log_handler.error(f"Request failed: {e}")
         raise HTTPException(status_code=500, detail="Failed to connect to Riot API.")
