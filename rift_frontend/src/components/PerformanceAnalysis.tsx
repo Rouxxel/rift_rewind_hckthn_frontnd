@@ -303,7 +303,7 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
       <div className="performance-header">
         <div className="header-content">
           <button onClick={onBack} className="back-button">
-            ← Back to Dashboard
+            Back to Dashboard
           </button>
           <div className="header-center">
             <h2>🎯 Performance Analysis</h2>
