@@ -6,6 +6,11 @@ import { cache, CACHE_KEYS } from '../utils/cache';
 let isLoading = false;
 let loadPromise: Promise<Record<string, any>> | null = null;
 let championsData: Record<string, any> | null = null;
+let lastAttemptTime = 0;
+let failureCount = 0;
+
+const MIN_RETRY_INTERVAL = 10000; // 10 seconds minimum between attempts
+const MAX_FAILURES = 2; // Stop trying after 2 failures
 
 /**
  * Get champions data with deduplication
@@ -32,9 +37,31 @@ export const getChampions = async (): Promise<Record<string, any>> => {
     return loadPromise;
   }
 
+  // Check if we've failed too many times recently
+  if (failureCount >= MAX_FAILURES) {
+    const timeSinceLastAttempt = Date.now() - lastAttemptTime;
+    if (timeSinceLastAttempt < MIN_RETRY_INTERVAL * 3) {
+      console.warn(`⚠️ Too many failures (${failureCount}), please wait ${Math.ceil((MIN_RETRY_INTERVAL * 3 - timeSinceLastAttempt) / 1000)}s before retrying`);
+      throw new Error('Too many failed attempts. Please wait 30 seconds and try again.');
+    } else {
+      // Reset after waiting long enough
+      console.log('🔄 Resetting failure count after cooldown period');
+      failureCount = 0;
+    }
+  }
+
+  // Enforce minimum retry interval to prevent rate limiting
+  const timeSinceLastAttempt = Date.now() - lastAttemptTime;
+  if (timeSinceLastAttempt < MIN_RETRY_INTERVAL && lastAttemptTime > 0) {
+    const waitTime = MIN_RETRY_INTERVAL - timeSinceLastAttempt;
+    console.log(`⏳ Rate limit protection: waiting ${Math.ceil(waitTime / 1000)}s before next attempt`);
+    await new Promise(resolve => setTimeout(resolve, waitTime));
+  }
+
   // Start new load
   console.log('🔄 Loading champions from API...');
   isLoading = true;
+  lastAttemptTime = Date.now();
   
   loadPromise = (async () => {
     try {
@@ -49,23 +76,40 @@ export const getChampions = async (): Promise<Record<string, any>> => {
 
       return data;
     } catch (err: any) {
-      console.error('❌ Failed to load champions:', err);
+      failureCount++;
+      console.error(`❌ Failed to load champions (failure ${failureCount}/${MAX_FAILURES}):`, err);
       
-      // If it's a rate limit error, wait and retry once
-      if (err.message?.includes('rate limit')) {
-        console.log('⏳ Rate limited, waiting 3 seconds before retry...');
-        await new Promise(resolve => setTimeout(resolve, 3000));
+      // Don't retry on CORS errors if we've already failed - backend is likely down
+      if (err.message?.includes('CORS') && failureCount >= MAX_FAILURES) {
+        console.error('❌ Backend appears to be unavailable');
+        throw new Error('Unable to connect to backend. Please check if the backend is running.');
+      }
+      
+      // Retry on rate limit or connection errors (backend might be waking up)
+      const shouldRetry = failureCount < MAX_FAILURES && (
+        err.message?.includes('rate limit') || 
+        err.message?.includes('CORS') ||
+        err.message?.includes('Unable to connect')
+      );
+      
+      if (shouldRetry) {
+        const waitTime = err.message?.includes('rate limit') ? 5000 : 10000;
+        console.log(`⏳ Connection issue detected, waiting ${waitTime/1000} seconds before retry...`);
+        await new Promise(resolve => setTimeout(resolve, waitTime));
         
         try {
           console.log('🔄 Retrying champion load...');
+          lastAttemptTime = Date.now();
           const response = await apiService.getChampions();
           const data = response.champions || {};
           championsData = data;
+          failureCount = 0; // Reset on success
           cache.set(CACHE_KEYS.CHAMPIONS, data, 60);
           console.log('✅ Champions loaded on retry');
           return data;
         } catch (retryErr: any) {
-          console.error('❌ Retry failed:', retryErr);
+          failureCount++;
+          console.error(`❌ Retry failed (failure ${failureCount}/${MAX_FAILURES}):`, retryErr);
           throw retryErr;
         }
       }
@@ -88,6 +132,8 @@ export const clearChampionsCache = () => {
   championsData = null;
   isLoading = false;
   loadPromise = null;
+  lastAttemptTime = 0;
+  failureCount = 0;
   cache.remove(CACHE_KEYS.CHAMPIONS);
 };
 

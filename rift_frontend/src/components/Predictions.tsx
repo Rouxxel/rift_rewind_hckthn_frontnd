@@ -57,8 +57,10 @@ export const Predictions: React.FC<PredictionsProps> = ({ onBack }) => {
   const userData = storage.getUserData();
 
   useEffect(() => {
-    // Load champions on mount (check cache first)
-    loadChampions();
+    // Load champions only for predictions tab (needed for team builder)
+    if (activeTab === 'predictions') {
+      loadChampions();
+    }
 
     // Load winrates if on winrates tab - but only if not already loaded
     if (activeTab === 'winrates') {
