@@ -58,17 +58,29 @@ const getBackendURL = async (): Promise<string> => {
   }
 
   // List of backend URLs to try (in order of preference)
-  // Priority: Render backend (most likely) → localhost (for local dev)
-  const backendURLs = [
-    'https://rift-rewind-hckthn-backend.onrender.com', // Production backend (try first)
-    'http://localhost:8000',                            // Local backend (fallback for dev)
-    import.meta.env.VITE_API_BASE_URL,                 // Environment variable (last resort)
-  ].filter((url, index, self) => url && self.indexOf(url) === index); // Remove duplicates and undefined
+  // Priority changes based on environment:
+  // - Development: localhost first (fast), then Render (fallback)
+  // - Production: Render first (most likely), then localhost (won't work)
+  const isDevelopment = import.meta.env.MODE === 'development' || import.meta.env.DEV;
+  
+  const backendURLs = isDevelopment
+    ? [
+        'http://localhost:8000',                            // Local backend (try first in dev)
+        'https://rift-rewind-hckthn-backend.onrender.com', // Render backend (fallback)
+        import.meta.env.VITE_API_BASE_URL,                 // Environment variable (last resort)
+      ]
+    : [
+        'https://rift-rewind-hckthn-backend.onrender.com', // Production backend (try first)
+        'http://localhost:8000',                            // Local backend (won't work in prod)
+        import.meta.env.VITE_API_BASE_URL,                 // Environment variable (last resort)
+      ];
+  
+  const filteredURLs = backendURLs.filter((url, index, self) => url && self.indexOf(url) === index); // Remove duplicates and undefined
 
-  console.log('🔍 Detecting available backend...');
+  console.log(`🔍 Detecting available backend... (Mode: ${isDevelopment ? 'Development' : 'Production'})`);
 
   // Try each backend URL
-  for (const url of backendURLs) {
+  for (const url of filteredURLs) {
     try {
       console.log(`⏳ Trying backend: ${url}`);
       const controller = new AbortController();
