@@ -750,6 +750,17 @@
   box-shadow: 0 4px 12px rgba(91, 192, 222, 0.3);
 }
 
+.back-button.secondary {
+  background: linear-gradient(145deg, #2a2d35 0%, #3c3f47 100%);
+  border: 1px solid #463714;
+  justify-self: end;
+}
+
+.back-button.secondary:hover {
+  background: linear-gradient(145deg, #3c3f47 0%, #2a2d35 100%);
+  box-shadow: 0 4px 12px rgba(70, 55, 20, 0.3);
+}
+
 .header-center {
   display: flex;
   flex-direction: column;

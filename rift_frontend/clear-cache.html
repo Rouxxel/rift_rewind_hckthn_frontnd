@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clear Rift Rewind Cache</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #0a1428 0%, #1e2328 100%);
+            color: #f0e6d2;
+        }
+        .container {
+            background: #1a1d23;
+            border: 2px solid #c89b3c;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        }
+        h1 {
+            color: #c89b3c;
+            margin-top: 0;
+        }
+        button {
+            background: linear-gradient(145deg, #c89b3c 0%, #f0e6d2 100%);
+            color: #0a1428;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 10px 5px;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(200, 155, 60, 0.4);
+        }
+        .info {
+            background: rgba(91, 192, 222, 0.1);
+            border-left: 3px solid #5bc0de;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .success {
+            background: rgba(92, 184, 92, 0.1);
+            border-left: 3px solid #5cb85c;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+            display: none;
+        }
+        .cache-list {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .cache-item {
+            padding: 8px;
+            margin: 5px 0;
+            background: rgba(200, 155, 60, 0.1);
+            border-radius: 4px;
+            font-size: 14px;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧹 Clear Rift Rewind Cache</h1>
+        
+        <div class="info">
+            <strong>Why clear cache?</strong><br>
+            After backend updates, old cached data may cause issues. Clear the cache to fetch fresh data.
+        </div>
+
+        <div id="cacheInfo">
+            <h3>Current Cache Items:</h3>
+            <div id="cacheList" class="cache-list"></div>
+        </div>
+
+        <button onclick="clearAllCache()">🗑️ Clear All Cache</button>
+        <button onclick="clearMatchCache()">🎮 Clear Match Data Only</button>
+        <button onclick="clearBackendCache()">🔗 Clear Backend URL</button>
+        <button onclick="location.reload()">🔄 Refresh</button>
+
+        <div id="success" class="success">
+            ✅ Cache cleared successfully! You can close this page and refresh your app.
+        </div>
+    </div>
+
+    <script>
+        function displayCacheItems() {
+            const cacheList = document.getElementById('cacheList');
+            const items = [];
+            
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.startsWith('rift_')) {
+                    items.push(key);
+                }
+            }
+
+            if (items.length === 0) {
+                cacheList.innerHTML = '<div class="cache-item">No cache items found</div>';
+            } else {
+                cacheList.innerHTML = items.map(key => 
+                    `<div class="cache-item">${key}</div>`
+                ).join('');
+            }
+        }
+
+        function clearAllCache() {
+            const keysToRemove = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.startsWith('rift_')) {
+                    keysToRemove.push(key);
+                }
+            }
+            
+            keysToRemove.forEach(key => localStorage.removeItem(key));
+            
+            document.getElementById('success').style.display = 'block';
+            displayCacheItems();
+            
+            console.log(`🧹 Cleared ${keysToRemove.length} cache items`);
+        }
+
+        function clearMatchCache() {
+            const keysToRemove = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && (
+                    key.includes('match_details') || 
+                    key.includes('match_participants') || 
+                    key.includes('match_timeline')
+                )) {
+                    keysToRemove.push(key);
+                }
+            }
+            
+            keysToRemove.forEach(key => localStorage.removeItem(key));
+            
+            document.getElementById('success').style.display = 'block';
+            displayCacheItems();
+            
+            console.log(`🧹 Cleared ${keysToRemove.length} match cache items`);
+        }
+
+        function clearBackendCache() {
+            localStorage.removeItem('rift_backend_url');
+            
+            document.getElementById('success').style.display = 'block';
+            displayCacheItems();
+            
+            console.log('🧹 Cleared backend URL cache');
+        }
+
+        // Display cache items on load
+        displayCacheItems();
+    </script>
+</body>
+</html>

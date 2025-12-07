@@ -4,6 +4,7 @@ import { storage } from '../utils/storage';
 import { ChampionDetails } from './ChampionDetails';
 import { ItemDetails } from './ItemDetails';
 import { cache, CACHE_KEYS } from '../utils/cache';
+import { getChampions } from '../services/championCache';
 
 interface GameAssetsProps {
   onBack: () => void;
@@ -58,28 +59,12 @@ export const GameAssets: React.FC<GameAssetsProps> = ({ onBack }) => {
   const loadChampions = async () => {
     if (championsLoaded) return; // Skip if already loaded in this session
 
-    // Check persistent cache first
-    const cachedChampions = cache.get<Record<string, Champion>>(CACHE_KEYS.CHAMPIONS);
-    if (cachedChampions) {
-      console.log('📋 Using cached champions data');
-      setChampions(cachedChampions);
-      setChampionsLoaded(true);
-      return;
-    }
-
     try {
       setLoading(true);
       setError(null);
-      console.log('🔄 Loading champions from API...');
-      const response = await apiService.getChampions();
-      console.log('✅ Champions loaded:', response);
-      
-      const championsData = response.champions || {};
+      const championsData = await getChampions();
       setChampions(championsData);
       setChampionsLoaded(true);
-      
-      // Cache for 60 minutes
-      cache.set(CACHE_KEYS.CHAMPIONS, championsData, 60);
     } catch (err: any) {
       console.error('❌ Failed to load champions:', err);
       setError(`Failed to load champions: ${err.message}`);

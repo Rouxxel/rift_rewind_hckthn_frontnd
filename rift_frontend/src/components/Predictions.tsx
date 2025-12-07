@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { apiService } from '../services/api';
 import { storage } from '../utils/storage';
 import { cache, CACHE_KEYS } from '../utils/cache';
+import { getChampions } from '../services/championCache';
 
 interface PredictionsProps {
   onBack: () => void;
@@ -88,49 +89,13 @@ export const Predictions: React.FC<PredictionsProps> = ({ onBack }) => {
   const loadChampions = async () => {
     if (championsLoaded) return; // Skip if already loaded in this session
 
-    // Check persistent cache first
-    const cachedChampions = cache.get<Record<string, any>>(CACHE_KEYS.CHAMPIONS);
-    if (cachedChampions) {
-      console.log('📋 Using cached champions data');
-      setChampions(cachedChampions);
-      setChampionsLoaded(true);
-      return;
-    }
-
     try {
-      console.log('🔄 Loading champions from API...');
-      const response = await apiService.getChampions();
-      console.log('✅ Champions loaded:', response);
-
-      const championsData = response.champions || {};
+      const championsData = await getChampions();
       setChampions(championsData);
       setChampionsLoaded(true);
-
-      // Cache for 60 minutes
-      cache.set(CACHE_KEYS.CHAMPIONS, championsData, 60);
     } catch (err: any) {
       console.error('❌ Failed to load champions:', err);
-      
-      // If it's a rate limit error, wait and retry once
-      if (err.message?.includes('rate limit')) {
-        console.log('⏳ Rate limited, waiting 2 seconds before retry...');
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        try {
-          console.log('🔄 Retrying champion load...');
-          const response = await apiService.getChampions();
-          const championsData = response.champions || {};
-          setChampions(championsData);
-          setChampionsLoaded(true);
-          cache.set(CACHE_KEYS.CHAMPIONS, championsData, 60);
-          console.log('✅ Champions loaded on retry');
-        } catch (retryErr: any) {
-          console.error('❌ Retry failed:', retryErr);
-          setError('Failed to load champions. Please try again later.');
-        }
-      } else {
-        setError('Failed to load champions. Please refresh the page.');
-      }
+      setError('Failed to load champions. Please try again later.');
     }
   };
 

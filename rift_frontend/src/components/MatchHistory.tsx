@@ -320,29 +320,67 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
   const getChampionNameVariations = (championName: string): string[] => {
     const variations: string[] = [];
 
-    // 1. Split by capitals first (most common case): "MissFortune" -> "Miss Fortune", "KSante" -> "K Sante"
+    // 1. Original name (as-is from Riot API)
+    variations.push(championName);
+
+    // 2. Remove all spaces and special characters (compact form)
+    const compact = championName.replace(/[\s'.-]/g, '');
+    if (compact !== championName && !variations.includes(compact)) {
+      variations.push(compact);
+    }
+
+    // 3. Split by capitals: "MissFortune" -> "Miss Fortune"
     const splitName = splitByCapitals(championName);
-    variations.push(splitName);
-
-    // 2. If split name is different, try with apostrophes: "K Sante" -> "K'Sante"
-    if (splitName !== championName) {
-      const splitWithApostrophe = splitName.replace(/\s+/g, "'");
-      if (splitWithApostrophe !== splitName) {
-        variations.push(splitWithApostrophe);
-      }
+    if (splitName !== championName && !variations.includes(splitName)) {
+      variations.push(splitName);
     }
 
-    // 3. Try original name as fallback
-    if (!variations.includes(championName)) {
-      variations.push(championName);
-    }
-
-    // 4. Try adding apostrophes to original: "KSante" -> "K'Sante" (without space first)
+    // 4. Add apostrophes between lowercase and uppercase: "KSante" -> "K'Sante"
     const apostropheName = addApostrophes(championName);
     if (apostropheName !== championName && !variations.includes(apostropheName)) {
       variations.push(apostropheName);
     }
 
+    // 5. Split by capitals then add apostrophes: "K Sante" -> "K'Sante"
+    if (splitName !== championName) {
+      const splitWithApostrophe = splitName.replace(/\s+/g, "'");
+      if (!variations.includes(splitWithApostrophe)) {
+        variations.push(splitWithApostrophe);
+      }
+    }
+
+    // 6. Common special cases
+    const specialCases: Record<string, string[]> = {
+      'Velkoz': ['Vel\'Koz', 'VelKoz', 'Vel Koz'],
+      'VelKoz': ['Vel\'Koz', 'Velkoz', 'Vel Koz'],
+      'KSante': ['K\'Sante', 'KSante', 'K Sante'],
+      'KhaZix': ['Kha\'Zix', 'KhaZix', 'Kha Zix'],
+      'RekSai': ['Rek\'Sai', 'RekSai', 'Rek Sai'],
+      'ChoGath': ['Cho\'Gath', 'ChoGath', 'Cho Gath'],
+      'KogMaw': ['Kog\'Maw', 'KogMaw', 'Kog Maw'],
+      'LeBlanc': ['LeBlanc', 'Leblanc', 'Le Blanc'],
+      'MissFortune': ['Miss Fortune', 'MissFortune'],
+      'MasterYi': ['Master Yi', 'MasterYi'],
+      'TahmKench': ['Tahm Kench', 'TahmKench'],
+      'TwistedFate': ['Twisted Fate', 'TwistedFate'],
+      'XinZhao': ['Xin Zhao', 'XinZhao'],
+      'JarvanIV': ['Jarvan IV', 'JarvanIV', 'Jarvan4'],
+      'LeeSin': ['Lee Sin', 'LeeSin'],
+      'AurelionSol': ['Aurelion Sol', 'AurelionSol'],
+      'DrMundo': ['Dr. Mundo', 'DrMundo', 'Dr Mundo'],
+      'Yunara': ['Yunara', 'Yuumi'], // In case of typos
+    };
+
+    const normalizedName = championName.replace(/[\s'.-]/g, '');
+    if (specialCases[normalizedName]) {
+      specialCases[normalizedName].forEach(variant => {
+        if (!variations.includes(variant)) {
+          variations.push(variant);
+        }
+      });
+    }
+
+    console.log(`🔍 Generated ${variations.length} variations for "${championName}":`, variations);
     return variations;
   };
 
@@ -769,14 +807,37 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
     <div className="match-history-page">
       <div className="match-history-header">
         <div className="header-content">
-          <button onClick={onBack} className="back-button">
-            Back to Dashboard
-          </button>
-          <div className="header-center">
-            <h2>📊 Match History</h2>
-            <p className="user-info">{userData.gameName}#{userData.tagLine}</p>
-          </div>
-          <div className="header-spacer"></div>
+          {showDetails && selectedMatch ? (
+            <>
+              <button 
+                onClick={() => {
+                  setShowDetails(false);
+                  setSelectedMatch(null);
+                }} 
+                className="back-button"
+              >
+                ← Back to Matches
+              </button>
+              <div className="header-center">
+                <h2>📊 Match Details</h2>
+                <p className="user-info">Match ID: {selectedMatch.slice(-8)}</p>
+              </div>
+              <button onClick={onBack} className="back-button secondary">
+                Back to Dashboard
+              </button>
+            </>
+          ) : (
+            <>
+              <button onClick={onBack} className="back-button">
+                Back to Dashboard
+              </button>
+              <div className="header-center">
+                <h2>📊 Match History</h2>
+                <p className="user-info">{userData.gameName}#{userData.tagLine}</p>
+              </div>
+              <div className="header-spacer"></div>
+            </>
+          )}
         </div>
       </div>
 
@@ -846,10 +907,13 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
                 <div className="match-details-header">
                   <h3>Match Details: {selectedMatch.slice(-8)}</h3>
                   <button
-                    onClick={() => setShowDetails(false)}
+                    onClick={() => {
+                      setShowDetails(false);
+                      setSelectedMatch(null);
+                    }}
                     className="back-to-history-button"
                   >
-                    Back to History
+                    ← Back to Match List
                   </button>
                 </div>
 
