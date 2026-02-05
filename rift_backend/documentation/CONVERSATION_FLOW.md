@@ -27,7 +27,7 @@ Here's exactly how it works:
 │  Backend returns:                                          │
 │  {                                                         │
 │    "ai_response": "Great question! With 150k mastery...", │
-│    "model_used": "gemini-2.0-flash"                       │
+│    "model_used": "gemini-2.5-flash"                       │
 │  }                                                         │
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
@@ -52,7 +52,7 @@ Here's exactly how it works:
 │  Backend returns:                                           │
 │  {                                                          │
 │    "ai_response": "Positioning is crucial for Jinx!...",   │
-│    "model_used": "gemini-2.0-flash"                        │
+│    "model_used": "gemini-2.5-flash"                        │
 │  }                                                          │
 │                                                             │
 └─────────────────────────────────────────────────────────────┘

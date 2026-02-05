@@ -1,6 +1,6 @@
 {
     "defaults":{
-        "ai_model":"gemini-2.0-flash",
+        "ai_model":"gemini-2.5-flash",
         "ai_response_time.s":10.0,
         "general_data_path":"src/data/general_data.json"
     },

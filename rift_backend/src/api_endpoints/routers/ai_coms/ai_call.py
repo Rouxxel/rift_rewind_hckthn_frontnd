@@ -88,7 +88,7 @@ async def generate_ai_response(
     - prompt (str): The user's current question or message
     - context_data (Optional[Dict]): Game data context (only needed on first message or when data changes)
     - conversation_history (Optional[list]): Previous messages [{"role": "user", "content": "..."}, {"role": "assistant", "content": "..."}]
-    - ai_model (Optional[str]): Gemini model to use (defaults to gemini-2.0-flash)
+    - ai_model (Optional[str]): Gemini model to use (defaults to gemini-2.5-flash)
     - timeout (Optional[float]): Maximum response time in seconds (defaults to 10.0)
 
     Returns:

@@ -30,7 +30,7 @@ GEMINI_API_KEY=your-actual-gemini-api-key-here
 ### 3. Verify Configuration
 
 The endpoint uses these config values from `config_file.json`:
-- `defaults.ai_model`: Default model (gemini-2.0-flash)
+- `defaults.ai_model`: Default model (gemini-2.5-flash)
 - `defaults.ai_response_time.s`: Timeout in seconds (10.0)
 - `endpoints.ai_model_call_endpoint`: Endpoint configuration
 
@@ -66,7 +66,7 @@ POST /ai/generate_ai_response
       }
     ]
   },
-  "ai_model": "gemini-2.0-flash",
+  "ai_model": "gemini-2.5-flash",
   "timeout": 10.0
 }
 ```
@@ -77,7 +77,7 @@ POST /ai/generate_ai_response
 |-----------|------|----------|---------|-------------|
 | `prompt` | string | Yes | - | User's question or message |
 | `context_data` | object | No | null | Game data context (match history, stats, etc.) |
-| `ai_model` | string | No | gemini-2.0-flash | Gemini model to use |
+| `ai_model` | string | No | gemini-2.5-flash | Gemini model to use |
 | `timeout` | float | No | 10.0 | Response timeout in seconds |
 
 ### Response
@@ -85,7 +85,7 @@ POST /ai/generate_ai_response
 ```json
 {
   "ai_response": "Great question! With 150k mastery points on Jinx, you're clearly experienced. Looking at your recent match (8/5/12), your KDA is solid at 4.0. Here are some tips to push it even higher:\n\n1. **Positioning**: As Jinx, you're immobile without your passive. Stay behind your frontline and use your range advantage.\n2. **Rocket Form**: Toggle to rockets in teamfights for AOE damage and safer positioning.\n3. **Peel Awareness**: Your E (Flame Chompers) is crucial for self-peel. Save it for assassins diving you.\n4. **Objective Control**: Your passive makes you a cleanup queen. Position for resets during objective fights.\n\nKeep it up, summoner! You're doing great.",
-  "model_used": "gemini-2.0-flash"
+  "model_used": "gemini-2.5-flash"
 }
 ```
 
@@ -157,7 +157,7 @@ const askAI = async (question, gameData) => {
       body: JSON.stringify({
         prompt: question,
         context_data: gameData, // Data from localStorage
-        ai_model: 'gemini-2.0-flash',
+        ai_model: 'gemini-2.5-flash',
         timeout: 15.0
       })
     });
@@ -249,7 +249,7 @@ RuntimeError: GEMINI_API_KEY environment variable is not set.
 
 ### Model Not Available
 
-If a model isn't available, the endpoint automatically falls back to the default model (`gemini-2.0-flash`).
+If a model isn't available, the endpoint automatically falls back to the default model (`gemini-2.5-flash`).
 
 ## Future Enhancements
 
