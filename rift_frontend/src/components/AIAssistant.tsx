@@ -16,6 +16,7 @@ interface AIAssistantProps {
 
 export const AIAssistant: React.FC<AIAssistantProps> = ({ currentPage, pageContext }) => {
     const [isOpen, setIsOpen] = useState(false);
+    const [isFullScreen, setIsFullScreen] = useState(false);
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
@@ -350,13 +351,26 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ currentPage, pageConte
 
             {/* Chat Window */}
             {isOpen && (
-                <div className="ai-assistant-window">
+                <div className={`ai-assistant-window ${isFullScreen ? 'ai-assistant-window--fullscreen' : ''}`}>
                     <div className="ai-assistant-header">
                         <div className="header-title">
                             <span className="ai-icon">🤖</span>
                             <span>Rift Rewind Assistant</span>
                         </div>
                         <div className="header-actions">
+                            <button
+                                onClick={() => {
+                                    setIsFullScreen(prev => {
+                                        const next = !prev;
+                                        console.log(next ? '⛶ [AI Assistant] Expanding to full screen' : '📐 [AI Assistant] Restoring chat size');
+                                        return next;
+                                    });
+                                }}
+                                title={isFullScreen ? 'Restore size' : 'Full screen'}
+                                className="fullscreen-btn"
+                            >
+                                {isFullScreen ? '⊟' : '⛶'}
+                            </button>
                             <button onClick={resetChat} title="New Chat" className="reset-btn">
                                 🔄
                             </button>

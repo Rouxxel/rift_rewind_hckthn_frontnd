@@ -5181,6 +5181,20 @@ gend */
   flex-direction: column;
   z-index: 1000;
   overflow: hidden;
+  transition: width 0.25s ease, height 0.25s ease, bottom 0.25s ease, right 0.25s ease, max-width 0.25s ease, max-height 0.25s ease, border-radius 0.25s ease;
+}
+
+/* Full screen mode for AI Assistant chat — equal margins on all sides */
+.ai-assistant-window--fullscreen {
+  top: 1rem;
+  left: 1rem;
+  bottom: 1rem;
+  right: 1rem;
+  width: auto;
+  height: auto;
+  max-width: none;
+  max-height: none;
+  border-radius: 12px;
 }
 
 .ai-assistant-header {
@@ -5210,6 +5224,7 @@ gend */
   gap: 0.5rem;
 }
 
+.fullscreen-btn,
 .reset-btn,
 .close-btn {
   background: rgba(30, 35, 40, 0.2);
@@ -5225,6 +5240,7 @@ gend */
   transition: all 0.2s;
 }
 
+.fullscreen-btn:hover,
 .reset-btn:hover,
 .close-btn:hover {
   background: rgba(30, 35, 40, 0.4);
@@ -5312,7 +5328,7 @@ gend */
 
 .message-content {
   flex: 1;
-  max-width: 75%;
+  max-width: 85%;
 }
 
 .message-text {
@@ -5475,6 +5491,17 @@ gend */
     height: calc(100vh - 4rem);
     bottom: 1rem;
     right: 1rem;
+    max-width: none;
+    max-height: none;
+  }
+
+  .ai-assistant-window.ai-assistant-window--fullscreen {
+    top: 1rem;
+    left: 1rem;
+    bottom: 1rem;
+    right: 1rem;
+    width: auto;
+    height: auto;
     max-width: none;
     max-height: none;
   }
