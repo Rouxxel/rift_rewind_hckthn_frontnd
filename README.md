@@ -1,6 +1,6 @@
 # 🎮 Rift Rewind - League of Legends AI Coach
 
-**Rift Rewind** is an intelligent League of Legends coaching platform that provides comprehensive performance analysis, match predictions, and AI-powered insights to help players improve their gameplay.
+**Rift Rewind** is an intelligent League of Legends coaching platform that provides comprehensive performance analysis, match predictions, and AI-powered insights to help players improve their gameplay, [Video demo](https://youtu.be/2k_Bq4mH-ZM).
 
 ---
 
