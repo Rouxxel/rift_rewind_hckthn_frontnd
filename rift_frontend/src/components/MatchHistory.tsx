@@ -816,15 +816,12 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
                 }} 
                 className="back-button"
               >
-                ← Back to Matches
+                Back to Matches
               </button>
               <div className="header-center">
                 <h2>📊 Match Details</h2>
                 <p className="user-info">Match ID: {selectedMatch.slice(-8)}</p>
               </div>
-              <button onClick={onBack} className="back-button secondary">
-                Back to Dashboard
-              </button>
             </>
           ) : (
             <>
@@ -906,15 +903,6 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
               <div className="match-details-section">
                 <div className="match-details-header">
                   <h3>Match Details: {selectedMatch.slice(-8)}</h3>
-                  <button
-                    onClick={() => {
-                      setShowDetails(false);
-                      setSelectedMatch(null);
-                    }}
-                    className="back-to-history-button"
-                  >
-                    ← Back to Match List
-                  </button>
                 </div>
 
                 {loadingStates.details && (
