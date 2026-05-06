@@ -784,17 +784,6 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
   if (!userData || !userCredentials) {
     return (
       <div className="match-history-page">
-        <div className="match-history-header">
-          <div className="header-content">
-            <button onClick={onBack} className="back-button">
-              Back to Dashboard
-            </button>
-            <div className="header-center">
-              <h2>📊 Match History</h2>
-            </div>
-            <div className="header-spacer"></div>
-          </div>
-        </div>
         <div className="error-state">
           <p>{error || 'Loading user data...'}</p>
           <button onClick={onBack}>Return to Dashboard</button>
@@ -805,614 +794,572 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
 
   return (
     <div className="match-history-page">
-      <div className="match-history-header">
-        <div className="header-content">
-          {showDetails && selectedMatch ? (
-            <>
-              <button 
-                onClick={() => {
-                  setShowDetails(false);
-                  setSelectedMatch(null);
-                }} 
-                className="back-button"
-              >
-                Back to Matches
-              </button>
-              <div className="header-center">
-                <h2>📊 Match Details</h2>
-                <p className="user-info">Match ID: {selectedMatch.slice(-8)}</p>
-              </div>
-            </>
-          ) : (
-            <>
-              <button onClick={onBack} className="back-button">
-                Back to Dashboard
-              </button>
-              <div className="header-center">
-                <h2>📊 Match History</h2>
-                <p className="user-info">{userData.gameName}#{userData.tagLine}</p>
-              </div>
-              <div className="header-spacer"></div>
-            </>
-          )}
+      {showDetails && selectedMatch && (
+        <div className="container pt-4">
+          <button
+            onClick={() => {
+              setShowDetails(false);
+              setSelectedMatch(null);
+            }}
+            className="font-pixel text-[10px] uppercase tracking-widest text-primary hover:text-primary-glow"
+          >
+            ◀ Back to Matches
+          </button>
         </div>
-      </div>
+      )}
 
       <div className="match-history-content">
-        {loading && (
-          <div className="loading-state">
-            <div className="loading-spinner"></div>
-            <p>Loading match history...</p>
-          </div>
-        )}
-
-        {error && (
-          <div className="error-state">
-            <p>{error}</p>
-            <button onClick={() => loadMatchHistory()}>
-              Retry
-            </button>
-          </div>
-        )}
-
-        {!loading && !error && (
-          <>
+        <div className="container py-6 space-y-6">
+          {/* Page heading */}
+          <div className="panel-bevel rounded-sm p-5 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+            <div>
+              <h2 className="font-blackletter text-2xl md:text-3xl text-primary text-glow m-0">
+                {showDetails && selectedMatch ? "Match Details" : "Match History"}
+              </h2>
+              <p className="font-pixel text-[10px] uppercase tracking-[0.18em] text-ink/70 mt-2">
+                {showDetails && selectedMatch
+                  ? `Match ID · ${selectedMatch.slice(-8)}`
+                  : `${userData.gameName}#${userData.tagLine}`}
+              </p>
+            </div>
             {!showDetails && (
-              <div className="match-history-section">
-                <div className="match-history-info">
-                  <span className="results-count">
-                    Showing {matchHistory.length} recent matches (Most recent to oldest)
+              <span className="font-pixel text-[10px] uppercase tracking-[0.18em] text-gold self-start sm:self-end">
+                {matchHistory.length} recent matches
+              </span>
+            )}
+          </div>
+
+          {loading && (
+            <div className="panel-bevel rounded-sm p-8 flex flex-col items-center gap-3">
+              <div className="loading-spinner" />
+              <p className="font-pixel text-[10px] uppercase tracking-widest text-ink/70 m-0">
+                Loading match history...
+              </p>
+            </div>
+          )}
+
+          {error && (
+            <div className="panel-bevel rounded-sm p-6 flex flex-col items-center gap-3 border-danger/60">
+              <p className="font-display text-sm text-danger m-0 text-center">{error}</p>
+              <button
+                onClick={() => loadMatchHistory()}
+                className="px-4 py-2 rounded-sm border border-primary/70 bg-surface-inset text-primary font-pixel text-[10px] uppercase tracking-[0.18em] hover:bg-primary/10 transition-colors"
+              >
+                Retry
+              </button>
+            </div>
+          )}
+
+          {!loading && !error && !showDetails && (
+            <div className="panel-bevel rounded-sm p-4 sm:p-5">
+              <div className="flex items-center justify-between mb-3 pb-2 border-b border-primary/25">
+                <h3 className="font-blackletter text-lg text-primary text-glow m-0">
+                  ◆ Recent Matches
+                </h3>
+                <span className="font-pixel text-[9px] uppercase tracking-[0.18em] text-ink/60">
+                  Newest first
+                </span>
+              </div>
+
+              {matchHistory.length > 0 ? (
+                <div className="grid grid-cols-1 gap-2">
+                  {matchHistory.map((matchId) => (
+                    <button
+                      key={matchId}
+                      onClick={() => selectMatch(matchId)}
+                      className="group panel-bevel rounded-sm p-3 flex items-center justify-between gap-3 text-left transition-all duration-200 hover:border-primary hover:shadow-halo hover:-translate-y-0.5"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="h-9 w-9 shrink-0 rounded-sm border border-primary/50 bg-surface-inset/70 flex items-center justify-center font-pixel text-[10px] text-primary">
+                          ID
+                        </div>
+                        <div className="min-w-0">
+                          <div className="font-blackletter text-base text-primary text-glow truncate">
+                            #{matchId.slice(-8)}
+                          </div>
+                          <div className="font-pixel text-[9px] uppercase tracking-[0.14em] text-ink/55 truncate">
+                            {matchId}
+                          </div>
+                        </div>
+                      </div>
+                      <span className="shrink-0 font-pixel text-[9px] uppercase tracking-[0.18em] text-primary group-hover:text-primary-glow">
+                        View ▸
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="panel-bevel rounded-sm p-8 flex flex-col items-center gap-2">
+                  <span className="text-2xl">🎮</span>
+                  <span className="font-pixel text-[10px] uppercase tracking-[0.18em] text-ink/60">
+                    No matches found
                   </span>
                 </div>
+              )}
+            </div>
+          )}
 
-                <div className="match-history-list">
-                  {matchHistory.length > 0 ? matchHistory.map((matchId, index) => (
-                    <div
-                      key={matchId}
-                      className={`match-item ${index % 2 === 0 ? 'even' : 'odd'}`}
-                      onClick={() => selectMatch(matchId)}
-                    >
-                      <div className="match-basic-info">
-                        <div className="match-id">
-                          <span className="match-label">Match ID</span>
-                          <span className="match-id-short">{matchId.slice(-8)}</span>
-                        </div>
-                        <div className="match-info">
-                          <span className="match-full-id">{matchId}</span>
-                        </div>
-                      </div>
-                      <div className="match-actions">
-                        <button className="view-details-button">
-                          View Details →
-                        </button>
-                      </div>
-                    </div>
-                  )) : (
-                    <div className="no-results">
-                      <div className="no-results-content">
-                        <span className="no-results-icon">🎮</span>
-                        <span className="no-results-text">No matches found</span>
-                      </div>
-                    </div>
-                  )}
+          {!loading && !error && showDetails && selectedMatch && (
+            <div className="space-y-6">
+              {loadingStates.details && (
+                <div className="panel-bevel rounded-sm p-6 flex flex-col items-center gap-3">
+                  <div className="loading-spinner" />
+                  <p className="font-pixel text-[10px] uppercase tracking-widest text-ink/70 m-0">
+                    Loading match details...
+                  </p>
                 </div>
-              </div>
-            )}
+              )}
 
-            {showDetails && selectedMatch && (
-              <div className="match-details-section">
-                <div className="match-details-header">
-                  <h3>Match Details: {selectedMatch.slice(-8)}</h3>
+              {matchDetails && (
+                <section className="panel-bevel rounded-sm p-5">
+                  <h4 className="font-blackletter text-lg text-primary text-glow m-0 pb-2 mb-3 border-b border-primary/25">
+                    ◆ Match Information
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 border border-border/60 rounded-sm overflow-hidden">
+                    {[
+                      ["Game Mode", matchDetails.match_info.gameMode || "Classic"],
+                      ["Game Type", matchDetails.match_info.gameType || "N/A"],
+                      ["Duration", formatDuration(matchDetails.match_info.gameDuration || 0)],
+                      ["Date", formatDate(matchDetails.match_info.gameCreation || 0)],
+                      ["Game Version", matchDetails.match_info.gameVersion || "N/A"],
+                      ["Region", userCredentials?.region || "N/A"],
+                      ["Platform", matchDetails.match_info.platformId || "N/A"],
+                      ["Queue ID", String(matchDetails.match_info.queueId ?? "N/A")],
+                      ["Map", getMapName(matchDetails.match_info.mapId) || "N/A"],
+                      ["End Result", matchDetails.match_info.endOfGameResult || "N/A"],
+                    ].map(([label, value], idx) => (
+                      <div
+                        key={label as string}
+                        className={`flex items-center justify-between gap-3 px-3 py-2 border-b border-border/40 ${
+                          idx % 2 === 0 ? "bg-surface-inset/40" : ""
+                        }`}
+                      >
+                        <span className="font-pixel text-[9px] uppercase tracking-[0.16em] text-ink/65">
+                          {label}
+                        </span>
+                        <span className="font-display text-sm text-ink truncate">{value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {loadingStates.participants && (
+                <div className="panel-bevel rounded-sm p-6 flex flex-col items-center gap-3">
+                  <div className="loading-spinner" />
+                  <p className="font-pixel text-[10px] uppercase tracking-widest text-ink/70 m-0">
+                    Loading participants...
+                  </p>
                 </div>
+              )}
 
-                {loadingStates.details && (
-                  <div className="loading-state">
-                    <div className="loading-spinner"></div>
-                    <p>Loading match details...</p>
-                  </div>
-                )}
-
-                {matchDetails && (
-                  <div className="match-info-card">
-                    <div className="match-info-header">
-                      <h4>Match Information</h4>
-                    </div>
-                    <div className="match-info-content">
-                      <div className="info-row">
-                        <span className="info-label">Game Mode:</span>
-                        <span className="info-value">{matchDetails.match_info.gameMode || 'Classic'}</span>
-                      </div>
-                      <div className="info-row">
-                        <span className="info-label">Game Type:</span>
-                        <span className="info-value">{matchDetails.match_info.gameType || 'N/A'}</span>
-                      </div>
-                      <div className="info-row">
-                        <span className="info-label">Duration:</span>
-                        <span className="info-value">{formatDuration(matchDetails.match_info.gameDuration || 0)}</span>
-                      </div>
-                      <div className="info-row">
-                        <span className="info-label">Date:</span>
-                        <span className="info-value">{formatDate(matchDetails.match_info.gameCreation || 0)}</span>
-                      </div>
-                      <div className="info-row">
-                        <span className="info-label">Game Version:</span>
-                        <span className="info-value">{matchDetails.match_info.gameVersion || 'N/A'}</span>
-                      </div>
-                      <div className="info-row">
-                        <span className="info-label">Region:</span>
-                        <span className="info-value">{userCredentials?.region || 'N/A'}</span>
-                      </div>
-                      <div className="info-row">
-                        <span className="info-label">Platform:</span>
-                        <span className="info-value">{matchDetails.match_info.platformId || 'N/A'}</span>
-                      </div>
-                      <div className="info-row">
-                        <span className="info-label">Queue ID:</span>
-                        <span className="info-value">{matchDetails.match_info.queueId || 'N/A'}</span>
-                      </div>
-                      <div className="info-row">
-                        <span className="info-label">Map:</span>
-                        <span className="info-value">{getMapName(matchDetails.match_info.mapId) || 'N/A'}</span>
-                      </div>
-                      <div className="info-row">
-                        <span className="info-label">End Result:</span>
-                        <span className="info-value">{matchDetails.match_info.endOfGameResult || 'N/A'}</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {loadingStates.participants && (
-                  <div className="loading-state">
-                    <div className="loading-spinner"></div>
-                    <p>Loading participants...</p>
-                  </div>
-                )}
-
-                {matchParticipants.length > 0 && (
-                  <div className="participants-section">
-                    <div className="teams-container">
-                      {/* Winning Team */}
-                      <div className="team-section blue-team">
-                        <h4>Winning Team</h4>
-                        <div className="participants-table">
-                          <div className="table-header">
-                            <div className="table-cell">Champion</div>
-                            <div className="table-cell">KDA</div>
-                            <div className="table-cell">Gold</div>
-                            <div className="table-cell">CS</div>
-                            <div className="table-cell">Result</div>
-                          </div>
-                          {matchParticipants
-                            .filter(p => p.win === true)
-                            .map((participant, index) => (
-                              <div key={index} className={`table-row ${index % 2 === 0 ? 'even' : 'odd'}`}>
-                                <div className="table-cell champion-cell">
-                                  <img
-                                    src={`https://ddragon.leagueoflegends.com/cdn/14.22.1/img/champion/${formatChampionName(participant.championName)}.png`}
-                                    alt={formatChampionName(participant.championName)}
-                                    className="champion-icon"
-                                    onError={(e) => {
-                                      (e.target as HTMLImageElement).src = '/champion-placeholder.png';
-                                    }}
-                                  />
-                                  <span className="champion-name">{formatChampionName(participant.championName)}</span>
-                                </div>
-                                <div className="table-cell">
-                                  <span className="kda">
-                                    {participant.kills}/{participant.deaths}/{participant.assists}
-                                  </span>
-                                </div>
-                                <div className="table-cell">
-                                  <span className="gold">{participant.goldEarned.toLocaleString()}</span>
-                                </div>
-                                <div className="table-cell">
-                                  <span className="cs">{participant.totalMinionsKilled}</span>
-                                </div>
-                                <div className="table-cell">
-                                  <span className={`result ${participant.win ? 'win' : 'loss'}`}>
-                                    {participant.win ? 'Victory' : 'Defeat'}
-                                  </span>
-                                </div>
-                              </div>
-                            ))}
-                        </div>
+              {matchParticipants.length > 0 && (
+                <section className="space-y-4">
+                  {[
+                    { label: "Winning Team", participants: matchParticipants.filter((p) => p.win), accent: "primary" as const },
+                    { label: "Losing Team", participants: matchParticipants.filter((p) => !p.win), accent: "danger" as const },
+                  ].map(({ label, participants, accent }) => (
+                    <div key={label} className="panel-bevel rounded-sm p-4 sm:p-5">
+                      <div className="flex items-center justify-between pb-2 mb-3 border-b border-primary/25">
+                        <h4 className="font-blackletter text-lg text-primary text-glow m-0">◆ {label}</h4>
+                        <span
+                          className={`font-pixel text-[9px] uppercase tracking-[0.18em] px-2 py-1 rounded-sm border ${
+                            accent === "primary"
+                              ? "text-success border-success/50 bg-success/10"
+                              : "text-danger border-danger/50 bg-danger/10"
+                          }`}
+                        >
+                          {accent === "primary" ? "Victory" : "Defeat"}
+                        </span>
                       </div>
 
-                      {/* Losing Team */}
-                      <div className="team-section red-team">
-                        <h4>Losing Team</h4>
-                        <div className="participants-table">
-                          <div className="table-header">
-                            <div className="table-cell">Champion</div>
-                            <div className="table-cell">KDA</div>
-                            <div className="table-cell">Gold</div>
-                            <div className="table-cell">CS</div>
-                            <div className="table-cell">Result</div>
-                          </div>
-                          {matchParticipants
-                            .filter(p => p.win === false)
-                            .map((participant, index) => (
-                              <div key={index} className={`table-row ${index % 2 === 0 ? 'even' : 'odd'}`}>
-                                <div className="table-cell champion-cell">
-                                  <img
-                                    src={`https://ddragon.leagueoflegends.com/cdn/14.22.1/img/champion/${formatChampionName(participant.championName)}.png`}
-                                    alt={formatChampionName(participant.championName)}
-                                    className="champion-icon"
-                                    onError={(e) => {
-                                      (e.target as HTMLImageElement).src = '/champion-placeholder.png';
-                                    }}
-                                  />
-                                  <span className="champion-name">{formatChampionName(participant.championName)}</span>
-                                </div>
-                                <div className="table-cell">
-                                  <span className="kda">
-                                    {participant.kills}/{participant.deaths}/{participant.assists}
-                                  </span>
-                                </div>
-                                <div className="table-cell">
-                                  <span className="gold">{participant.goldEarned.toLocaleString()}</span>
-                                </div>
-                                <div className="table-cell">
-                                  <span className="cs">{participant.totalMinionsKilled}</span>
-                                </div>
-                                <div className="table-cell">
-                                  <span className={`result ${participant.win ? 'win' : 'loss'}`}>
-                                    {participant.win ? 'Victory' : 'Defeat'}
-                                  </span>
-                                </div>
-                              </div>
-                            ))}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Match Prediction Button */}
-                    <div className="prediction-button-section">
-                      {(() => {
-                        const winningTeam = matchParticipants.filter(p => p.win === true);
-                        const losingTeam = matchParticipants.filter(p => p.win === false);
-                        const isCorrectTeamSize = winningTeam.length === 5 && losingTeam.length === 5;
-                        const isClassicMode = matchDetails?.match_info?.gameMode === 'CLASSIC';
-                        const isValidForPrediction = isCorrectTeamSize && isClassicMode;
-
-                        return (
-                          <>
-                            <button
-                              onClick={() => loadMatchPrediction(matchParticipants)}
-                              disabled={loadingStates.prediction || matchParticipants.length === 0 || !isValidForPrediction}
-                              className={`prediction-button ${!isValidForPrediction ? 'disabled-non-5v5' : ''}`}
+                      <div className="border border-border/60 rounded-sm overflow-x-auto">
+                        <div className="grid grid-cols-[2fr_1fr_1fr_0.7fr_0.9fr] min-w-[520px] bg-surface-inset/70 px-3 py-2 border-b border-border/60">
+                          {["Champion", "KDA", "Gold", "CS", "Result"].map((h) => (
+                            <span
+                              key={h}
+                              className="font-pixel text-[9px] uppercase tracking-[0.16em] text-primary"
                             >
-                              {loadingStates.prediction ? (
-                                <>
-                                  <div className="loading-spinner-small"></div>
-                                  Analyzing Match...
-                                </>
-                              ) : !isValidForPrediction ? (
-                                <>
-                                  🚫 Prediction Not Available
-                                </>
-                              ) : (
-                                <>
-                                  🔮 Get AI Match Prediction
-                                </>
-                              )}
-                            </button>
-                            <p className="prediction-button-description">
-                              {!isValidForPrediction ? (
-                                <>
-                                  AI match prediction is only available for 5v5 Classic matches.
-                                  {!isCorrectTeamSize && (
-                                    <> This match has {winningTeam.length}v{losingTeam.length} teams.</>
-                                  )}
-                                  {!isClassicMode && (
-                                    <> This match is {matchDetails?.match_info?.gameMode || 'Unknown'} mode.</>
-                                  )}
-                                </>
-                              ) : (
-                                <>
-                                  Get prediction analysis for this match using the actual teams that played
-                                </>
-                              )}
-                            </p>
-                          </>
-                        );
-                      })()}
-                    </div>
-                  </div>
-                )}
-
-                {loadingStates.composition && (
-                  <div className="loading-state">
-                    <div className="loading-spinner"></div>
-                    <p>Loading team composition analysis...</p>
-                  </div>
-                )}
-
-                {teamComposition && (
-                  <div className="team-composition-section">
-                    <div className="composition-header">
-                      <h4>Team Composition Analysis of winning team</h4>
-                      <p className="composition-archetype">
-                        <strong>{teamComposition.team_composition.archetype}</strong> - {teamComposition.team_composition.archetype_description}
-                      </p>
-                    </div>
-
-                    <div className="composition-stats">
-                      <div className="stats-grid">
-                        <div className="stat-item">
-                          <span className="stat-label">Attack</span>
-                          <span className="stat-value">{teamComposition.team_stats.averages.attack}</span>
-                        </div>
-                        <div className="stat-item">
-                          <span className="stat-label">Defense</span>
-                          <span className="stat-value">{teamComposition.team_stats.averages.defense}</span>
-                        </div>
-                        <div className="stat-item">
-                          <span className="stat-label">Magic</span>
-                          <span className="stat-value">{teamComposition.team_stats.averages.magic}</span>
-                        </div>
-                        <div className="stat-item">
-                          <span className="stat-label">Difficulty</span>
-                          <span className="stat-value">{teamComposition.team_stats.averages.difficulty}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="composition-analysis">
-                      <div className="analysis-section">
-                        <h5>Strengths</h5>
-                        <ul>
-                          {teamComposition.analysis.strengths.map((strength, index) => (
-                            <li key={index}>{strength}</li>
+                              {h}
+                            </span>
                           ))}
-                        </ul>
-                      </div>
-
-                      <div className="analysis-section">
-                        <h5>Weaknesses</h5>
-                        <ul>
-                          {teamComposition.analysis.weaknesses.map((weakness, index) => (
-                            <li key={index}>{weakness}</li>
-                          ))}
-                        </ul>
-                      </div>
-
-                      <div className="analysis-section">
-                        <h5>Strategic Recommendations</h5>
-                        <ul>
-                          {teamComposition.strategic_recommendations.map((recommendation, index) => (
-                            <li key={index}>{recommendation}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {loadingStates.prediction && (
-                  <div className="loading-state">
-                    <div className="loading-spinner"></div>
-                    <p>Loading match prediction...</p>
-                  </div>
-                )}
-
-                {matchPrediction && (
-                  <div className="prediction-section">
-                    <div className="prediction-header">
-                      <h4>Match Prediction Analysis</h4>
-                      <p className="prediction-subtitle">
-                        AI-powered analysis based on the actual teams that played
-                      </p>
-                    </div>
-
-                    <div className="prediction-results">
-                      <div className="prediction-summary">
-                        <div className="win-probabilities">
-                          <div className="probability blue">
-                            <span className="team-name">Winning Team</span>
-                            <span className="percentage">{matchPrediction.prediction.blue_team_win_probability}%</span>
-                            <span className="team-subtitle">Prediction</span>
-                          </div>
-                          <div className="probability red">
-                            <span className="team-name">Losing Team</span>
-                            <span className="percentage">{matchPrediction.prediction.red_team_win_probability}%</span>
-                            <span className="team-subtitle">Prediction</span>
-                          </div>
                         </div>
-                        <div className="predicted-winner">
-                          <strong>AI Predicted Winner: {matchPrediction.prediction.predicted_winner}</strong>
-                          <br />
-                          <span className={`actual-result ${matchPrediction.prediction.predicted_winner === 'Blue Team' ? 'correct' : 'incorrect'
-                            }`}>
-                            {matchPrediction.prediction.predicted_winner === 'Blue Team'
-                              ? '✅ Prediction was CORRECT!'
-                              : '❌ Prediction was WRONG - Blue Team actually won'
-                            }
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="team-analysis">
-                        <div className="analysis-section">
-                          <h5>Winning Team Analysis</h5>
-                          <div className="team-stats">
-                            <div className="stat-item">
-                              <span>Attack: {matchPrediction.team_analysis.blue_team.composition_score.attack}</span>
+                        {participants.map((participant, i) => (
+                          <div
+                            key={i}
+                            className={`grid grid-cols-[2fr_1fr_1fr_0.7fr_0.9fr] min-w-[520px] items-center px-3 py-2 border-b border-border/40 last:border-b-0 ${
+                              i % 2 === 0 ? "bg-surface-inset/30" : ""
+                            }`}
+                          >
+                            <div className="flex items-center gap-2 min-w-0">
+                              <img
+                                src={`https://ddragon.leagueoflegends.com/cdn/14.22.1/img/champion/${formatChampionName(participant.championName)}.png`}
+                                alt={formatChampionName(participant.championName)}
+                                className="h-8 w-8 rounded-sm border border-primary/50 object-cover shrink-0"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).src = "/champion-placeholder.png";
+                                }}
+                              />
+                              <span className="font-display text-sm text-ink truncate">
+                                {formatChampionName(participant.championName)}
+                              </span>
                             </div>
-                            <div className="stat-item">
-                              <span>Defense: {matchPrediction.team_analysis.blue_team.composition_score.defense}</span>
-                            </div>
-                            <div className="stat-item">
-                              <span>Magic: {matchPrediction.team_analysis.blue_team.composition_score.magic}</span>
-                            </div>
-                            <div className="stat-item">
-                              <span>Synergy: {matchPrediction.team_analysis.blue_team.composition_score.synergy}</span>
-                            </div>
-                          </div>
-                          <div className="strengths-weaknesses">
-                            {matchPrediction.team_analysis.blue_team.strengths.length > 0 && (
-                              <div className="strengths">
-                                <h6>Strengths:</h6>
-                                <ul>
-                                  {matchPrediction.team_analysis.blue_team.strengths.map((strength: string, index: number) => (
-                                    <li key={index}>{strength}</li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )}
-                            {matchPrediction.team_analysis.blue_team.weaknesses.length > 0 && (
-                              <div className="weaknesses">
-                                <h6>Weaknesses:</h6>
-                                <ul>
-                                  {matchPrediction.team_analysis.blue_team.weaknesses.map((weakness: string, index: number) => (
-                                    <li key={index}>{weakness}</li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="analysis-section">
-                          <h5>Losing Team Analysis</h5>
-                          <div className="team-stats">
-                            <div className="stat-item">
-                              <span>Attack: {matchPrediction.team_analysis.red_team.composition_score.attack}</span>
-                            </div>
-                            <div className="stat-item">
-                              <span>Defense: {matchPrediction.team_analysis.red_team.composition_score.defense}</span>
-                            </div>
-                            <div className="stat-item">
-                              <span>Magic: {matchPrediction.team_analysis.red_team.composition_score.magic}</span>
-                            </div>
-                            <div className="stat-item">
-                              <span>Synergy: {matchPrediction.team_analysis.red_team.composition_score.synergy}</span>
-                            </div>
-                          </div>
-                          <div className="strengths-weaknesses">
-                            {matchPrediction.team_analysis.red_team.strengths.length > 0 && (
-                              <div className="strengths">
-                                <h6>Strengths:</h6>
-                                <ul>
-                                  {matchPrediction.team_analysis.red_team.strengths.map((strength: string, index: number) => (
-                                    <li key={index}>{strength}</li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )}
-                            {matchPrediction.team_analysis.red_team.weaknesses.length > 0 && (
-                              <div className="weaknesses">
-                                <h6>Weaknesses:</h6>
-                                <ul>
-                                  {matchPrediction.team_analysis.red_team.weaknesses.map((weakness: string, index: number) => (
-                                    <li key={index}>{weakness}</li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="disclaimer">
-                        <p>{matchPrediction.disclaimer}</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {loadingStates.timeline && (
-                  <div className="loading-state">
-                    <div className="loading-spinner"></div>
-                    <p>Loading match timeline...</p>
-                  </div>
-                )}
-
-                {matchTimeline && (
-                  <div className="timeline-section">
-                    <div className="timeline-header">
-                      <h4>Match Timeline</h4>
-                      <p className="timeline-summary">
-                        {matchTimeline.summary.total_frames} frames • {matchTimeline.summary.total_kills} kills •
-                        {matchTimeline.summary.total_item_events} item events • {matchTimeline.summary.total_ward_events} ward events • {matchTimeline.summary.total_objective_events} objectives
-                      </p>
-                    </div>
-
-                    <div className="timeline-stats">
-                      <div className="stats-grid">
-                        <div className="stat-item">
-                          <span className="stat-label">Game Duration</span>
-                          <span className="stat-value">{formatDuration(matchTimeline.game_duration / 1000)}</span>
-                        </div>
-                        <div className="stat-item">
-                          <span className="stat-label">Total Frames</span>
-                          <span className="stat-value">{matchTimeline.summary.total_frames}</span>
-                        </div>
-                        <div className="stat-item">
-                          <span className="stat-label">Total Kills</span>
-                          <span className="stat-value">{matchTimeline.summary.total_kills}</span>
-                        </div>
-                        <div className="stat-item">
-                          <span className="stat-label">Item Events</span>
-                          <span className="stat-value">{matchTimeline.summary.total_item_events}</span>
-                        </div>
-                        <div className="stat-item">
-                          <span className="stat-label">Ward Events</span>
-                          <span className="stat-value">{matchTimeline.summary.total_ward_events}</span>
-                        </div>
-                        <div className="stat-item">
-                          <span className="stat-label">Objectives</span>
-                          <span className="stat-value">{matchTimeline.summary.total_objective_events}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="timeline-frames">
-                      <h5>Key Events by Minute</h5>
-                      <div className="frames-list">
-                        {matchTimeline.frames.map((frame, index) => (
-                          <div key={index} className="frame-item">
-                            <div className="frame-time">
-                              <span className="minute">{frame.minute}:00</span>
-                            </div>
-                            <div className="frame-events">
-                              {frame.events.kills.length > 0 && (
-                                <div className="event-group">
-                                  <span className="event-type">Kills: {frame.events.kills.length}</span>
-                                </div>
-                              )}
-                              {frame.events.objective_events.length > 0 && (
-                                <div className="event-group">
-                                  <span className="event-type">Objectives: {frame.events.objective_events.length}</span>
-                                </div>
-                              )}
-                              {frame.events.item_events.length > 0 && (
-                                <div className="event-group">
-                                  <span className="event-type">Items: {frame.events.item_events.length}</span>
-                                </div>
-                              )}
-                              {frame.events.ward_events && frame.events.ward_events.length > 0 && (
-                                <div className="event-group">
-                                  <span className="event-type">Wards: {frame.events.ward_events.length}</span>
-                                </div>
-                              )}
-                              {frame.events.kills.length === 0 && frame.events.objective_events.length === 0 && frame.events.item_events.length === 0 && (!frame.events.ward_events || frame.events.ward_events.length === 0) && (
-                                <div className="event-group">
-                                  <span className="event-type quiet">No major events</span>
-                                </div>
-                              )}
-                            </div>
+                            <span className="font-pixel text-[10px] text-ink">
+                              {participant.kills}/{participant.deaths}/{participant.assists}
+                            </span>
+                            <span className="font-pixel text-[10px] text-gold">
+                              {participant.goldEarned.toLocaleString()}
+                            </span>
+                            <span className="font-pixel text-[10px] text-ink">
+                              {participant.totalMinionsKilled}
+                            </span>
+                            <span
+                              className={`font-pixel text-[9px] uppercase tracking-[0.14em] ${
+                                participant.win ? "text-success" : "text-danger"
+                              }`}
+                            >
+                              {participant.win ? "Victory" : "Defeat"}
+                            </span>
                           </div>
                         ))}
                       </div>
                     </div>
+                  ))}
+
+                  {/* Match Prediction Button */}
+                  <div className="panel-bevel rounded-sm p-5 flex flex-col items-center gap-3 text-center">
+                    {(() => {
+                      const winningTeam = matchParticipants.filter((p) => p.win === true);
+                      const losingTeam = matchParticipants.filter((p) => p.win === false);
+                      const isCorrectTeamSize = winningTeam.length === 5 && losingTeam.length === 5;
+                      const isClassicMode = matchDetails?.match_info?.gameMode === "CLASSIC";
+                      const isValidForPrediction = isCorrectTeamSize && isClassicMode;
+                      const disabled = loadingStates.prediction || matchParticipants.length === 0 || !isValidForPrediction;
+                      return (
+                        <>
+                          <button
+                            onClick={() => loadMatchPrediction(matchParticipants)}
+                            disabled={disabled}
+                            className={`px-5 py-3 rounded-sm font-pixel text-[10px] uppercase tracking-[0.18em] border transition-all ${
+                              disabled
+                                ? "bg-surface-inset/60 border-border text-ink/50 cursor-not-allowed"
+                                : "bg-gradient-coral text-primary-foreground border-primary/80 shadow-halo hover:-translate-y-0.5"
+                            }`}
+                          >
+                            {loadingStates.prediction
+                              ? "Analyzing Match..."
+                              : !isValidForPrediction
+                              ? "🚫 Prediction Not Available"
+                              : "🔮 Get AI Match Prediction"}
+                          </button>
+                          <p className="font-display text-xs text-ink/70 m-0 max-w-md">
+                            {!isValidForPrediction ? (
+                              <>
+                                AI match prediction is only available for 5v5 Classic matches.
+                                {!isCorrectTeamSize && (
+                                  <> This match has {winningTeam.length}v{losingTeam.length} teams.</>
+                                )}
+                                {!isClassicMode && (
+                                  <> This match is {matchDetails?.match_info?.gameMode || "Unknown"} mode.</>
+                                )}
+                              </>
+                            ) : (
+                              <>Get prediction analysis for this match using the actual teams that played.</>
+                            )}
+                          </p>
+                        </>
+                      );
+                    })()}
                   </div>
-                )}
-              </div>
-            )}
-          </>
-        )}
+                </section>
+              )}
+
+              {loadingStates.composition && (
+                <div className="panel-bevel rounded-sm p-6 flex flex-col items-center gap-3">
+                  <div className="loading-spinner" />
+                  <p className="font-pixel text-[10px] uppercase tracking-widest text-ink/70 m-0">
+                    Loading team composition analysis...
+                  </p>
+                </div>
+              )}
+
+              {teamComposition && (
+                <section className="panel-bevel rounded-sm p-5 space-y-4">
+                  <div>
+                    <h4 className="font-blackletter text-lg text-primary text-glow m-0 pb-2 border-b border-primary/25">
+                      ◆ Winning Team Composition
+                    </h4>
+                    <p className="font-display text-sm text-ink/80 mt-3 m-0">
+                      <strong className="text-primary">{teamComposition.team_composition.archetype}</strong>
+                      {" — "}
+                      {teamComposition.team_composition.archetype_description}
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {[
+                      ["Attack", teamComposition.team_stats.averages.attack],
+                      ["Defense", teamComposition.team_stats.averages.defense],
+                      ["Magic", teamComposition.team_stats.averages.magic],
+                      ["Difficulty", teamComposition.team_stats.averages.difficulty],
+                    ].map(([label, value]) => (
+                      <div
+                        key={label as string}
+                        className="panel-bevel rounded-sm p-3 flex flex-col items-center gap-1"
+                      >
+                        <span className="font-pixel text-[9px] uppercase tracking-[0.16em] text-ink/65">
+                          {label}
+                        </span>
+                        <span className="font-blackletter text-xl text-primary text-glow">{value}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    {[
+                      { title: "Strengths", items: teamComposition.analysis.strengths, color: "text-success" },
+                      { title: "Weaknesses", items: teamComposition.analysis.weaknesses, color: "text-danger" },
+                      { title: "Strategic Recommendations", items: teamComposition.strategic_recommendations, color: "text-gold" },
+                    ].map(({ title, items, color }) => (
+                      <div key={title} className="panel-bevel rounded-sm p-3">
+                        <h5 className={`font-pixel text-[10px] uppercase tracking-[0.16em] mb-2 ${color}`}>
+                          ▸ {title}
+                        </h5>
+                        <ul className="space-y-1 m-0 pl-0 list-none">
+                          {items.map((it, i) => (
+                            <li key={i} className="font-display text-xs text-ink/80 leading-snug">
+                              ◆ {it}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {loadingStates.prediction && (
+                <div className="panel-bevel rounded-sm p-6 flex flex-col items-center gap-3">
+                  <div className="loading-spinner" />
+                  <p className="font-pixel text-[10px] uppercase tracking-widest text-ink/70 m-0">
+                    Loading match prediction...
+                  </p>
+                </div>
+              )}
+
+              {matchPrediction && (
+                <section className="panel-bevel rounded-sm p-5 space-y-4">
+                  <div className="pb-2 border-b border-primary/25">
+                    <h4 className="font-blackletter text-lg text-primary text-glow m-0">
+                      ◆ Match Prediction Analysis
+                    </h4>
+                    <p className="font-pixel text-[10px] uppercase tracking-[0.16em] text-ink/65 mt-2 m-0">
+                      AI-powered analysis based on the actual teams that played
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="panel-bevel rounded-sm p-4 flex flex-col items-center gap-1 border-success/40">
+                      <span className="font-pixel text-[10px] uppercase tracking-[0.16em] text-success">
+                        Winning Team
+                      </span>
+                      <span className="font-blackletter text-3xl text-success text-glow">
+                        {matchPrediction.prediction.blue_team_win_probability}%
+                      </span>
+                      <span className="font-pixel text-[9px] uppercase tracking-[0.14em] text-ink/60">
+                        Prediction
+                      </span>
+                    </div>
+                    <div className="panel-bevel rounded-sm p-4 flex flex-col items-center gap-1 border-danger/40">
+                      <span className="font-pixel text-[10px] uppercase tracking-[0.16em] text-danger">
+                        Losing Team
+                      </span>
+                      <span className="font-blackletter text-3xl text-danger text-glow">
+                        {matchPrediction.prediction.red_team_win_probability}%
+                      </span>
+                      <span className="font-pixel text-[9px] uppercase tracking-[0.14em] text-ink/60">
+                        Prediction
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="panel-bevel rounded-sm p-4 text-center">
+                    <p className="font-blackletter text-base text-primary text-glow m-0">
+                      AI Predicted Winner: {matchPrediction.prediction.predicted_winner}
+                    </p>
+                    <p
+                      className={`font-pixel text-[10px] uppercase tracking-[0.16em] mt-2 m-0 ${
+                        matchPrediction.prediction.predicted_winner === "Blue Team"
+                          ? "text-success"
+                          : "text-danger"
+                      }`}
+                    >
+                      {matchPrediction.prediction.predicted_winner === "Blue Team"
+                        ? "✅ Prediction was CORRECT!"
+                        : "❌ Prediction was WRONG — Blue Team actually won"}
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {[
+                      { label: "Winning Team Analysis", team: matchPrediction.team_analysis.blue_team, accent: "text-success" },
+                      { label: "Losing Team Analysis", team: matchPrediction.team_analysis.red_team, accent: "text-danger" },
+                    ].map(({ label, team, accent }) => (
+                      <div key={label} className="panel-bevel rounded-sm p-4 space-y-3">
+                        <h5 className={`font-pixel text-[10px] uppercase tracking-[0.16em] ${accent}`}>
+                          ▸ {label}
+                        </h5>
+                        <div className="grid grid-cols-2 gap-2">
+                          {[
+                            ["Attack", team.composition_score.attack],
+                            ["Defense", team.composition_score.defense],
+                            ["Magic", team.composition_score.magic],
+                            ["Synergy", team.composition_score.synergy],
+                          ].map(([k, v]) => (
+                            <div
+                              key={k as string}
+                              className="flex items-center justify-between px-2 py-1 rounded-sm bg-surface-inset/40 border border-border/40"
+                            >
+                              <span className="font-pixel text-[9px] uppercase tracking-[0.14em] text-ink/65">
+                                {k}
+                              </span>
+                              <span className="font-display text-xs text-ink">{v}</span>
+                            </div>
+                          ))}
+                        </div>
+                        {team.strengths.length > 0 && (
+                          <div>
+                            <h6 className="font-pixel text-[9px] uppercase tracking-[0.16em] text-success mb-1">
+                              Strengths
+                            </h6>
+                            <ul className="space-y-1 m-0 pl-0 list-none">
+                              {team.strengths.map((s: string, i: number) => (
+                                <li key={i} className="font-display text-xs text-ink/80 leading-snug">
+                                  ◆ {s}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        {team.weaknesses.length > 0 && (
+                          <div>
+                            <h6 className="font-pixel text-[9px] uppercase tracking-[0.16em] text-danger mb-1">
+                              Weaknesses
+                            </h6>
+                            <ul className="space-y-1 m-0 pl-0 list-none">
+                              {team.weaknesses.map((w: string, i: number) => (
+                                <li key={i} className="font-display text-xs text-ink/80 leading-snug">
+                                  ◆ {w}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  <p className="font-display text-[11px] italic text-ink/55 m-0 pt-2 border-t border-border/40">
+                    {matchPrediction.disclaimer}
+                  </p>
+                </section>
+              )}
+
+              {loadingStates.timeline && (
+                <div className="panel-bevel rounded-sm p-6 flex flex-col items-center gap-3">
+                  <div className="loading-spinner" />
+                  <p className="font-pixel text-[10px] uppercase tracking-widest text-ink/70 m-0">
+                    Loading match timeline...
+                  </p>
+                </div>
+              )}
+
+              {matchTimeline && (
+                <section className="panel-bevel rounded-sm p-5 space-y-4">
+                  <div className="pb-2 border-b border-primary/25">
+                    <h4 className="font-blackletter text-lg text-primary text-glow m-0">◆ Match Timeline</h4>
+                    <p className="font-pixel text-[10px] uppercase tracking-[0.14em] text-ink/65 mt-2 m-0">
+                      {matchTimeline.summary.total_frames} frames · {matchTimeline.summary.total_kills} kills ·{" "}
+                      {matchTimeline.summary.total_item_events} items · {matchTimeline.summary.total_ward_events} wards ·{" "}
+                      {matchTimeline.summary.total_objective_events} objectives
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+                    {[
+                      ["Game Duration", formatDuration(matchTimeline.game_duration / 1000)],
+                      ["Total Frames", matchTimeline.summary.total_frames],
+                      ["Total Kills", matchTimeline.summary.total_kills],
+                      ["Item Events", matchTimeline.summary.total_item_events],
+                      ["Ward Events", matchTimeline.summary.total_ward_events],
+                      ["Objectives", matchTimeline.summary.total_objective_events],
+                    ].map(([label, value]) => (
+                      <div
+                        key={label as string}
+                        className="panel-bevel rounded-sm p-3 flex flex-col items-center gap-1"
+                      >
+                        <span className="font-pixel text-[9px] uppercase tracking-[0.14em] text-ink/65 text-center">
+                          {label}
+                        </span>
+                        <span className="font-blackletter text-lg text-primary text-glow">{value}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div>
+                    <h5 className="font-pixel text-[10px] uppercase tracking-[0.16em] text-primary mb-2">
+                      ▸ Key Events by Minute
+                    </h5>
+                    <div className="border border-border/60 rounded-sm divide-y divide-border/40 max-h-96 overflow-y-auto">
+                      {matchTimeline.frames.map((frame, index) => (
+                        <div
+                          key={index}
+                          className={`flex items-center gap-3 px-3 py-2 ${
+                            index % 2 === 0 ? "bg-surface-inset/30" : ""
+                          }`}
+                        >
+                          <span className="font-pixel text-[10px] text-gold w-12 shrink-0">
+                            {frame.minute}:00
+                          </span>
+                          <div className="flex flex-wrap gap-2">
+                            {frame.events.kills.length > 0 && (
+                              <span className="px-2 py-0.5 rounded-sm border border-danger/40 bg-danger/10 text-danger font-pixel text-[9px] uppercase tracking-[0.12em]">
+                                Kills: {frame.events.kills.length}
+                              </span>
+                            )}
+                            {frame.events.objective_events.length > 0 && (
+                              <span className="px-2 py-0.5 rounded-sm border border-gold/40 bg-gold/10 text-gold font-pixel text-[9px] uppercase tracking-[0.12em]">
+                                Objectives: {frame.events.objective_events.length}
+                              </span>
+                            )}
+                            {frame.events.item_events.length > 0 && (
+                              <span className="px-2 py-0.5 rounded-sm border border-primary/40 bg-primary/10 text-primary font-pixel text-[9px] uppercase tracking-[0.12em]">
+                                Items: {frame.events.item_events.length}
+                              </span>
+                            )}
+                            {frame.events.ward_events && frame.events.ward_events.length > 0 && (
+                              <span className="px-2 py-0.5 rounded-sm border border-success/40 bg-success/10 text-success font-pixel text-[9px] uppercase tracking-[0.12em]">
+                                Wards: {frame.events.ward_events.length}
+                              </span>
+                            )}
+                            {frame.events.kills.length === 0 &&
+                              frame.events.objective_events.length === 0 &&
+                              frame.events.item_events.length === 0 &&
+                              (!frame.events.ward_events || frame.events.ward_events.length === 0) && (
+                                <span className="font-pixel text-[9px] uppercase tracking-[0.12em] text-ink/45">
+                                  No major events
+                                </span>
+                              )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </section>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

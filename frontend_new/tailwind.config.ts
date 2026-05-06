@@ -96,6 +96,10 @@ export default {
         },
         "rune-spin": { from: { transform: "rotate(0deg)" }, to: { transform: "rotate(360deg)" } },
         "blink-dot": { "0%, 100%": { opacity: "1" }, "50%": { opacity: "0.3" } },
+        "fade-in-up": {
+          from: { opacity: "0", transform: "translateY(30px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -105,6 +109,7 @@ export default {
         shimmer: "shimmer 2.2s linear infinite",
         "rune-spin": "rune-spin 30s linear infinite",
         "blink-dot": "blink-dot 1.6s ease-in-out infinite",
+        "fade-in-up": "fade-in-up 0.25s ease-out",
       },
     },
   },

@@ -73,17 +73,12 @@ const Landing = () => {
           }}
         />
         <div className="container relative z-10 flex flex-col items-center text-center py-20 md:py-28">
-          <img
-            src={logo}
-            alt="Lol Coach Logo"
-            className="h-28 md:h-36 drop-shadow-[0_0_24px_hsl(10_96%_70%/0.55)]"
-          />
           <span className="mt-4 font-pixel text-[10px] uppercase tracking-[0.4em] text-primary animate-flicker">
-            ◆ Summoner's Companion ◆
+            ◆ Summoner's best Companion ◆
           </span>
           <h1 className="mt-3 font-blackletter text-5xl md:text-7xl lg:text-8xl text-ink text-shadow-deep leading-none">
-            <span className="text-glow">Rift</span>{" "}
-            <span className="bg-gradient-coral bg-clip-text text-transparent">Rewind</span>
+            <span className="text-glow">Rewind your</span>{" "}
+            <span className="bg-gradient-coral bg-clip-text text-transparent">Rift</span>
           </h1>
           <div className="mt-3 h-1 w-48 bg-gradient-to-r from-transparent via-secondary to-transparent shadow-halo" />
           <p className="mt-6 max-w-2xl font-display text-lg text-parchment/90 leading-relaxed">
@@ -206,7 +201,7 @@ const Landing = () => {
             </form>
 
             <p className="mt-6 text-center font-pixel text-[8px] uppercase tracking-widest text-muted-foreground">
-              Free · Secure · Riot API + Gemini AI
+              Free · Secure · Riot API + Gemini API
             </p>
           </BevelPanel>
         </div>

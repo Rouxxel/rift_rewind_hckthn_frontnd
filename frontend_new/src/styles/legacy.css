@@ -1823,6 +1823,76 @@ All class names from the original frontend are preserved. JSX is untouched.
 .performance-page .breakdown-item-small:last-child { border-bottom: none; }
 .performance-page .breakdown-spells-list { margin-top: .5rem; }
 
+/* Champion breakdown card typography + sections */
+.performance-page .champion-breakdown-item h4 {
+  font-family: 'MedievalSharp', 'Cinzel', serif;
+  font-size: 1.05rem;
+  color: var(--coral);
+  margin: 0 0 .25rem;
+  padding-bottom: .4rem;
+  border-bottom: 1px solid rgba(252, 130, 104, .3);
+  text-shadow: 0 0 10px rgba(252, 130, 104, .35);
+  letter-spacing: .03em;
+}
+.performance-page .champion-breakdown-item .games-played {
+  font-family: 'Press Start 2P', monospace;
+  font-size: .55rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  margin: 0 0 .85rem;
+}
+.performance-page .champion-breakdown-item .breakdown-section {
+  margin: .85rem 0 0;
+  padding: .65rem .75rem;
+  background: rgba(45, 26, 58, .55);
+  border: 1px solid rgba(252, 130, 104, .18);
+  border-left: 2px solid var(--coral);
+  border-radius: 3px;
+}
+.performance-page .champion-breakdown-item .breakdown-section h5 {
+  font-family: 'Cinzel', serif;
+  font-size: .72rem;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  color: var(--coral);
+  margin: 0 0 .5rem;
+  padding-bottom: .35rem;
+  border-bottom: 1px dashed rgba(252, 130, 104, .25);
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+}
+.performance-page .champion-breakdown-item .breakdown-section h5::before {
+  content: '◆';
+  color: var(--hot);
+  font-size: .55rem;
+}
+.performance-page .champion-breakdown-item .breakdown-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.performance-page .champion-breakdown-item .breakdown-item-small span:first-child {
+  color: hsl(var(--ink));
+  font-weight: 500;
+}
+.performance-page .champion-breakdown-item .breakdown-item-small .count {
+  font-family: 'Press Start 2P', monospace;
+  font-size: .55rem;
+  color: var(--coral);
+  background: rgba(252, 130, 104, .1);
+  border: 1px solid rgba(252, 130, 104, .25);
+  padding: .2rem .45rem;
+  border-radius: 3px;
+}
+.performance-page .champion-breakdown-item .no-data {
+  color: var(--ink-dim);
+  font-style: italic;
+  font-size: .8rem;
+  padding: .25rem 0;
+}
+
 /* Section divider */
 .performance-page .section-divider {
   height: 1px;
@@ -1833,6 +1903,119 @@ All class names from the original frontend are preserved. JSX is untouched.
 /* Tabs already styled globally; tighten container spacing here */
 .performance-page .performance-tabs { margin-bottom: 1.25rem; }
 
+/* Tighten Performance page vertical spacing — remove flex:1 stretch and big paddings
+   that produced large empty gaps above the content and below it before the footer. */
+.performance-page { gap: 0; }
+.performance-page .performance-content,
+.predictions-page .predictions-content,
+.game-assets-page .game-assets-content,
+.match-history-page .match-history-content {
+  padding: 0;
+  flex: 0 1 auto;
+  max-width: none;
+}
+
+/* ---------- Champion / Item details modal polish ---------- */
+.champion-details-overlay,
+.item-details-overlay {
+  background: radial-gradient(ellipse at center, rgba(45, 26, 58, .7), rgba(10, 4, 18, .92));
+}
+.champion-details-modal,
+.item-details-modal {
+  background: linear-gradient(180deg, hsl(277 35% 22%) 0%, hsl(277 40% 14%) 100%);
+  border: 2px solid hsl(var(--primary) / .8);
+  border-radius: 4px;
+  box-shadow:
+    inset 0 1px 0 hsl(38 60% 90% / .2),
+    inset 0 -2px 0 hsl(277 50% 6% / .6),
+    0 18px 60px hsl(277 80% 4% / .7),
+    0 0 60px hsl(10 96% 70% / .35);
+}
+.champion-details-header,
+.item-details-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  background: linear-gradient(180deg, hsl(277 40% 18%) 0%, hsl(277 40% 12%) 100%);
+  border-bottom: 1px solid hsl(var(--primary) / .35);
+}
+.champion-details-header h2,
+.item-details-header h2 {
+  font-family: 'MedievalSharp', 'Cinzel', serif;
+  color: hsl(var(--primary));
+  text-shadow: 0 0 12px hsl(10 96% 70% / .55);
+  margin: 0;
+  font-size: 1.5rem;
+  line-height: 1.1;
+}
+.champion-details-header .champion-title,
+.item-details-header .item-title {
+  font-family: 'Cinzel', serif;
+  font-style: italic;
+  color: hsl(var(--ink) / .75);
+  font-size: .85rem;
+  margin: 0;
+}
+.champion-portrait img,
+.item-portrait img {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 2px solid hsl(var(--primary) / .6);
+  box-shadow: var(--shadow-bevel);
+}
+.champion-title-section,
+.item-title-section {
+  flex-direction: row !important;
+  gap: 1rem !important;
+  align-items: center;
+}
+.champion-details-header .champion-tags,
+.item-details-header .item-tags {
+  display: flex;
+  gap: .35rem;
+  flex-wrap: wrap;
+  margin-top: .35rem;
+}
+.champion-details-header .champion-tag,
+.item-details-header .item-tag {
+  padding: .15rem .5rem;
+  border: 1px solid hsl(var(--primary) / .4);
+  background: hsl(var(--primary) / .1);
+  color: hsl(var(--primary));
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  border-radius: 2px;
+}
+.champion-close-button,
+.item-close-button {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: hsl(var(--surface-inset));
+  color: hsl(var(--ink) / .75);
+  border: 1px solid hsl(var(--border));
+  border-radius: 4px;
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: all .15s ease;
+  flex-shrink: 0;
+}
+.champion-close-button:hover,
+.item-close-button:hover {
+  color: hsl(var(--secondary));
+  border-color: hsl(var(--secondary));
+  background: hsl(var(--secondary) / .1);
+}
+
 /* Loading / error states */
 .performance-page .loading-state,
 .performance-page .error-state {
@@ -1841,21 +2024,90 @@ All class names from the original frontend are preserved. JSX is untouched.
   color: hsl(var(--ink) / .8);
 }
 
-/* Responsive — collapse Recent Matches table on narrow screens */
+/* Responsive — keep the Recent Matches header visible by allowing horizontal scroll */
 @media (max-width: 900px) {
-  .performance-page .performance-table .table-header { display: none; }
-  .performance-page .performance-table .table-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: .35rem .75rem;
-    padding: .85rem 1rem;
+  .performance-page .performance-table,
+  .performance-page .spells-table {
+    overflow-x: auto;
   }
-  .performance-page .performance-table .table-row .table-cell {
-    border-bottom: none;
-    padding: .25rem 0;
+  .performance-page .performance-table .table-header,
+  .performance-page .performance-table .table-row {
+    min-width: 760px;
+  }
+  .performance-page .spells-table .table-header,
+  .performance-page .spells-table .table-row {
+    min-width: 520px;
+  }
+  .performance-page .performance-table .table-header .table-cell,
+  .performance-page .performance-table .table-row .table-cell,
+  .performance-page .spells-table .table-header .table-cell,
+  .performance-page .spells-table .table-row .table-cell {
+    font-size: .78rem;
+    padding: .6rem .55rem;
+  }
+}
+
+/* Stat cards / trends / role-distribution responsive fixes (≤ 600px) */
+@media (max-width: 600px) {
+  .performance-page .stats-cards,
+  .performance-page .trends-grid {
+    grid-template-columns: 1fr;
+  }
+  .performance-page .stat-card {
+    padding: 1rem 1rem;
+    min-width: 0;
+  }
+  .performance-page .stat-card h3,
+  .performance-page h3 {
+    font-size: 1.35rem;
+    word-break: break-word;
+    line-height: 1.15;
+  }
+  .performance-page h4 {
+    font-size: .95rem;
+    word-break: break-word;
+  }
+  .performance-page .stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .55rem;
+  }
+  .performance-page .stat-item {
+    padding: .65rem .7rem;
+    min-width: 0;
+  }
+  .performance-page .stat-label {
+    font-size: .6rem;
+    letter-spacing: .12em;
+    word-break: break-word;
+  }
+  .performance-page .stat-value {
+    font-size: 1.05rem;
+    word-break: break-word;
+  }
+  .performance-page .trend-section {
+    padding: .8rem .85rem;
+    min-width: 0;
+  }
+  .performance-page .most-played-item {
+    padding: .55rem .7rem;
+    flex-wrap: wrap;
+    gap: .35rem;
   }
   .performance-page .role-item {
-    grid-template-columns: 90px 1fr 70px;
-    gap: .65rem;
+    grid-template-columns: 80px 1fr 60px;
+    gap: .5rem;
+    padding: .55rem .7rem;
+  }
+  .performance-page .role-item .role-name {
+    font-size: .5rem;
+  }
+  .performance-page .role-count {
+    font-size: .7rem;
+  }
+}
+
+@media (max-width: 420px) {
+  .performance-page .stat-grid {
+    grid-template-columns: 1fr;
   }
 }

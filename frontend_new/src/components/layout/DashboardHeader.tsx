@@ -31,7 +31,7 @@ export const DashboardHeader = ({ rankBadge }: DashboardHeaderProps) => {
               Lol Coach
             </span>
             <span className="font-pixel text-[8px] uppercase tracking-[0.3em] text-primary/80">
-              Coach · The · Rift
+              Best · insights · summoner
             </span>
           </span>
         </Link>

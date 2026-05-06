@@ -396,16 +396,20 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ currentPage, pageConte
                         {messages.length === 0 && (
                             <div className="welcome-message">
                                 <p>{getWelcomeMessage()}</p>
-                                <div className="quick-actions">
-                                    <button onClick={() => setInput('What can this app do?')}>
-                                        - What can this app do?
-                                    </button>
-                                    <button onClick={() => setInput('How can I improve my gameplay?')}>
-                                        - How can I improve?
-                                    </button>
-                                    <button onClick={() => setInput('Explain this page')}>
-                                        - Explain this page
-                                    </button>
+                                <div className="flex flex-col gap-2 mt-4 w-full">
+                                    {[
+                                        'What can this app do?',
+                                        'How can I improve my gameplay?',
+                                        'Explain this page',
+                                    ].map((q) => (
+                                        <button
+                                            key={q}
+                                            onClick={() => setInput(q)}
+                                            className="w-full text-left px-3 py-2 rounded-md border border-primary/30 bg-surface-inset/60 hover:bg-surface-inset hover:border-primary/60 transition-colors font-pixel text-[11px] uppercase tracking-wider text-foreground/90 hover:text-primary"
+                                        >
+                                            ▸ {q}
+                                        </button>
+                                    ))}
                                 </div>
                             </div>
                         )}

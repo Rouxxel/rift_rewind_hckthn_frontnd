@@ -507,20 +507,41 @@ export const Predictions: React.FC<PredictionsProps> = ({ onBack }) => {
   return (
     <div className="predictions-page">
 
-      <div className="predictions-tabs">
-        <div className="predictions-tabs-container">
-          <button
-            className={`tab-button ${activeTab === 'winrates' ? 'active' : ''}`}
-            onClick={() => setActiveTab('winrates')}
-          >
-            Champion Winrates
-          </button>
-          <button
-            className={`tab-button ${activeTab === 'predictions' ? 'active' : ''}`}
-            onClick={() => setActiveTab('predictions')}
-          >
-            Match Predictions
-          </button>
+      <div className="mb-4">
+        <div className="relative flex flex-wrap items-center gap-2 p-2 rounded-sm border border-border bg-gradient-panel shadow-bevel">
+          <span className="pointer-events-none absolute inset-x-3 top-0 h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
+          {([
+            { id: 'winrates', label: 'Champion Winrates' },
+            { id: 'predictions', label: 'Match Predictions' },
+          ] as const).map((tab) => {
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as typeof activeTab)}
+                className={[
+                  "group relative inline-flex items-center gap-2 px-4 py-2 rounded-sm",
+                  "font-display text-xs uppercase tracking-[0.18em]",
+                  "border transition-all duration-200",
+                  "before:absolute before:inset-0 before:rounded-[inherit] before:bg-sheen before:pointer-events-none before:opacity-60",
+                  isActive
+                    ? "bg-gradient-coral text-primary-foreground border-primary/80 shadow-halo"
+                    : "bg-surface-inset/70 text-ink/75 border-border hover:text-primary hover:border-primary/60 hover:bg-surface-raised/60",
+                ].join(" ")}
+              >
+                <span
+                  aria-hidden
+                  className={[
+                    "relative z-10 inline-block h-1.5 w-1.5 rotate-45",
+                    isActive ? "bg-primary-foreground shadow-[0_0_6px_hsl(var(--primary-foreground)/0.8)]" : "bg-primary/70 group-hover:bg-primary",
+                  ].join(" ")}
+                />
+                <span className="relative z-10 drop-shadow-[0_1px_0_hsl(277_50%_8%/0.6)]">
+                  {tab.label}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -544,16 +565,19 @@ export const Predictions: React.FC<PredictionsProps> = ({ onBack }) => {
         {!loading && !error && (
           <>
             {activeTab === 'winrates' && (
-              <div className="winrates-section">
-                <div className="winrates-controls">
-                  <div className="winrates-search-row">
-                    <div className="winrates-search">
+              <div className="flex flex-col gap-4">
+                {/* Controls card */}
+                <div className="panel-bevel rounded-sm p-4 flex flex-col gap-4">
+                  {/* Search row */}
+                  <div className="flex flex-col sm:flex-row gap-3 items-stretch">
+                    <div className="flex-1 flex items-center gap-2 px-3 py-2 rounded-sm border-2 border-primary/70 bg-surface-inset shadow-[0_0_24px_hsl(10_96%_70%/0.35)]">
+                      <span className="text-primary/80 font-display text-sm">⌕</span>
                       <input
                         type="text"
                         placeholder="Search champions..."
                         value={winrateSearch}
                         onChange={(e) => setWinrateSearch(e.target.value)}
-                        className="winrate-search-input"
+                        className="flex-1 bg-transparent outline-none border-0 font-display text-sm text-ink placeholder:text-muted-foreground/60"
                       />
                     </div>
 
@@ -561,110 +585,145 @@ export const Predictions: React.FC<PredictionsProps> = ({ onBack }) => {
                       <button
                         onClick={loadMoreWinrates}
                         disabled={loadingMore}
-                        className="load-more-button"
+                        className="relative inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-sm border border-primary/80 bg-gradient-coral text-primary-foreground font-display text-xs uppercase tracking-[0.18em] shadow-bevel hover:shadow-halo transition-shadow disabled:opacity-60 before:absolute before:inset-0 before:rounded-[inherit] before:bg-sheen before:pointer-events-none before:opacity-60"
                       >
                         {loadingMore ? (
                           <>
-                            <div className="loading-spinner-small"></div>
-                            Loading...
+                            <span className="h-3 w-3 rounded-full border-2 border-primary-foreground/40 border-t-primary-foreground animate-spin" />
+                            <span className="relative z-10">Loading…</span>
                           </>
                         ) : (
-                          `Load More (${currentLimit}+)`
+                          <span className="relative z-10">Load More ({currentLimit}+)</span>
                         )}
                       </button>
                     )}
                   </div>
 
-
-                  <div className="winrates-filters">
-                    <div className="filter-group">
-                      <label>Rank:</label>
-                      <select value={rank} onChange={(e) => setRank(e.target.value)}>
-                        <option value="ALL">All Ranks</option>
-                        <option value="IRON">Iron</option>
-                        <option value="BRONZE">Bronze</option>
-                        <option value="SILVER">Silver</option>
-                        <option value="GOLD">Gold</option>
-                        <option value="PLATINUM">Platinum</option>
-                        <option value="DIAMOND">Diamond</option>
-                        <option value="MASTER">Master+</option>
-                      </select>
-                    </div>
-                    <div className="filter-group">
-                      <label>Sort by:</label>
-                      <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-                        <option value="name">Name (A-Z)</option>
-                        <option value="win_rate">Win Rate</option>
-                        <option value="pick_rate">Pick Rate</option>
-                        <option value="ban_rate">Ban Rate</option>
-                        <option value="games_played">Games Played</option>
-                      </select>
-                    </div>
+                  {/* Filters row */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {[
+                      {
+                        label: 'Rank',
+                        value: rank,
+                        onChange: (v: string) => setRank(v),
+                        options: [
+                          ['ALL', 'All Ranks'], ['IRON', 'Iron'], ['BRONZE', 'Bronze'],
+                          ['SILVER', 'Silver'], ['GOLD', 'Gold'], ['PLATINUM', 'Platinum'],
+                          ['DIAMOND', 'Diamond'], ['MASTER', 'Master+'],
+                        ],
+                      },
+                      {
+                        label: 'Sort by',
+                        value: sortBy,
+                        onChange: (v: string) => setSortBy(v),
+                        options: [
+                          ['name', 'Name (A-Z)'], ['win_rate', 'Win Rate'],
+                          ['pick_rate', 'Pick Rate'], ['ban_rate', 'Ban Rate'],
+                          ['games_played', 'Games Played'],
+                        ],
+                      },
+                    ].map((f) => (
+                      <label key={f.label} className="flex flex-col gap-1.5">
+                        <span className="font-pixel text-[10px] uppercase tracking-[0.2em] text-primary/90">
+                          {f.label}
+                        </span>
+                        <div className="flex items-center px-3 py-2 rounded-sm border-2 border-primary/70 bg-surface-inset shadow-[0_0_24px_hsl(10_96%_70%/0.25)] focus-within:border-primary focus-within:shadow-inner-glow">
+                          <select
+                            value={f.value}
+                            onChange={(e) => f.onChange(e.target.value)}
+                            className="w-full bg-transparent outline-none border-0 font-display text-sm text-ink appearance-none cursor-pointer"
+                          >
+                            {f.options.map(([v, l]) => (
+                              <option key={v} value={v} className="bg-surface text-ink">
+                                {l}
+                              </option>
+                            ))}
+                          </select>
+                          <span className="text-primary/80 text-xs ml-2 pointer-events-none">▾</span>
+                        </div>
+                      </label>
+                    ))}
                   </div>
                 </div>
 
-                <div className="winrates-results-info">
-                  <span className="results-count">
-                    Showing {filteredWinrates.length} of {winrates.length} champions loaded
+                {/* Results info */}
+                <div className="flex items-center gap-2 px-1 font-pixel text-[10px] uppercase tracking-[0.18em] text-ink/70">
+                  <span className="inline-block h-1.5 w-1.5 rotate-45 bg-primary shadow-halo" />
+                  <span>
+                    Showing {filteredWinrates.length} of {winrates.length} champions
                     {winrateSearch && ` for "${winrateSearch}"`}
                     {hasMoreChampions && !winrateSearch && (
-                      <span className="more-available"> • More available</span>
+                      <span className="text-primary"> • More available</span>
                     )}
                   </span>
                 </div>
 
-                <div className="winrates-table">
-                  <div className="table-header">
-                    <div className="table-cell">Champion</div>
-                    <div className="table-cell">Win Rate</div>
-                    <div className="table-cell">Pick Rate</div>
-                    <div className="table-cell">Ban Rate</div>
-                    <div className="table-cell">Games</div>
+                {/* Table card */}
+                <div className="panel-bevel rounded-sm overflow-hidden">
+                  <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-2 px-4 py-3 border-b border-border bg-surface-inset/80 font-display text-[11px] uppercase tracking-[0.18em] text-primary">
+                    <div>Champion</div>
+                    <div>Win Rate</div>
+                    <div>Pick Rate</div>
+                    <div>Ban Rate</div>
+                    <div>Games</div>
                   </div>
                   {filteredWinrates.length > 0 ? filteredWinrates.map((champion, index) => (
-                    <div key={champion.champion_id} className={`table-row ${index % 2 === 0 ? 'even' : 'odd'}`}>
-                      <div className="table-cell champion-cell">
+                    <div
+                      key={champion.champion_id}
+                      className={[
+                        "grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-2 items-center px-4 py-2.5 border-b border-border/60 transition-colors",
+                        index % 2 === 0 ? "bg-surface-inset/40" : "bg-transparent",
+                        "hover:bg-primary/10",
+                      ].join(" ")}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
                         <img
                           src={`https://ddragon.leagueoflegends.com/cdn/14.22.1/img/champion/${champion.champion_id}.png`}
                           alt={champion.name}
-                          className="champion-icon"
+                          className="h-9 w-9 rounded-sm border border-primary/40 shadow-bevel object-cover flex-shrink-0"
                           onError={(e) => {
                             (e.target as HTMLImageElement).src = '/champion-placeholder.png';
                           }}
                         />
-                        <div className="champion-info">
-                          <span className="champion-name">{champion.name}</span>
-                          <span className="champion-title">{champion.title}</span>
+                        <div className="flex flex-col min-w-0">
+                          <span className="font-blackletter text-sm text-ink truncate">{champion.name}</span>
+                          <span className="text-[11px] text-muted-foreground truncate italic">{champion.title}</span>
                         </div>
                       </div>
-                      <div className="table-cell">
-                        <span className={`win-rate ${champion.win_rate >= 52 ? 'high' : champion.win_rate <= 48 ? 'low' : 'medium'}`}>
+                      <div>
+                        <span
+                          className={[
+                            "font-pixel text-[11px] px-2 py-1 rounded-sm border",
+                            champion.win_rate >= 52
+                              ? "text-[#6fd58a] border-[#6fd58a]/40 bg-[#6fd58a]/10"
+                              : champion.win_rate <= 48
+                              ? "text-secondary border-secondary/50 bg-secondary/10"
+                              : "text-gold border-gold/40 bg-gold/10",
+                          ].join(" ")}
+                        >
                           {champion.win_rate}%
                         </span>
                       </div>
-                      <div className="table-cell">{champion.pick_rate}%</div>
-                      <div className="table-cell">{champion.ban_rate}%</div>
-                      <div className="table-cell">{champion.games_played.toLocaleString()}</div>
+                      <div className="font-display text-sm text-ink/85">{champion.pick_rate}%</div>
+                      <div className="font-display text-sm text-ink/85">{champion.ban_rate}%</div>
+                      <div className="font-display text-sm text-ink/85">{champion.games_played.toLocaleString()}</div>
                     </div>
                   )) : (
-                    <div className="no-results">
-                      <div className="no-results-content">
-                        <span className="no-results-icon">🔍</span>
-                        <span className="no-results-text">
-                          {winrateSearch
-                            ? `No champions found matching "${winrateSearch}"`
-                            : 'No champions available'
-                          }
-                        </span>
-                        {winrateSearch && (
-                          <button
-                            onClick={() => setWinrateSearch('')}
-                            className="clear-search-button"
-                          >
-                            Clear Search
-                          </button>
-                        )}
-                      </div>
+                    <div className="flex flex-col items-center justify-center gap-3 py-12 px-6 text-center">
+                      <span className="text-3xl">🔍</span>
+                      <span className="font-display text-sm text-ink/80">
+                        {winrateSearch
+                          ? `No champions found matching "${winrateSearch}"`
+                          : 'No champions available'}
+                      </span>
+                      {winrateSearch && (
+                        <button
+                          onClick={() => setWinrateSearch('')}
+                          className="px-4 py-2 rounded-sm border border-primary/70 bg-surface-inset text-primary font-display text-xs uppercase tracking-[0.18em] hover:bg-primary/10 transition-colors"
+                        >
+                          Clear Search
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>
@@ -672,67 +731,108 @@ export const Predictions: React.FC<PredictionsProps> = ({ onBack }) => {
             )}
 
             {activeTab === 'predictions' && (
-              <div className="predictions-section">
-                <div className="team-builder">
-                  <div className="team-builder-header">
-                    <h3>Team Composition Builder</h3>
-                    <div className="match-settings">
-                      <div className="setting-group">
-                        <label>Game Mode:</label>
-                        <select value={gameMode} onChange={(e) => setGameMode(e.target.value)}>
-                          <option value="CLASSIC">Classic (Summoner's Rift)</option>
-                          <option value="ARAM">ARAM</option>
-                        </select>
-                      </div>
-                      <div className="setting-group">
-                        <label>Average Rank:</label>
-                        <select value={averageRank} onChange={(e) => setAverageRank(e.target.value)}>
-                          <option value="IRON">Iron</option>
-                          <option value="BRONZE">Bronze</option>
-                          <option value="SILVER">Silver</option>
-                          <option value="GOLD">Gold</option>
-                          <option value="PLATINUM">Platinum</option>
-                          <option value="DIAMOND">Diamond</option>
-                          <option value="MASTER+">Master+</option>
-                        </select>
-                      </div>
+              <div className="flex flex-col gap-4">
+                {/* Team Builder card */}
+                <div className="panel-bevel rounded-sm p-4 flex flex-col gap-5">
+                  <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+                    <h3 className="font-blackletter text-xl text-primary text-glow m-0">
+                      Team Composition Builder
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:min-w-[420px]">
+                      {[
+                        {
+                          label: 'Game Mode',
+                          value: gameMode,
+                          onChange: setGameMode,
+                          options: [
+                            ['CLASSIC', "Classic (Summoner's Rift)"],
+                            ['ARAM', 'ARAM'],
+                          ] as [string, string][],
+                        },
+                        {
+                          label: 'Average Rank',
+                          value: averageRank,
+                          onChange: setAverageRank,
+                          options: [
+                            ['IRON', 'Iron'], ['BRONZE', 'Bronze'], ['SILVER', 'Silver'],
+                            ['GOLD', 'Gold'], ['PLATINUM', 'Platinum'],
+                            ['DIAMOND', 'Diamond'], ['MASTER+', 'Master+'],
+                          ] as [string, string][],
+                        },
+                      ].map((f) => (
+                        <label key={f.label} className="flex flex-col gap-1.5">
+                          <span className="font-pixel text-[10px] uppercase tracking-[0.2em] text-primary/90">
+                            {f.label}
+                          </span>
+                          <div className="flex items-center px-3 py-2 rounded-sm border-2 border-primary/70 bg-surface-inset shadow-[0_0_24px_hsl(10_96%_70%/0.25)] focus-within:border-primary focus-within:shadow-inner-glow">
+                            <select
+                              value={f.value}
+                              onChange={(e) => f.onChange(e.target.value)}
+                              className="w-full bg-transparent outline-none border-0 font-display text-sm text-ink appearance-none cursor-pointer"
+                            >
+                              {f.options.map(([v, l]) => (
+                                <option key={v} value={v} className="bg-surface text-ink">
+                                  {l}
+                                </option>
+                              ))}
+                            </select>
+                            <span className="text-primary/80 text-xs ml-2 pointer-events-none">▾</span>
+                          </div>
+                        </label>
+                      ))}
                     </div>
                   </div>
 
-                  <div className="champion-search">
-                    <div className="search-controls">
-                      <input
-                        type="text"
-                        placeholder="Search champions..."
-                        value={championSearch}
-                        onChange={(e) => {
-                          setChampionSearch(e.target.value);
-                          searchChampions(e.target.value);
-                        }}
-                        className="champion-search-input"
-                      />
-                      <div className="team-selector">
+                  {/* Champion search */}
+                  <div className="flex flex-col gap-3">
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <div className="flex-1 flex items-center gap-2 px-3 py-2 rounded-sm border-2 border-primary/70 bg-surface-inset shadow-[0_0_24px_hsl(10_96%_70%/0.35)] focus-within:border-primary focus-within:shadow-inner-glow">
+                        <span className="text-primary/80 font-display text-sm">⌕</span>
+                        <input
+                          type="text"
+                          placeholder="Search champions..."
+                          value={championSearch}
+                          onChange={(e) => {
+                            setChampionSearch(e.target.value);
+                            searchChampions(e.target.value);
+                          }}
+                          className="flex-1 bg-transparent outline-none border-0 font-display text-sm text-ink placeholder:text-muted-foreground/60"
+                        />
+                      </div>
+                      <div className="flex gap-2">
                         <button
-                          className={`team-button ${selectedTeam === 'blue' ? 'active blue' : 'blue'}`}
                           onClick={() => setSelectedTeam('blue')}
+                          className={[
+                            "relative px-4 py-2 rounded-sm border font-display text-xs uppercase tracking-[0.18em] transition-all",
+                            "before:absolute before:inset-0 before:rounded-[inherit] before:bg-sheen before:pointer-events-none before:opacity-50",
+                            selectedTeam === 'blue'
+                              ? "bg-[hsl(210_90%_55%)] text-white border-[hsl(210_100%_70%)] shadow-[0_0_18px_hsl(210_100%_60%/0.6)]"
+                              : "bg-surface-inset text-ink/80 border-[hsl(210_60%_45%)]/60 hover:text-white hover:border-[hsl(210_100%_70%)]",
+                          ].join(" ")}
                         >
-                          Add to Blue Team
+                          <span className="relative z-10">Add to Blue</span>
                         </button>
                         <button
-                          className={`team-button ${selectedTeam === 'red' ? 'active red' : 'red'}`}
                           onClick={() => setSelectedTeam('red')}
+                          className={[
+                            "relative px-4 py-2 rounded-sm border font-display text-xs uppercase tracking-[0.18em] transition-all",
+                            "before:absolute before:inset-0 before:rounded-[inherit] before:bg-sheen before:pointer-events-none before:opacity-50",
+                            selectedTeam === 'red'
+                              ? "bg-gradient-coral text-primary-foreground border-primary/80 shadow-halo"
+                              : "bg-surface-inset text-ink/80 border-secondary/60 hover:text-primary hover:border-primary",
+                          ].join(" ")}
                         >
-                          Add to Red Team
+                          <span className="relative z-10">Add to Red</span>
                         </button>
                       </div>
                     </div>
 
                     {searchResults.length > 0 && (
-                      <div className="search-results">
-                        {searchResults.map(championName => (
+                      <div className="panel-bevel rounded-sm p-2 max-h-48 overflow-y-auto flex flex-col gap-1">
+                        {searchResults.map((championName) => (
                           <div
                             key={championName}
-                            className="search-result"
+                            className="px-3 py-1.5 rounded-sm font-display text-sm text-ink/90 cursor-pointer hover:bg-primary/15 hover:text-primary transition-colors"
                             onClick={() => addChampionToTeam(championName)}
                           >
                             {championName}
@@ -742,180 +842,171 @@ export const Predictions: React.FC<PredictionsProps> = ({ onBack }) => {
                     )}
                   </div>
 
-                  <div className="teams-display">
-                    <div className="team blue-team">
-                      <h4>Blue Team ({blueTeam.length}/5)</h4>
-                      <div className="team-champions">
-                        {blueTeam.map(championName => (
-                          <div key={championName} className="team-champion">
-                            <span>{championName}</span>
-                            <button onClick={() => removeChampionFromTeam(championName, 'blue')}>×</button>
+                  {/* Teams display */}
+                  <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-4 items-stretch">
+                    {([
+                      { side: 'blue' as const, list: blueTeam, label: 'Blue Team', accent: 'hsl(210_100%_70%)', glow: 'hsl(210_100%_60%/0.5)' },
+                      { side: 'red' as const, list: redTeam, label: 'Red Team', accent: 'hsl(10_96%_70%)', glow: 'hsl(10_96%_70%/0.55)' },
+                    ] as const).map((team, idx) => (
+                      <React.Fragment key={team.side}>
+                        {idx === 1 && (
+                          <div className="hidden md:flex items-center justify-center font-blackletter text-2xl text-primary text-glow">
+                            VS
                           </div>
-                        ))}
-                        {Array.from({ length: 5 - blueTeam.length }).map((_, index) => (
-                          <div key={index} className="team-champion empty">
-                            <span>Empty Slot</span>
+                        )}
+                        <div
+                          className="panel-bevel rounded-sm p-4 flex flex-col gap-3"
+                          style={{ boxShadow: `var(--shadow-bevel), 0 0 22px ${team.glow.replace(/_/g, ' ')}` }}
+                        >
+                          <h4
+                            className="font-blackletter text-lg m-0"
+                            style={{ color: `hsl(${team.accent.replace(/_/g, ' ')})` }}
+                          >
+                            {team.label} ({team.list.length}/5)
+                          </h4>
+                          <div className="flex flex-col gap-1.5">
+                            {team.list.map((championName) => (
+                              <div
+                                key={championName}
+                                className="flex items-center justify-between gap-2 px-3 py-1.5 rounded-sm bg-surface-inset/70 border border-border"
+                              >
+                                <span className="font-display text-sm text-ink truncate">{championName}</span>
+                                <button
+                                  onClick={() => removeChampionFromTeam(championName, team.side)}
+                                  className="h-6 w-6 inline-flex items-center justify-center rounded-sm border border-border text-ink/70 hover:text-secondary hover:border-secondary transition-colors"
+                                  aria-label="Remove"
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            ))}
+                            {Array.from({ length: 5 - team.list.length }).map((_, i) => (
+                              <div
+                                key={i}
+                                className="px-3 py-1.5 rounded-sm border border-dashed border-border/60 bg-surface-inset/30 font-display text-xs italic text-muted-foreground"
+                              >
+                                Empty Slot
+                              </div>
+                            ))}
                           </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="vs-divider">VS</div>
-
-                    <div className="team red-team">
-                      <h4>Red Team ({redTeam.length}/5)</h4>
-                      <div className="team-champions">
-                        {redTeam.map(championName => (
-                          <div key={championName} className="team-champion">
-                            <span>{championName}</span>
-                            <button onClick={() => removeChampionFromTeam(championName, 'red')}>×</button>
-                          </div>
-                        ))}
-                        {Array.from({ length: 5 - redTeam.length }).map((_, index) => (
-                          <div key={index} className="team-champion empty">
-                            <span>Empty Slot</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
+                        </div>
+                      </React.Fragment>
+                    ))}
                   </div>
 
-                  <div className="prediction-controls">
+                  {/* Action buttons */}
+                  <div className="flex flex-wrap gap-2 justify-center">
                     <button
                       onClick={predictMatch}
                       disabled={blueTeam.length !== 5 || redTeam.length !== 5}
-                      className="predict-button"
+                      className="relative inline-flex items-center gap-2 px-5 py-2.5 rounded-sm border border-primary/80 bg-gradient-coral text-primary-foreground font-display text-xs uppercase tracking-[0.18em] shadow-bevel hover:shadow-halo transition-shadow disabled:opacity-50 disabled:cursor-not-allowed before:absolute before:inset-0 before:rounded-[inherit] before:bg-sheen before:pointer-events-none before:opacity-60"
                     >
-                      Predict Match Outcome
+                      <span className="relative z-10">⚔ Predict Outcome</span>
                     </button>
-                    <button 
-                      onClick={() => fillRandomTeam('red')} 
-                      className="random-button"
+                    <button
+                      onClick={() => fillRandomTeam('red')}
                       disabled={loading || !championsLoaded}
                       title={!championsLoaded ? 'Loading champions...' : 'Fill red team with random champions'}
+                      className="px-4 py-2.5 rounded-sm border border-border bg-surface-inset text-ink/85 font-display text-xs uppercase tracking-[0.18em] hover:text-primary hover:border-primary/70 transition-colors disabled:opacity-50"
                     >
-                      {!championsLoaded ? '⏳ Loading...' : '🎲 Random Red Team'}
+                      {!championsLoaded ? '⏳ Loading...' : '🎲 Random Red'}
                     </button>
-                    <button 
-                      onClick={() => fillRandomTeam('both')} 
-                      className="random-button"
+                    <button
+                      onClick={() => fillRandomTeam('both')}
                       disabled={loading || !championsLoaded}
                       title={!championsLoaded ? 'Loading champions...' : 'Fill both teams with random champions'}
+                      className="px-4 py-2.5 rounded-sm border border-border bg-surface-inset text-ink/85 font-display text-xs uppercase tracking-[0.18em] hover:text-primary hover:border-primary/70 transition-colors disabled:opacity-50"
                     >
-                      {!championsLoaded ? '⏳ Loading...' : '🎲 Random Both Teams'}
+                      {!championsLoaded ? '⏳ Loading...' : '🎲 Random Both'}
                     </button>
-                    <button onClick={clearTeams} className="clear-button">
+                    <button
+                      onClick={clearTeams}
+                      className="px-4 py-2.5 rounded-sm border border-secondary/60 bg-surface-inset text-secondary font-display text-xs uppercase tracking-[0.18em] hover:bg-secondary/10 transition-colors"
+                    >
                       Clear Teams
                     </button>
                   </div>
                 </div>
 
                 {prediction && (
-                  <div className="prediction-results">
-                    <div className="prediction-header">
-                      <h3>Match Prediction Results</h3>
-                      <div className="prediction-summary">
-                        <div className="win-probabilities">
-                          <div className="probability blue">
-                            <span className="team-name">Blue Team</span>
-                            <span className="percentage">{prediction.prediction.blue_team_win_probability}%</span>
-                          </div>
-                          <div className="probability red">
-                            <span className="team-name">Red Team</span>
-                            <span className="percentage">{prediction.prediction.red_team_win_probability}%</span>
+                  <div className="panel-bevel rounded-sm p-5 flex flex-col gap-5">
+                    <div className="flex flex-col gap-3">
+                      <h3 className="font-blackletter text-xl text-primary text-glow m-0">
+                        Match Prediction Results
+                      </h3>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="rounded-sm p-3 border border-[hsl(210_100%_70%)]/60 bg-[hsl(210_60%_30%)]/25 text-center shadow-[0_0_18px_hsl(210_100%_60%/0.25)]">
+                          <div className="font-pixel text-[10px] uppercase tracking-[0.2em] text-[hsl(210_100%_80%)]">Blue Team</div>
+                          <div className="font-blackletter text-3xl text-[hsl(210_100%_85%)] mt-1">
+                            {prediction.prediction.blue_team_win_probability}%
                           </div>
                         </div>
-                        <div className="predicted-winner">
-                          <strong>Predicted Winner: {prediction.prediction.predicted_winner}</strong>
+                        <div className="rounded-sm p-3 border border-primary/70 bg-primary/10 text-center shadow-[0_0_18px_hsl(10_96%_70%/0.3)]">
+                          <div className="font-pixel text-[10px] uppercase tracking-[0.2em] text-primary">Red Team</div>
+                          <div className="font-blackletter text-3xl text-primary mt-1">
+                            {prediction.prediction.red_team_win_probability}%
+                          </div>
                         </div>
+                      </div>
+                      <div className="text-center font-display text-base text-ink">
+                        <span className="font-pixel text-[10px] uppercase tracking-[0.2em] text-primary/80 mr-2">Predicted Winner:</span>
+                        <strong className="font-blackletter text-lg text-glow">{prediction.prediction.predicted_winner}</strong>
                       </div>
                     </div>
 
-                    <div className="team-analysis">
-                      <div className="analysis-section">
-                        <h4>Blue Team Analysis</h4>
-                        <div className="team-stats">
-                          <div className="stat-item">
-                            <span>Attack: {prediction.team_analysis.blue_team.composition_score.attack}</span>
-                          </div>
-                          <div className="stat-item">
-                            <span>Defense: {prediction.team_analysis.blue_team.composition_score.defense}</span>
-                          </div>
-                          <div className="stat-item">
-                            <span>Magic: {prediction.team_analysis.blue_team.composition_score.magic}</span>
-                          </div>
-                          <div className="stat-item">
-                            <span>Synergy: {prediction.team_analysis.blue_team.composition_score.synergy}</span>
-                          </div>
-                        </div>
-                        <div className="strengths-weaknesses">
-                          {prediction.team_analysis.blue_team.strengths.length > 0 && (
-                            <div className="strengths">
-                              <h5>Strengths:</h5>
-                              <ul>
-                                {prediction.team_analysis.blue_team.strengths.map((strength: string, index: number) => (
-                                  <li key={index}>{strength}</li>
-                                ))}
-                              </ul>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {([
+                        { key: 'blue_team' as const, label: 'Blue Team Analysis', accent: 'hsl(210_100%_75%)' },
+                        { key: 'red_team' as const, label: 'Red Team Analysis', accent: 'hsl(10_96%_70%)' },
+                      ]).map((side) => {
+                        const data = prediction.team_analysis[side.key];
+                        return (
+                          <div key={side.key} className="rounded-sm border border-border bg-surface-inset/40 p-4 flex flex-col gap-3">
+                            <h4
+                              className="font-blackletter text-base m-0"
+                              style={{ color: `hsl(${side.accent.replace(/_/g, ' ')})` }}
+                            >
+                              {side.label}
+                            </h4>
+                            <div className="grid grid-cols-2 gap-2">
+                              {[
+                                ['Attack', data.composition_score.attack],
+                                ['Defense', data.composition_score.defense],
+                                ['Magic', data.composition_score.magic],
+                                ['Synergy', data.composition_score.synergy],
+                              ].map(([label, val]) => (
+                                <div key={label as string} className="flex items-center justify-between px-2.5 py-1.5 rounded-sm bg-background/50 border border-border/70">
+                                  <span className="font-pixel text-[9px] uppercase tracking-[0.18em] text-ink/70">{label}</span>
+                                  <span className="font-display text-sm text-primary">{val as number}</span>
+                                </div>
+                              ))}
                             </div>
-                          )}
-                          {prediction.team_analysis.blue_team.weaknesses.length > 0 && (
-                            <div className="weaknesses">
-                              <h5>Weaknesses:</h5>
-                              <ul>
-                                {prediction.team_analysis.blue_team.weaknesses.map((weakness: string, index: number) => (
-                                  <li key={index}>{weakness}</li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="analysis-section">
-                        <h4>Red Team Analysis</h4>
-                        <div className="team-stats">
-                          <div className="stat-item">
-                            <span>Attack: {prediction.team_analysis.red_team.composition_score.attack}</span>
+                            {data.strengths.length > 0 && (
+                              <div>
+                                <h5 className="font-pixel text-[10px] uppercase tracking-[0.2em] text-[#6fd58a] mb-1.5">◆ Strengths</h5>
+                                <ul className="list-none p-0 m-0 flex flex-col gap-1">
+                                  {data.strengths.map((s: string, i: number) => (
+                                    <li key={i} className="text-sm text-ink/85 pl-3 relative before:content-['▸'] before:absolute before:left-0 before:text-[#6fd58a]">{s}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                            {data.weaknesses.length > 0 && (
+                              <div>
+                                <h5 className="font-pixel text-[10px] uppercase tracking-[0.2em] text-secondary mb-1.5">◆ Weaknesses</h5>
+                                <ul className="list-none p-0 m-0 flex flex-col gap-1">
+                                  {data.weaknesses.map((w: string, i: number) => (
+                                    <li key={i} className="text-sm text-ink/85 pl-3 relative before:content-['▸'] before:absolute before:left-0 before:text-secondary">{w}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
                           </div>
-                          <div className="stat-item">
-                            <span>Defense: {prediction.team_analysis.red_team.composition_score.defense}</span>
-                          </div>
-                          <div className="stat-item">
-                            <span>Magic: {prediction.team_analysis.red_team.composition_score.magic}</span>
-                          </div>
-                          <div className="stat-item">
-                            <span>Synergy: {prediction.team_analysis.red_team.composition_score.synergy}</span>
-                          </div>
-                        </div>
-                        <div className="strengths-weaknesses">
-                          {prediction.team_analysis.red_team.strengths.length > 0 && (
-                            <div className="strengths">
-                              <h5>Strengths:</h5>
-                              <ul>
-                                {prediction.team_analysis.red_team.strengths.map((strength: string, index: number) => (
-                                  <li key={index}>{strength}</li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
-                          {prediction.team_analysis.red_team.weaknesses.length > 0 && (
-                            <div className="weaknesses">
-                              <h5>Weaknesses:</h5>
-                              <ul>
-                                {prediction.team_analysis.red_team.weaknesses.map((weakness: string, index: number) => (
-                                  <li key={index}>{weakness}</li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
-                        </div>
-                      </div>
+                        );
+                      })}
                     </div>
 
-                    <div className="disclaimer">
-                      <p>{prediction.disclaimer}</p>
-                    </div>
+                    <p className="text-xs italic text-muted-foreground text-center m-0">{prediction.disclaimer}</p>
                   </div>
                 )}
               </div>

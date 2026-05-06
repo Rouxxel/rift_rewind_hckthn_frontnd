@@ -304,32 +304,43 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
 
   return (
     <div className="performance-page">
-      <div className="performance-tabs">
-        <div className="performance-tabs-container">
-          <button
-            className={`tab-button ${activeTab === 'overview' ? 'active' : ''}`}
-            onClick={() => setActiveTab('overview')}
-          >
-            Overview
-          </button>
-          <button
-            className={`tab-button ${activeTab === 'mastery' ? 'active' : ''}`}
-            onClick={() => setActiveTab('mastery')}
-          >
-            Champion Mastery
-          </button>
-          <button
-            className={`tab-button ${activeTab === 'spells' ? 'active' : ''}`}
-            onClick={() => setActiveTab('spells')}
-          >
-            Summoner Spells
-          </button>
-          <button
-            className={`tab-button ${activeTab === 'runes' ? 'active' : ''}`}
-            onClick={() => setActiveTab('runes')}
-          >
-            Runes
-          </button>
+      <div className="mb-4">
+        <div className="relative flex flex-wrap items-center gap-2 p-2 rounded-sm border border-border bg-gradient-panel shadow-bevel">
+          <span className="pointer-events-none absolute inset-x-3 top-0 h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
+          {([
+            { id: 'overview', label: 'Overview' },
+            { id: 'mastery', label: 'Champion Mastery' },
+            { id: 'spells', label: 'Summoner Spells' },
+            { id: 'runes', label: 'Runes' },
+          ] as const).map((tab) => {
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as typeof activeTab)}
+                className={[
+                  "group relative inline-flex items-center gap-2 px-4 py-2 rounded-sm",
+                  "font-display text-xs uppercase tracking-[0.18em]",
+                  "border transition-all duration-200",
+                  "before:absolute before:inset-0 before:rounded-[inherit] before:bg-sheen before:pointer-events-none before:opacity-60",
+                  isActive
+                    ? "bg-gradient-coral text-primary-foreground border-primary/80 shadow-halo"
+                    : "bg-surface-inset/70 text-ink/75 border-border hover:text-primary hover:border-primary/60 hover:bg-surface-raised/60",
+                ].join(" ")}
+              >
+                <span
+                  aria-hidden
+                  className={[
+                    "relative z-10 inline-block h-1.5 w-1.5 rotate-45",
+                    isActive ? "bg-primary-foreground shadow-[0_0_6px_hsl(var(--primary-foreground)/0.8)]" : "bg-primary/70 group-hover:bg-primary",
+                  ].join(" ")}
+                />
+                <span className="relative z-10 drop-shadow-[0_1px_0_hsl(277_50%_8%/0.6)]">
+                  {tab.label}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -797,8 +808,6 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
                           {Object.entries(runeMasteries.champion_breakdown).map(([champion, data], index) => (
                             <div key={index} className="champion-breakdown-item">
                               <h4>{champion}</h4>
-                              <p className="games-played">{data.games_played} games played</p>
-
                               <div className="breakdown-section">
                                 <h5>Primary Trees</h5>
                                 <div className="breakdown-list">

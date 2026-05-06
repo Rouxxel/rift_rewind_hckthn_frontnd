@@ -226,11 +226,11 @@ export const ItemDetails: React.FC<ItemDetailsProps> = ({ itemId, itemData: cach
 
   if (loading) {
     return (
-      <div className="champion-details-overlay" onClick={handleOverlayClick}>
-        <div className="champion-details-modal">
-          <div className="champion-details-loading">
-            <div className="loading-spinner"></div>
-            <p>Loading item details...</p>
+      <div className="item-details-overlay" onClick={handleOverlayClick}>
+        <div className="item-details-modal flex items-center justify-center p-12">
+          <div className="flex flex-col items-center gap-3">
+            <span className="h-8 w-8 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
+            <p className="font-display text-sm text-ink/80">Loading item details...</p>
           </div>
         </div>
       </div>
@@ -239,16 +239,16 @@ export const ItemDetails: React.FC<ItemDetailsProps> = ({ itemId, itemData: cach
 
   if (error) {
     return (
-      <div className="champion-details-overlay" onClick={handleOverlayClick}>
-        <div className="champion-details-modal">
-          <div className="champion-details-error">
-            <h3>Error Loading Item</h3>
-            <p>{error}</p>
-            <div className="error-actions">
-              <button onClick={loadItemDetails} className="retry-button">
+      <div className="item-details-overlay" onClick={handleOverlayClick}>
+        <div className="item-details-modal p-8">
+          <div className="flex flex-col items-center gap-3 text-center">
+            <h3 className="font-blackletter text-xl text-secondary m-0">Error Loading Item</h3>
+            <p className="font-display text-sm text-ink/80 m-0">{error}</p>
+            <div className="flex gap-2 mt-2">
+              <button onClick={loadItemDetails} className="px-4 py-2 rounded-sm border border-primary/70 bg-surface-inset text-primary font-display text-xs uppercase tracking-[0.18em] hover:bg-primary/10 transition-colors">
                 Retry
               </button>
-              <button onClick={onClose} className="close-button">
+              <button onClick={onClose} className="px-4 py-2 rounded-sm border border-border bg-surface-inset text-ink/80 font-display text-xs uppercase tracking-[0.18em] hover:text-secondary hover:border-secondary transition-colors">
                 Close
               </button>
             </div>
@@ -262,262 +262,205 @@ export const ItemDetails: React.FC<ItemDetailsProps> = ({ itemId, itemData: cach
     return null;
   }
 
+  const formattedTags = itemData.tags.map(formatTag);
+
+  const StatRow = ({ label, value, suffix = '' }: { label: string; value: number; suffix?: string }) => (
+    <div className="flex items-center justify-between gap-3 px-3 py-2 rounded-sm bg-surface-inset/50 border border-border/60">
+      <span className="font-pixel text-[9px] uppercase tracking-[0.18em] text-ink/70">{label}</span>
+      <span className="font-blackletter text-base text-primary text-glow">+{value}{suffix}</span>
+    </div>
+  );
+
+  const StatGroup = ({ title, has, children }: { title: string; has: boolean; children: React.ReactNode }) => (
+    <div className="flex flex-col gap-2">
+      <h4 className="font-pixel text-[10px] uppercase tracking-[0.2em] text-primary/90 m-0 pb-1.5 border-b border-primary/30">
+        ◆ {title}
+      </h4>
+      {has ? (
+        <div className="flex flex-col gap-1.5">{children}</div>
+      ) : (
+        <div className="px-3 py-2 rounded-sm bg-surface-inset/30 border border-dashed border-border/50 text-center">
+          <span className="font-display text-xs italic text-muted-foreground">Not Applicable</span>
+        </div>
+      )}
+    </div>
+  );
+
   return (
-    <div className="champion-details-overlay" onClick={handleOverlayClick}>
-      <div className="champion-details-modal">
-        <div className="champion-details-header">
-          <div className="champion-title-section">
-            <div className="champion-portrait">
+    <div className="item-details-overlay" onClick={handleOverlayClick}>
+      <div className="item-details-modal">
+        <div className="item-details-header">
+          <div className="item-title-section">
+            <div className="item-portrait relative h-16 w-16 rounded-sm overflow-hidden border-2 border-primary/60 shadow-bevel flex-shrink-0">
               <img
                 src={`https://ddragon.leagueoflegends.com/cdn/14.22.1/img/item/${itemData.image.full}`}
                 alt={itemData.name}
+                className="absolute inset-0 w-full h-full object-cover"
                 onError={(e) => {
                   (e.target as HTMLImageElement).src = '/item-placeholder.png';
                 }}
               />
             </div>
-            <div className="champion-title-info">
-              <h2>{itemData.name} <span className="item-id">(Id: {itemId})</span></h2>
-              <p className="champion-title">{itemData.plaintext}</p>
-              {/* Tags right below plaintext */}
-              <div className="champion-tags">
-                {itemData.tags.map(tag => (
-                  <span key={tag} className="champion-tag">
-                    {formatTag(tag)}
-                  </span>
-                ))}
-              </div>
+            <div className="item-title-info flex flex-col gap-1 min-w-0">
+              <h2 className="m-0 truncate">
+                {itemData.name}{' '}
+                <span className="font-pixel text-[10px] uppercase tracking-[0.15em] text-muted-foreground align-middle">
+                  Id: {itemId}
+                </span>
+              </h2>
+              <p className="item-title m-0">{itemData.plaintext}</p>
+              {formattedTags.length > 0 && (
+                <div className="item-tags">
+                  {formattedTags.map((tag) => (
+                    <span key={tag} className="item-tag">{tag}</span>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
-          <button onClick={onClose} className="champion-close-button">×</button>
+          <button onClick={onClose} className="item-close-button" aria-label="Close">×</button>
         </div>
 
-        <div className="champion-details-content">
-          {/* Item Info Section */}
-          <div className="champion-info-section">
-            <h3>Item Info</h3>
+        <div className="p-5 sm:p-6 flex flex-col gap-5">
+          <section className="flex flex-col gap-4">
+            <h3 className="font-blackletter text-lg text-primary text-glow m-0 flex items-center gap-2">
+              <span className="inline-block h-2 w-2 rotate-45 bg-primary shadow-halo" />
+              Item Info
+            </h3>
 
-            {/* Item Description - First with proper spacing */}
             {itemData.description && (
-              <div className="item-description-container">
-                <div
-                  className="item-description-content"
-                  dangerouslySetInnerHTML={{ __html: cleanDescription(itemData.description) }}
-                />
+              <div className="panel-bevel rounded-sm p-4 text-sm leading-relaxed text-ink/90">
+                <div dangerouslySetInnerHTML={{ __html: cleanDescription(itemData.description) }} />
               </div>
             )}
 
-            {/* Gold Information Table */}
-            <div className="item-gold-table">
-              <div className="gold-row">
-                <span className="gold-label">Total Cost:</span>
-                <span className="gold-value">{formatGoldValue(itemData.gold.total)}g</span>
+            <div className="panel-bevel rounded-sm overflow-hidden">
+              <div className="grid grid-cols-2 px-4 py-2.5 bg-surface-inset/80 border-b border-border font-display text-[11px] uppercase tracking-[0.18em] text-primary">
+                <span>Gold</span>
+                <span className="text-right">Value</span>
               </div>
-              <div className="gold-row">
-                <span className="gold-label">Base Cost:</span>
-                <span className="gold-value">{formatGoldValue(itemData.gold.base)}g</span>
-              </div>
-              <div className="gold-row">
-                <span className="gold-label">Sell Value:</span>
-                <span className="gold-value">{formatGoldValue(itemData.gold.sell)}g</span>
-              </div>
-              <div className="gold-row">
-                <span className="gold-label">Purchasable:</span>
-                <span className="gold-value">{itemData.gold.purchasable ? 'Yes' : 'No'}</span>
-              </div>
+              {[
+                ['Total Cost', `${formatGoldValue(itemData.gold.total)}g`],
+                ['Base Cost', `${formatGoldValue(itemData.gold.base)}g`],
+                ['Sell Value', `${formatGoldValue(itemData.gold.sell)}g`],
+                ['Purchasable', itemData.gold.purchasable ? 'Yes' : 'No'],
+              ].map(([label, value], i) => (
+                <div
+                  key={label as string}
+                  className={[
+                    "grid grid-cols-2 items-center px-4 py-2.5 border-b border-border/50 last:border-b-0",
+                    i % 2 === 0 ? "bg-surface-inset/40" : "bg-transparent",
+                  ].join(" ")}
+                >
+                  <span className="font-pixel text-[10px] uppercase tracking-[0.18em] text-ink/70">{label}</span>
+                  <span className="text-right font-blackletter text-base text-gold text-glow-gold">{value}</span>
+                </div>
+              ))}
             </div>
 
-            {/* Additional Item Properties */}
             {itemData.maps && (
-              <div className="additional-info">
-                <div className="info-item">
-                  <span className="info-label">Available Maps:</span>
-                  <span className="info-value">
-                    {Object.entries(itemData.maps)
-                      .filter(([_, available]) => available)
-                      .map(([mapId, _]) => `${getMapName(mapId)} (${mapId})`)
-                      .join(', ')}
-                  </span>
-                </div>
+              <div className="panel-bevel rounded-sm p-4 flex flex-col gap-1.5">
+                <span className="font-pixel text-[10px] uppercase tracking-[0.2em] text-primary/90">◆ Available Maps</span>
+                <span className="font-display text-sm text-ink/85">
+                  {Object.entries(itemData.maps)
+                    .filter(([_, available]) => available)
+                    .map(([mapId]) => `${getMapName(mapId)} (${mapId})`)
+                    .join(', ') || 'None'}
+                </span>
               </div>
             )}
 
-            {/* Special Effects Table */}
             {itemData.effect && Object.keys(itemData.effect).length > 0 && (
-              <div className="special-effects-section">
-                <h4>Special Effects (Riot's Internal Parameters)</h4>
-                <p className="effects-explanation">
-                  <strong>⚠️ Item-Specific Values:</strong> These are Riot's internal effect parameters for this specific item.
-                  Each Effect# slot has a different meaning per item - there's no universal "Effect1 = damage" rule.
-                  These values are used in item tooltips with placeholders like {`{{ e1 }}`}, {`{{ e2 }}`}, etc.
-                  The actual meaning depends on this item's unique mechanics and tooltip implementation.
+              <div className="flex flex-col gap-3">
+                <h4 className="font-blackletter text-base text-primary m-0">Special Effects (Riot's Internal Parameters)</h4>
+                <p className="text-xs italic text-muted-foreground m-0 leading-relaxed">
+                  <strong className="text-secondary not-italic">⚠ Item-Specific Values:</strong>{' '}
+                  These are Riot's internal effect parameters for this specific item. Each Effect# slot has a
+                  different meaning per item — there's no universal "Effect1 = damage" rule. The actual meaning
+                  depends on this item's unique mechanics.
                 </p>
-                <div className="effects-table">
-                  <div className="effects-table-header">
-                    <div className="effect-cell header">Parameter</div>
-                    <div className="effect-cell header">Raw Value</div>
-                    <div className="effect-cell header">Estimated Type</div>
+                <div className="panel-bevel rounded-sm overflow-hidden">
+                  <div className="grid grid-cols-[1fr_1fr_2fr] gap-2 px-4 py-2.5 bg-surface-inset/80 border-b border-border font-display text-[11px] uppercase tracking-[0.18em] text-primary">
+                    <div>Parameter</div>
+                    <div>Raw Value</div>
+                    <div>Estimated Type</div>
                   </div>
                   {Object.entries(itemData.effect)
-                    .filter(([_, value]) => value !== '0' && parseFloat(value as string) !== 0)
+                    .filter(([_, v]) => v !== '0' && parseFloat(v as string) !== 0)
                     .map(([key, value], index) => {
                       const numValue = parseFloat(value as string);
                       let estimatedType = 'Unknown';
-
-                      if (numValue > 0 && numValue < 1) {
-                        estimatedType = `Likely ${(numValue * 100).toFixed(1)}% (Percentage)`;
-                      } else if (numValue >= 1 && numValue <= 10) {
-                        estimatedType = `Likely ${numValue} (Duration/Count)`;
-                      } else if (numValue > 10 && numValue <= 100) {
-                        estimatedType = `Likely ${numValue} (Damage/Range)`;
-                      } else if (numValue > 100) {
-                        estimatedType = `Likely ${numValue} (Large Threshold)`;
-                      }
-
+                      if (numValue > 0 && numValue < 1) estimatedType = `Likely ${(numValue * 100).toFixed(1)}% (Percentage)`;
+                      else if (numValue >= 1 && numValue <= 10) estimatedType = `Likely ${numValue} (Duration/Count)`;
+                      else if (numValue > 10 && numValue <= 100) estimatedType = `Likely ${numValue} (Damage/Range)`;
+                      else if (numValue > 100) estimatedType = `Likely ${numValue} (Large Threshold)`;
                       return (
-                        <div key={key} className={`effects-table-row ${index % 2 === 0 ? 'even' : 'odd'}`}>
-                          <div className="effect-cell">
-                            <span className="effect-param">{key}</span>
-                          </div>
-                          <div className="effect-cell value">{value}</div>
-                          <div className="effect-cell meaning">{estimatedType}</div>
+                        <div
+                          key={key}
+                          className={[
+                            "grid grid-cols-[1fr_1fr_2fr] gap-2 items-center px-4 py-2.5 border-b border-border/50 last:border-b-0",
+                            index % 2 === 0 ? "bg-surface-inset/40" : "bg-transparent",
+                          ].join(" ")}
+                        >
+                          <span className="font-pixel text-[10px] text-primary truncate">{key}</span>
+                          <span className="font-blackletter text-base text-gold">{value as string}</span>
+                          <span className="font-display text-xs text-ink/80">{estimatedType}</span>
                         </div>
                       );
                     })}
                 </div>
               </div>
             )}
-          </div>
+          </section>
 
-          {/* Item Stats Section */}
-          <div className="base-stats-section">
-            <h3>Item Statistics</h3>
-            <div className="stats-grid">
-              <div className="stat-group">
-                <h4>Offensive Stats</h4>
-                {hasOffensiveStats(itemData.stats) ? (
-                  <>
-                    {getStatValue(itemData.stats, 'attack_damage') > 0 && (
-                      <div className="stat-item">
-                        <span className="stat-label">Attack Damage:</span>
-                        <span className="stat-value">+{getStatValue(itemData.stats, 'attack_damage')}</span>
-                      </div>
-                    )}
-                    {getStatValue(itemData.stats, 'ability_power') > 0 && (
-                      <div className="stat-item">
-                        <span className="stat-label">Ability Power:</span>
-                        <span className="stat-value">+{getStatValue(itemData.stats, 'ability_power')}</span>
-                      </div>
-                    )}
-                    {getStatValue(itemData.stats, 'attack_speed') > 0 && (
-                      <div className="stat-item">
-                        <span className="stat-label">Attack Speed:</span>
-                        <span className="stat-value">+{getStatValue(itemData.stats, 'attack_speed')}%</span>
-                      </div>
-                    )}
-                    {getStatValue(itemData.stats, 'crit_chance') > 0 && (
-                      <div className="stat-item">
-                        <span className="stat-label">Critical Strike:</span>
-                        <span className="stat-value">+{getStatValue(itemData.stats, 'crit_chance')}%</span>
-                      </div>
-                    )}
-                    {getStatValue(itemData.stats, 'life_steal') > 0 && (
-                      <div className="stat-item">
-                        <span className="stat-label">Life Steal:</span>
-                        <span className="stat-value">+{getStatValue(itemData.stats, 'life_steal')}%</span>
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <div className="stat-not-applicable">
-                    <span>Not Applicable</span>
-                  </div>
-                )}
-              </div>
-
-              <div className="stat-group">
-                <h4>Defensive Stats</h4>
-                {hasDefensiveStats(itemData.stats) ? (
-                  <>
-                    {getStatValue(itemData.stats, 'health') > 0 && (
-                      <div className="stat-item">
-                        <span className="stat-label">Health:</span>
-                        <span className="stat-value">+{getStatValue(itemData.stats, 'health')}</span>
-                      </div>
-                    )}
-                    {getStatValue(itemData.stats, 'armor') > 0 && (
-                      <div className="stat-item">
-                        <span className="stat-label">Armor:</span>
-                        <span className="stat-value">+{getStatValue(itemData.stats, 'armor')}</span>
-                      </div>
-                    )}
-                    {getStatValue(itemData.stats, 'magic_resist') > 0 && (
-                      <div className="stat-item">
-                        <span className="stat-label">Magic Resist:</span>
-                        <span className="stat-value">+{getStatValue(itemData.stats, 'magic_resist')}</span>
-                      </div>
-                    )}
-                    {getStatValue(itemData.stats, 'health_regen') > 0 && (
-                      <div className="stat-item">
-                        <span className="stat-label">Health Regen:</span>
-                        <span className="stat-value">+{getStatValue(itemData.stats, 'health_regen')}</span>
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <div className="stat-not-applicable">
-                    <span>Not Applicable</span>
-                  </div>
-                )}
-              </div>
-
-              <div className="stat-group">
-                <h4>Utility Stats</h4>
-                {hasUtilityStats(itemData.stats) ? (
-                  <>
-                    {getStatValue(itemData.stats, 'mana') > 0 && (
-                      <div className="stat-item">
-                        <span className="stat-label">Mana:</span>
-                        <span className="stat-value">+{getStatValue(itemData.stats, 'mana')}</span>
-                      </div>
-                    )}
-                    {getStatValue(itemData.stats, 'mana_regen') > 0 && (
-                      <div className="stat-item">
-                        <span className="stat-label">Mana Regen:</span>
-                        <span className="stat-value">+{getStatValue(itemData.stats, 'mana_regen')}</span>
-                      </div>
-                    )}
-                    {getStatValue(itemData.stats, 'movement_speed') > 0 && (
-                      <div className="stat-item">
-                        <span className="stat-label">Movement Speed:</span>
-                        <span className="stat-value">+{getStatValue(itemData.stats, 'movement_speed')}</span>
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <div className="stat-not-applicable">
-                    <span>Not Applicable</span>
-                  </div>
-                )}
-              </div>
+          <section className="flex flex-col gap-3">
+            <h3 className="font-blackletter text-lg text-primary text-glow m-0 flex items-center gap-2">
+              <span className="inline-block h-2 w-2 rotate-45 bg-primary shadow-halo" />
+              Item Statistics
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <StatGroup title="Offensive" has={hasOffensiveStats(itemData.stats)}>
+                {getStatValue(itemData.stats, 'attack_damage') > 0 && <StatRow label="Attack Damage" value={getStatValue(itemData.stats, 'attack_damage')} />}
+                {getStatValue(itemData.stats, 'ability_power') > 0 && <StatRow label="Ability Power" value={getStatValue(itemData.stats, 'ability_power')} />}
+                {getStatValue(itemData.stats, 'attack_speed') > 0 && <StatRow label="Attack Speed" value={getStatValue(itemData.stats, 'attack_speed')} suffix="%" />}
+                {getStatValue(itemData.stats, 'crit_chance') > 0 && <StatRow label="Critical Strike" value={getStatValue(itemData.stats, 'crit_chance')} suffix="%" />}
+                {getStatValue(itemData.stats, 'life_steal') > 0 && <StatRow label="Life Steal" value={getStatValue(itemData.stats, 'life_steal')} suffix="%" />}
+              </StatGroup>
+              <StatGroup title="Defensive" has={hasDefensiveStats(itemData.stats)}>
+                {getStatValue(itemData.stats, 'health') > 0 && <StatRow label="Health" value={getStatValue(itemData.stats, 'health')} />}
+                {getStatValue(itemData.stats, 'armor') > 0 && <StatRow label="Armor" value={getStatValue(itemData.stats, 'armor')} />}
+                {getStatValue(itemData.stats, 'magic_resist') > 0 && <StatRow label="Magic Resist" value={getStatValue(itemData.stats, 'magic_resist')} />}
+                {getStatValue(itemData.stats, 'health_regen') > 0 && <StatRow label="Health Regen" value={getStatValue(itemData.stats, 'health_regen')} />}
+              </StatGroup>
+              <StatGroup title="Utility" has={hasUtilityStats(itemData.stats)}>
+                {getStatValue(itemData.stats, 'mana') > 0 && <StatRow label="Mana" value={getStatValue(itemData.stats, 'mana')} />}
+                {getStatValue(itemData.stats, 'mana_regen') > 0 && <StatRow label="Mana Regen" value={getStatValue(itemData.stats, 'mana_regen')} />}
+                {getStatValue(itemData.stats, 'movement_speed') > 0 && <StatRow label="Movement Speed" value={getStatValue(itemData.stats, 'movement_speed')} />}
+              </StatGroup>
             </div>
-          </div>
+          </section>
 
-          {/* Build Information Section */}
           {(itemData.from || itemData.into) && (
-            <div className="base-stats-section">
-              <h3>Build Information</h3>
+            <section className="flex flex-col gap-3">
+              <h3 className="font-blackletter text-lg text-primary text-glow m-0 flex items-center gap-2">
+                <span className="inline-block h-2 w-2 rotate-45 bg-primary shadow-halo" />
+                Build Information
+              </h3>
 
               {itemData.from && itemData.from.length > 0 && (
-                <div className="build-subsection">
-                  <h4>Components</h4>
-                  <div className="build-items-grid">
+                <div className="flex flex-col gap-2">
+                  <h4 className="font-pixel text-[10px] uppercase tracking-[0.2em] text-primary/90 m-0">◆ Components</h4>
+                  <div className="grid gap-2 grid-cols-[repeat(auto-fill,minmax(160px,1fr))]">
                     {itemData.from.map((componentId, index) => {
                       const itemName = getItemName(componentId, allItemsData);
                       return (
-                        <div key={index} className="build-item-card">
-                          <div className="build-item-name">{itemName !== componentId ? itemName : `Item ${componentId}`}</div>
-                          <div className="build-item-id">ID: {componentId}</div>
+                        <div key={index} className="panel-bevel rounded-sm p-3 flex flex-col gap-1">
+                          <div className="font-blackletter text-sm text-primary truncate">
+                            {itemName !== componentId ? itemName : `Item ${componentId}`}
+                          </div>
+                          <div className="font-pixel text-[9px] uppercase tracking-[0.15em] text-muted-foreground">
+                            ID: {componentId}
+                          </div>
                         </div>
                       );
                     })}
@@ -526,22 +469,26 @@ export const ItemDetails: React.FC<ItemDetailsProps> = ({ itemId, itemData: cach
               )}
 
               {itemData.into && itemData.into.length > 0 && (
-                <div className="build-subsection">
-                  <h4>Builds Into</h4>
-                  <div className="build-items-grid">
+                <div className="flex flex-col gap-2">
+                  <h4 className="font-pixel text-[10px] uppercase tracking-[0.2em] text-primary/90 m-0">◆ Builds Into:</h4>
+                  <div className="grid gap-2 grid-cols-[repeat(auto-fill,minmax(160px,1fr))]">
                     {itemData.into.map((upgradeId, index) => {
                       const itemName = getItemName(upgradeId, allItemsData);
                       return (
-                        <div key={index} className="build-item-card">
-                          <div className="build-item-name">{itemName !== upgradeId ? itemName : `Item ${upgradeId}`}</div>
-                          <div className="build-item-id">ID: {upgradeId}</div>
+                        <div key={index} className="panel-bevel rounded-sm p-3 flex flex-col gap-1">
+                          <div className="font-blackletter text-sm text-primary truncate">
+                            {itemName !== upgradeId ? itemName : `Item ${upgradeId}`}
+                          </div>
+                          <div className="font-pixel text-[9px] uppercase tracking-[0.15em] text-muted-foreground">
+                            ID: {upgradeId}
+                          </div>
                         </div>
                       );
                     })}
                   </div>
                 </div>
               )}
-            </div>
+            </section>
           )}
         </div>
       </div>

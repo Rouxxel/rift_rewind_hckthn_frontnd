@@ -9,7 +9,7 @@ export const SiteFooter = () => {
         <p className="font-display uppercase tracking-[0.3em] text-muted-foreground">
           © 2026 LoL Coach · Not affiliated with Riot Games
         </p>
-        <p className="font-pixel text-[9px] text-primary/70">v1.0.0</p>
+        <p className="font-pixel text-[9px] text-primary/70">v1.1.0</p>
       </div>
     </footer>
   );
