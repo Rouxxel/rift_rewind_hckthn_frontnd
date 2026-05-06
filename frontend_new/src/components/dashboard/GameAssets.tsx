@@ -50,12 +50,6 @@ export const GameAssets: React.FC<GameAssetsProps> = ({ onBack }) => {
   // User data
   const userData = storage.getUserData();
 
-  useEffect(() => {
-    // Load both champions and items when component mounts (check cache first)
-    loadChampions();
-    loadItems();
-  }, []);
-
   const loadChampions = async () => {
     if (championsLoaded) return; // Skip if already loaded in this session
 
@@ -106,7 +100,11 @@ export const GameAssets: React.FC<GameAssetsProps> = ({ onBack }) => {
     }
   };
 
-
+  useEffect(() => {
+    // Load both champions and items when component mounts (check cache first)
+    loadChampions();
+    loadItems();
+  }, []);
 
   const filteredChampions = Object.entries(champions).filter(([_, champion]) =>
     champion.name.toLowerCase().includes(searchTerm.toLowerCase()) ||

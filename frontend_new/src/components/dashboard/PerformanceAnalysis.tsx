@@ -126,13 +126,6 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
     matchCount: '10'
   });
 
-  useEffect(() => {
-    if (activeTab === 'overview') {
-      loadPlayerPerformance();
-    }
-    // Don't auto-load other tabs - wait for user to click analyze
-  }, [activeTab]);
-
   const loadPlayerPerformance = async () => {
     if (!userData || !userCredentials) return;
 
@@ -160,6 +153,13 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (activeTab === 'overview') {
+      loadPlayerPerformance();
+    }
+    // Don't auto-load other tabs - wait for user to click analyze
+  }, [activeTab]);
 
   const loadChampionMastery = async () => {
     if (!userData || !userCredentials) return;

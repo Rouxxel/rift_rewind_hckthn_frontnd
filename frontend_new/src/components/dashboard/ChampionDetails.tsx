@@ -99,10 +99,6 @@ export const ChampionDetails: React.FC<ChampionDetailsProps> = ({ championName, 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadChampionDetails();
-  }, [championName]);
-
   const loadChampionDetails = async () => {
     try {
       setLoading(true);
@@ -137,6 +133,10 @@ export const ChampionDetails: React.FC<ChampionDetailsProps> = ({ championName, 
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadChampionDetails();
+  }, [championName]);
 
   const handleOverlayClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {

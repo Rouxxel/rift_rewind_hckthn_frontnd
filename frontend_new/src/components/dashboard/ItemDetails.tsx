@@ -69,10 +69,6 @@ export const ItemDetails: React.FC<ItemDetailsProps> = ({ itemId, itemData: cach
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadItemDetails();
-  }, [itemId]);
-
   const loadItemDetails = async () => {
     try {
       setLoading(true);
@@ -96,6 +92,10 @@ export const ItemDetails: React.FC<ItemDetailsProps> = ({ itemId, itemData: cach
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadItemDetails();
+  }, [itemId]);
 
   const handleOverlayClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {

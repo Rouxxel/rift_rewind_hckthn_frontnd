@@ -56,6 +56,19 @@ export const Predictions: React.FC<PredictionsProps> = ({ onBack }) => {
   // User data
   const userData = storage.getUserData();
 
+  const loadChampions = async () => {
+    if (championsLoaded) return; // Skip if already loaded in this session
+
+    try {
+      const championsData = await getChampions();
+      setChampions(championsData);
+      setChampionsLoaded(true);
+    } catch (err: any) {
+      console.error('❌ Failed to load champions:', err);
+      setError('Failed to load champions. Please try again later.');
+    }
+  };
+
   useEffect(() => {
     // Load champions only for predictions tab (needed for team builder)
     if (activeTab === 'predictions') {
@@ -87,19 +100,6 @@ export const Predictions: React.FC<PredictionsProps> = ({ onBack }) => {
       }
     }
   }, [rank, sortBy, winratesLoaded]);
-
-  const loadChampions = async () => {
-    if (championsLoaded) return; // Skip if already loaded in this session
-
-    try {
-      const championsData = await getChampions();
-      setChampions(championsData);
-      setChampionsLoaded(true);
-    } catch (err: any) {
-      console.error('❌ Failed to load champions:', err);
-      setError('Failed to load champions. Please try again later.');
-    }
-  };
 
   // New function to check if winrates need to be loaded
   const loadWinratesIfNeeded = async () => {

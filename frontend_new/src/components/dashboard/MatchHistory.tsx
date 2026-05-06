@@ -232,7 +232,7 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
     try {
       // Check cache first
       const cacheKey = CACHE_KEYS.MATCH_DETAILS(matchId);
-      let cachedDetails = cache.get<any>(cacheKey);
+      const cachedDetails = cache.get<any>(cacheKey);
 
       if (cachedDetails) {
         console.log(`✅ Using cached match details for ${matchId}`);
@@ -267,7 +267,7 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
     try {
       // Check cache first
       const cacheKey = CACHE_KEYS.MATCH_PARTICIPANTS(matchId);
-      let cachedParticipants = cache.get<MatchParticipant[]>(cacheKey);
+      const cachedParticipants = cache.get<MatchParticipant[]>(cacheKey);
 
       if (cachedParticipants) {
         console.log(`✅ Using cached match participants for ${matchId}`);
