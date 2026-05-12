@@ -13,8 +13,12 @@ interface ChampionMastery {
   championPoints: number;
   championName?: string;
   lastPlayTime: number;
-  chestGranted: boolean;
+  chestGranted?: boolean;
   tokensEarned: number;
+  championPointsSinceLastLevel?: number;
+  championPointsUntilNextLevel?: number;
+  markRequiredForNextLevel?: number;
+  championSeasonMilestone?: number;
 }
 
 interface SummonerSpellsResponse {
@@ -598,15 +602,47 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
                       <div key={index} className="mastery-card">
                         <div className="mastery-level">
                           <span className="level-badge">Level {mastery.championLevel}</span>
+                          {mastery.championSeasonMilestone !== undefined && (
+                            <span className="milestone-badge" title="Season Milestone" style={{ background: '#4a90e2', color: 'white', padding: '2px 6px', borderRadius: '4px', fontSize: '10px', marginLeft: '5px' }}>
+                              M{mastery.championSeasonMilestone}
+                            </span>
+                          )}
                         </div>
                         <div className="mastery-info">
                           <h4>Champion #{mastery.championId}</h4>
                           <div className="mastery-points">
                             <span className="points">{formatNumber(mastery.championPoints)} points</span>
                           </div>
+
+                          {(mastery.championPointsUntilNextLevel !== undefined && mastery.championPointsUntilNextLevel > 0) && (
+                            <div className="mastery-progress" style={{ margin: '10px 0' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', marginBottom: '4px' }}>
+                                <span>{formatNumber(mastery.championPointsSinceLastLevel || 0)}</span>
+                                <span>{formatNumber((mastery.championPointsSinceLastLevel || 0) + (mastery.championPointsUntilNextLevel || 0))}</span>
+                              </div>
+                              <div style={{ height: '6px', background: '#eee', borderRadius: '3px', overflow: 'hidden' }}>
+                                <div 
+                                  style={{ 
+                                    height: '100%',
+                                    background: 'linear-gradient(90deg, #f093fb 0%, #f5576c 100%)',
+                                    width: `${((mastery.championPointsSinceLastLevel || 0) / ((mastery.championPointsSinceLastLevel || 0) + (mastery.championPointsUntilNextLevel || 0))) * 100}%` 
+                                  }}
+                                />
+                              </div>
+                              <div style={{ textAlign: 'center', fontSize: '9px', marginTop: '4px', color: '#666' }}>
+                                {formatNumber(mastery.championPointsUntilNextLevel)} to next level
+                              </div>
+                            </div>
+                          )}
+
                           <div className="mastery-details">
                             {mastery.chestGranted && <span className="chest-badge">✓ Chest</span>}
                             {mastery.tokensEarned > 0 && <span className="token-badge">{mastery.tokensEarned} Tokens</span>}
+                            {mastery.markRequiredForNextLevel !== undefined && mastery.markRequiredForNextLevel > 0 && (
+                              <span className="mark-badge" style={{ background: '#ffd700', color: '#000', padding: '2px 6px', borderRadius: '4px', fontSize: '10px', marginRight: '5px' }}>
+                                {mastery.markRequiredForNextLevel} Marks
+                              </span>
+                            )}
                           </div>
                           <div className="last-played">
                             Last played: {formatDate(mastery.lastPlayTime)}
