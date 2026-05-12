@@ -69,51 +69,88 @@ async def get_champion_mastery(
             detail=f"Invalid region '{region}'. Must be one of: {list(REGION_DATA.keys())}"
         )
 
-    #Use the first platform region (e.g., euw1, na1)
     platforms = REGION_DATA[region_lower]["platforms"]
-    platform_region = platforms[0].lower()
-    base_url = f"https://{platform_region}.api.riotgames.com/lol/champion-mastery/v4"
-
-    #Determine API endpoint
-    if total_score:
-        url = f"{base_url}/scores/by-puuid/{puuid}"
-    elif champion_id is not None:
-        url = f"{base_url}/champion-masteries/by-puuid/{puuid}/by-champion/{champion_id}"
-    elif top is not None:
-        url = f"{base_url}/champion-masteries/by-puuid/{puuid}/top?count={top}"
-    else:
-        url = f"{base_url}/champion-masteries/by-puuid/{puuid}"
-
     headers = {"X-Riot-Token": RIOT_API_KEY}
 
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(url, headers=headers, timeout=10.0)
-            response.raise_for_status()
+    mastery_data = None
+    successful_platform = None
+    last_error = None
 
-            mastery_data = response.json()
-            
-            # Calculate count based on response type
+    async with httpx.AsyncClient() as client:
+        for platform in platforms:
+            platform_lower = platform.lower()
+            base_url = f"https://{platform_lower}.api.riotgames.com/lol/champion-mastery/v4"
+
+            #Determine API endpoint
             if total_score:
-                count = 1
-                log_handler.info(f"Fetched total mastery score for PUUID {puuid}")
-            elif isinstance(mastery_data, list):
-                count = len(mastery_data)
-                log_handler.info(f"Fetched {count} mastery entries for PUUID {puuid}")
+                url = f"{base_url}/scores/by-puuid/{puuid}"
+            elif champion_id is not None:
+                url = f"{base_url}/champion-masteries/by-puuid/{puuid}/by-champion/{champion_id}"
+            elif top is not None:
+                url = f"{base_url}/champion-masteries/by-puuid/{puuid}/top?count={top}"
             else:
-                count = 1
-                log_handler.info(f"Fetched mastery for champion {champion_id} for PUUID {puuid}")
+                url = f"{base_url}/champion-masteries/by-puuid/{puuid}"
 
-            return {
-                "region": region,
-                "puuid": puuid,
-                "entries_count": count,
-                "mastery_data": mastery_data
-            }
+            try:
+                response = await client.get(url, headers=headers, timeout=10.0)
+                if response.status_code == 200:
+                    data = response.json()
+                    
+                    # Check if data exists on this platform
+                    if total_score:
+                        if isinstance(data, int) and data > 0:
+                            mastery_data = data
+                            successful_platform = platform_lower
+                            break
+                    elif champion_id is not None:
+                        if isinstance(data, dict):
+                            mastery_data = data
+                            successful_platform = platform_lower
+                            break
+                    else:
+                        if isinstance(data, list) and len(data) > 0:
+                            mastery_data = data
+                            successful_platform = platform_lower
+                            break
+                    
+                    # If it's an empty list or 0, we keep it as a fallback but continue checking other platforms
+                    if mastery_data is None:
+                        mastery_data = data
+                        successful_platform = platform_lower
+                
+                elif response.status_code == 404:
+                    # Not found on this platform, continue
+                    continue
+                else:
+                    last_error = f"Platform {platform_lower}: {response.status_code} - {response.text}"
+                    continue
 
-    except httpx.HTTPStatusError as e:
-        log_handler.error(f"HTTP Error: {e} | Response: {e.response.text}")
-        raise HTTPException(status_code=e.response.status_code, detail=e.response.text)
-    except httpx.RequestError as e:
-        log_handler.error(f"Request failed: {e}")
-        raise HTTPException(status_code=500, detail="Failed to connect to Riot API.")
+            except httpx.RequestError as e:
+                last_error = f"Platform {platform_lower}: Connection error - {str(e)}"
+                continue
+
+    if mastery_data is None:
+        if last_error:
+            log_handler.error(f"Failed to find champion mastery after trying all platforms. Last error: {last_error}")
+            raise HTTPException(status_code=500, detail=f"Failed to connect to Riot API. Last error: {last_error}")
+        else:
+            raise HTTPException(status_code=404, detail="Champion mastery not found on any platform.")
+
+    # Calculate count based on response type
+    if total_score:
+        count = 1
+        log_handler.info(f"Fetched total mastery score for PUUID {puuid} on {successful_platform}")
+    elif isinstance(mastery_data, list):
+        count = len(mastery_data)
+        log_handler.info(f"Fetched {count} mastery entries for PUUID {puuid} on {successful_platform}")
+    else:
+        count = 1
+        log_handler.info(f"Fetched mastery for champion {champion_id} for PUUID {puuid} on {successful_platform}")
+
+    return {
+        "region": region,
+        "platform": successful_platform,
+        "puuid": puuid,
+        "entries_count": count,
+        "mastery_data": mastery_data
+    }
