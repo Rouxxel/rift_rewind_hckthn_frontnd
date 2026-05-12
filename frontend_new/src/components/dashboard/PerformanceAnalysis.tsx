@@ -115,6 +115,7 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
     top: '10',
     totalScore: false
   });
+  const [hasSearched, setHasSearched] = useState(false);
 
   const [spellsFilters, setSpellsFilters] = useState({
     championName: '',
@@ -184,11 +185,13 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
 
       const masteryData = response.mastery_data || response.data?.mastery_data || [];
       setChampionMastery(Array.isArray(masteryData) ? masteryData : [masteryData]);
+      setHasSearched(true);
     } catch (err: any) {
       console.error('❌ Failed to load champion mastery:', err);
       // Mark as unavailable instead of showing error
       setMasteryUnavailable(true);
       setChampionMastery([]);
+      setHasSearched(true);
     } finally {
       setLoading(false);
     }
@@ -547,7 +550,18 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
                   </p>
                   <div className="filters-grid">
                     <div className="filter-group">
-                      <label>Top N Champions:</label>
+                      <label>Champion ID:</label>
+                      <input
+                        type="number"
+                        placeholder="e.g., 103"
+                        value={masteryFilters.championId}
+                        onChange={(e) => setMasteryFilters({ ...masteryFilters, championId: e.target.value, totalScore: false })}
+                        disabled={masteryUnavailable}
+                        className="bg-surface-inset border-border rounded-sm px-2 py-1 text-xs text-ink focus:outline-none focus:border-primary/50 transition-colors w-full"
+                      />
+                    </div>
+                    <div className="filter-group">
+                      <label>Top N:</label>
                       <select
                         value={masteryFilters.top}
                         onChange={(e) => setMasteryFilters({ ...masteryFilters, top: e.target.value })}
@@ -556,7 +570,7 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
                         <option value="5">Top 5</option>
                         <option value="10">Top 10</option>
                         <option value="20">Top 20</option>
-                        <option value="">All Champions</option>
+                        <option value="">All</option>
                       </select>
                     </div>
                     <div className="filter-group checkbox-group">
@@ -607,6 +621,21 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
                     <div className="total-score-display">
                       <span className="total-score-value">{formatNumber(championMastery[0] as any)}</span>
                       <span className="total-score-label">Total Mastery Points</span>
+                    </div>
+                  </div>
+                )}
+
+                {!loading && hasSearched && championMastery.length === 0 && !masteryFilters.totalScore && (
+                  <div className="group relative mt-6 overflow-hidden rounded-sm border border-dashed border-border bg-surface-inset/30 p-12 text-center transition-all hover:bg-surface-inset/50">
+                    <div className="relative z-10 flex flex-col items-center gap-3">
+                      <div className="relative">
+                        <div className="absolute -inset-4 rounded-full bg-primary/10 blur-xl group-hover:bg-primary/15 transition-colors" />
+                        <span className="relative text-4xl grayscale opacity-50 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500">🔍</span>
+                      </div>
+                      <div className="space-y-1">
+                        <h4 className="font-display text-xs uppercase tracking-[0.2em] text-ink/80">No Mastery Data Found</h4>
+                        <p className="text-[10px] text-ink/40 tracking-wider">WE COULDN'T FIND ANY ENTRIES MATCHING YOUR FILTERS</p>
+                      </div>
                     </div>
                   </div>
                 )}

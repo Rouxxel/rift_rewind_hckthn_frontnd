@@ -115,6 +115,7 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
     top: '10',
     totalScore: false
   });
+  const [hasSearched, setHasSearched] = useState(false);
 
   const [spellsFilters, setSpellsFilters] = useState({
     championName: '',
@@ -184,11 +185,13 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
 
       const masteryData = response.mastery_data || response.data?.mastery_data || [];
       setChampionMastery(Array.isArray(masteryData) ? masteryData : [masteryData]);
+      setHasSearched(true);
     } catch (err: any) {
       console.error('❌ Failed to load champion mastery:', err);
       // Mark as unavailable instead of showing error
       setMasteryUnavailable(true);
       setChampionMastery([]);
+      setHasSearched(true);
     } finally {
       setLoading(false);
     }
@@ -549,7 +552,18 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
                   </p>
                   <div className="filters-grid">
                     <div className="filter-group">
-                      <label>Top N Champions:</label>
+                      <label>Champion ID:</label>
+                      <input
+                        type="number"
+                        placeholder="e.g., 103"
+                        value={masteryFilters.championId}
+                        onChange={(e) => setMasteryFilters({ ...masteryFilters, championId: e.target.value, totalScore: false })}
+                        disabled={masteryUnavailable}
+                        style={{ padding: '4px 8px', borderRadius: '4px', border: '1px solid #ccc' }}
+                      />
+                    </div>
+                    <div className="filter-group">
+                      <label>Top N:</label>
                       <select
                         value={masteryFilters.top}
                         onChange={(e) => setMasteryFilters({ ...masteryFilters, top: e.target.value })}
@@ -558,7 +572,7 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
                         <option value="5">Top 5</option>
                         <option value="10">Top 10</option>
                         <option value="20">Top 20</option>
-                        <option value="">All Champions</option>
+                        <option value="">All</option>
                       </select>
                     </div>
                     <div className="filter-group checkbox-group">
@@ -610,6 +624,12 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
                       <span className="total-score-value">{formatNumber(championMastery[0] as any)}</span>
                       <span className="total-score-label">Total Mastery Points</span>
                     </div>
+                  </div>
+                )}
+
+                {hasSearched && championMastery.length === 0 && !loading && (
+                  <div className="no-data-notice" style={{ textAlign: 'center', padding: '40px', background: '#f9f9f9', borderRadius: '8px', border: '1px dashed #ccc', marginTop: '20px' }}>
+                    <p>No champion mastery data found for the selected filters.</p>
                   </div>
                 )}
               </div>
