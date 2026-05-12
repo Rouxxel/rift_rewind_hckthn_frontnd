@@ -48,6 +48,21 @@ class CacheManager {
     }
   }
 
+  // Remove cache items matching a pattern
+  removeByPattern(pattern: string): void {
+    try {
+      const keys = Object.keys(localStorage).filter(key => 
+        key.startsWith(this.prefix) && key.includes(pattern)
+      );
+      keys.forEach(key => localStorage.removeItem(key));
+      if (keys.length > 0) {
+        console.log(`🗑️ Removed ${keys.length} cache items matching pattern: ${pattern}`);
+      }
+    } catch (error) {
+      console.warn('Failed to remove cache by pattern:', error);
+    }
+  }
+
   // Remove specific cache
   remove(key: string): void {
     try {
@@ -114,10 +129,7 @@ export const CACHE_KEYS = {
   TEAM_COMPOSITION: (champions: string[]) => `team_comp_${champions.sort().join('_')}`,
   // Performance Analysis cache keys
   PLAYER_PERFORMANCE: (puuid: string) => `player_performance_${puuid}`,
-  CHAMPION_MASTERY: (puuid: string, champId?: number, top?: number, total?: boolean) => 
-    `champion_mastery_${puuid}_${champId ?? 'all'}_${top ?? 'all'}_${total ?? 'false'}`,
-  SUMMONER_SPELLS: (puuid: string, champName?: string, count?: number) => 
-    `summoner_spells_${puuid}_${champName ?? 'all'}_${count ?? 'default'}`,
-  RUNE_MASTERIES: (puuid: string, champName?: string, count?: number) => 
-    `rune_masteries_${puuid}_${champName ?? 'all'}_${count ?? 'default'}`,
+  CHAMPION_MASTERY: (puuid: string) => `champion_mastery_${puuid}`,
+  SUMMONER_SPELLS: (puuid: string) => `summoner_spells_${puuid}`,
+  RUNE_MASTERIES: (puuid: string) => `rune_masteries_${puuid}`,
 } as const;

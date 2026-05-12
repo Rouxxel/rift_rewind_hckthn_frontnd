@@ -179,30 +179,48 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
       const top = masteryFilters.top ? parseInt(masteryFilters.top) : undefined;
       const totalScore = masteryFilters.totalScore;
 
-      const cacheKey = CACHE_KEYS.CHAMPION_MASTERY(userData.puuid, championId, top, totalScore);
+      const cacheKey = CACHE_KEYS.CHAMPION_MASTERY(userData.puuid);
       const cached = cache.get<any>(cacheKey);
 
-      if (cached) {
-        console.log('✅ Using cached champion mastery:', cached);
+      // Check if we have cached data AND it matches our current search type
+      // (This is a bit simplified, but ensures we don't end up with multiple keys)
+      if (cached && !loading) {
         const masteryData = cached.mastery_data || cached.data?.mastery_data || cached;
-        setChampionMastery(Array.isArray(masteryData) ? masteryData : [masteryData]);
-        setHasSearched(true);
-      } else {
-        console.log('🔄 Loading champion mastery with filters:', { championId, top, totalScore });
-        const response = await apiService.getChampionMastery(
-          userData.puuid,
-          userCredentials.region,
-          championId,
-          top,
-          totalScore
-        );
-        console.log('✅ Champion mastery response:', response);
+        const isSameSearch = cached.searchParams?.championId === championId && 
+                             cached.searchParams?.top === top && 
+                             cached.searchParams?.totalScore === totalScore;
 
-        const masteryData = response.mastery_data || response.data?.mastery_data || [];
-        setChampionMastery(Array.isArray(masteryData) ? masteryData : [masteryData]);
-        setHasSearched(true);
-        cache.set(cacheKey, response, 15);
+        if (isSameSearch) {
+          console.log('✅ Using cached champion mastery (same filters):', cached);
+          setChampionMastery(Array.isArray(masteryData) ? masteryData : [masteryData]);
+          setHasSearched(true);
+          setLoading(false);
+          return;
+        }
       }
+
+      console.log('🔄 Loading champion mastery with filters:', { championId, top, totalScore });
+      const response = await apiService.getChampionMastery(
+        userData.puuid,
+        userCredentials.region,
+        championId,
+        top,
+        totalScore
+      );
+      console.log('✅ Champion mastery response:', response);
+
+      const masteryData = response.mastery_data || response.data?.mastery_data || [];
+      setChampionMastery(Array.isArray(masteryData) ? masteryData : [masteryData]);
+      setHasSearched(true);
+      
+      // Cache the result, overwriting any existing cache for this user
+      // First, remove any old-style keys that might exist
+      cache.removeByPattern(`champion_mastery_${userData.puuid}`);
+      
+      cache.set(cacheKey, {
+        ...response,
+        searchParams: { championId, top, totalScore }
+      }, 15);
     } catch (err: any) {
       console.error('❌ Failed to load champion mastery:', err);
       // Mark as unavailable instead of showing error
@@ -224,11 +242,11 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
       const championName = spellsFilters.championName || undefined;
       const matchCount = spellsFilters.matchCount ? parseInt(spellsFilters.matchCount) : undefined;
 
-      const cacheKey = CACHE_KEYS.SUMMONER_SPELLS(userData.puuid, championName, matchCount);
-      const cached = cache.get<SummonerSpellsResponse>(cacheKey);
+      const cacheKey = CACHE_KEYS.SUMMONER_SPELLS(userData.puuid);
+      const cached = cache.get<any>(cacheKey);
 
-      if (cached) {
-        console.log('✅ Using cached summoner spells:', cached);
+      if (cached && cached.searchParams?.matchCount === matchCount) {
+        console.log('✅ Using cached summoner spells (same filters):', cached);
         setSummonerSpells(cached);
       } else {
         console.log('🔄 Loading summoner spells analysis with filters:', { championName, matchCount });
@@ -240,7 +258,15 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
         );
         console.log('✅ Summoner spells response:', response);
         setSummonerSpells(response);
-        cache.set(cacheKey, response, 15);
+        
+        // Cache the result, overwriting any existing cache for this user
+        // First, remove any old-style keys that might exist
+        cache.removeByPattern(`summoner_spells_${userData.puuid}`);
+
+        cache.set(cacheKey, {
+          ...response,
+          searchParams: { championName, matchCount }
+        }, 15);
       }
     } catch (err: any) {
       console.error('❌ Failed to load summoner spells:', err);
@@ -260,11 +286,11 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
       const championName = runesFilters.championName || undefined;
       const matchCount = runesFilters.matchCount ? parseInt(runesFilters.matchCount) : undefined;
 
-      const cacheKey = CACHE_KEYS.RUNE_MASTERIES(userData.puuid, championName, matchCount);
-      const cached = cache.get<RuneMasteriesResponse>(cacheKey);
+      const cacheKey = CACHE_KEYS.RUNE_MASTERIES(userData.puuid);
+      const cached = cache.get<any>(cacheKey);
 
-      if (cached) {
-        console.log('✅ Using cached rune masteries:', cached);
+      if (cached && cached.searchParams?.matchCount === matchCount) {
+        console.log('✅ Using cached rune masteries (same filters):', cached);
         setRuneMasteries(cached);
       } else {
         console.log('🔄 Loading rune masteries with filters:', { championName, matchCount });
@@ -276,7 +302,15 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
         );
         console.log('✅ Rune masteries response:', response);
         setRuneMasteries(response);
-        cache.set(cacheKey, response, 15);
+        
+        // Cache the result, overwriting any existing cache for this user
+        // First, remove any old-style keys that might exist
+        cache.removeByPattern(`rune_masteries_${userData.puuid}`);
+
+        cache.set(cacheKey, {
+          ...response,
+          searchParams: { championName, matchCount }
+        }, 15);
       }
     } catch (err: any) {
       console.error('❌ Failed to load rune masteries:', err);
