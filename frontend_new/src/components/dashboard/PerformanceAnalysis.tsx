@@ -13,8 +13,12 @@ interface ChampionMastery {
   championPoints: number;
   championName?: string;
   lastPlayTime: number;
-  chestGranted: boolean;
+  chestGranted?: boolean;
   tokensEarned: number;
+  championPointsSinceLastLevel?: number;
+  championPointsUntilNextLevel?: number;
+  markRequiredForNextLevel?: number;
+  championSeasonMilestone?: number;
 }
 
 interface SummonerSpellsResponse {
@@ -596,15 +600,44 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
                       <div key={index} className="mastery-card">
                         <div className="mastery-level">
                           <span className="level-badge">Level {mastery.championLevel}</span>
+                          {mastery.championSeasonMilestone !== undefined && (
+                            <span className="milestone-badge" title="Season Milestone">
+                              M{mastery.championSeasonMilestone}
+                            </span>
+                          )}
                         </div>
                         <div className="mastery-info">
                           <h4>Champion #{mastery.championId}</h4>
                           <div className="mastery-points">
                             <span className="points">{formatNumber(mastery.championPoints)} points</span>
                           </div>
+
+                          {(mastery.championPointsUntilNextLevel !== undefined && mastery.championPointsUntilNextLevel > 0) && (
+                            <div className="mastery-progress">
+                              <div className="progress-labels">
+                                <span>{formatNumber(mastery.championPointsSinceLastLevel || 0)}</span>
+                                <span>{formatNumber((mastery.championPointsSinceLastLevel || 0) + (mastery.championPointsUntilNextLevel || 0))}</span>
+                              </div>
+                              <div className="progress-bar-bg">
+                                <div
+                                  className="progress-bar-fill"
+                                  style={{
+                                    width: `${((mastery.championPointsSinceLastLevel || 0) / ((mastery.championPointsSinceLastLevel || 0) + (mastery.championPointsUntilNextLevel || 0))) * 100}%`
+                                  }}
+                                />
+                              </div>
+                              <div className="next-level-label">
+                                {formatNumber(mastery.championPointsUntilNextLevel)} to next level
+                              </div>
+                            </div>
+                          )}
+
                           <div className="mastery-details">
                             {mastery.chestGranted && <span className="chest-badge">✓ Chest</span>}
                             {mastery.tokensEarned > 0 && <span className="token-badge">{mastery.tokensEarned} Tokens</span>}
+                            {mastery.markRequiredForNextLevel !== undefined && mastery.markRequiredForNextLevel > 0 && (
+                              <span className="mark-badge">{mastery.markRequiredForNextLevel} Marks</span>
+                            )}
                           </div>
                           <div className="last-played">
                             Last played: {formatDate(mastery.lastPlayTime)}
