@@ -1752,15 +1752,83 @@ All class names from the original frontend are preserved. JSX is untouched.
 /* Mastery cards */
 .performance-page .mastery-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
   gap: 1rem;
   margin-top: 1rem;
+  width: 100%;
 }
 .performance-page .mastery-card {
   background: var(--grad-panel);
   border: 1px solid rgba(252, 130, 104, .35);
   border-left: 3px solid rgb(252, 130, 104);
+  border-radius: 6px;
   padding: 1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: .65rem;
+  min-width: 0;
+  box-shadow: var(--bevel);
+  position: relative;
+  overflow: hidden;
+}
+.performance-page .mastery-card .mastery-level {
+  display: flex;
+  justify-content: flex-start;
+}
+.performance-page .mastery-card .mastery-info {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: .5rem;
+  min-width: 0;
+}
+.performance-page .mastery-card .mastery-info h4 {
+  margin: 0;
+  font-size: 1rem;
+  color: hsl(var(--ink));
+  word-break: break-word;
+  border-bottom: 1px dashed rgba(252, 130, 104, .25);
+  padding-bottom: .35rem;
+}
+.performance-page .mastery-card .mastery-points {
+  display: flex;
+  align-items: center;
+}
+.performance-page .mastery-card .mastery-points .points {
+  color: rgb(252, 130, 104);
+  font-weight: 700;
+  font-size: .95rem;
+}
+.performance-page .mastery-card .mastery-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem;
+}
+.performance-page .mastery-card .level-badge,
+.performance-page .mastery-card .token-badge,
+.performance-page .mastery-card .chest-badge {
+  background: rgb(255, 81, 58);
+  color: #fff;
+  border-color: rgb(200, 50, 30);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, .35);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .2), 0 1px 3px rgba(0, 0, 0, .3);
+}
+.performance-page .mastery-card .last-played {
+  font-size: .78rem;
+  color: hsl(var(--ink) / .7);
+  margin-top: auto;
+  padding-top: .35rem;
+  border-top: 1px dashed rgba(252, 130, 104, .15);
+}
+
+@media (max-width: 599px) {
+  .performance-page .mastery-grid {
+    grid-template-columns: 1fr;
+    gap: .75rem;
+  }
+  .performance-page .mastery-card {
+    padding: .85rem .9rem;
+  }
 }
 
 /* Spells / runes results sections */
