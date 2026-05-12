@@ -209,6 +209,7 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
     if (!userCredentials) return;
 
     setSelectedMatch(matchId);
+    localStorage.setItem('rift_rewind_current_match_id', matchId);
     setShowDetails(true);
     setMatchDetails(null);
     setMatchParticipants([]);

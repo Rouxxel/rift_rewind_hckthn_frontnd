@@ -177,20 +177,32 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
     try {
       const championId = masteryFilters.championId ? parseInt(masteryFilters.championId) : undefined;
       const top = masteryFilters.top ? parseInt(masteryFilters.top) : undefined;
+      const totalScore = masteryFilters.totalScore;
 
-      console.log('🔄 Loading champion mastery with filters:', { championId, top, totalScore: masteryFilters.totalScore });
-      const response = await apiService.getChampionMastery(
-        userData.puuid,
-        userCredentials.region,
-        championId,
-        top,
-        masteryFilters.totalScore
-      );
-      console.log('✅ Champion mastery response:', response);
+      const cacheKey = CACHE_KEYS.CHAMPION_MASTERY(userData.puuid, championId, top, totalScore);
+      const cached = cache.get<any>(cacheKey);
 
-      const masteryData = response.mastery_data || response.data?.mastery_data || [];
-      setChampionMastery(Array.isArray(masteryData) ? masteryData : [masteryData]);
-      setHasSearched(true);
+      if (cached) {
+        console.log('✅ Using cached champion mastery:', cached);
+        const masteryData = cached.mastery_data || cached.data?.mastery_data || cached;
+        setChampionMastery(Array.isArray(masteryData) ? masteryData : [masteryData]);
+        setHasSearched(true);
+      } else {
+        console.log('🔄 Loading champion mastery with filters:', { championId, top, totalScore });
+        const response = await apiService.getChampionMastery(
+          userData.puuid,
+          userCredentials.region,
+          championId,
+          top,
+          totalScore
+        );
+        console.log('✅ Champion mastery response:', response);
+
+        const masteryData = response.mastery_data || response.data?.mastery_data || [];
+        setChampionMastery(Array.isArray(masteryData) ? masteryData : [masteryData]);
+        setHasSearched(true);
+        cache.set(cacheKey, response, 15);
+      }
     } catch (err: any) {
       console.error('❌ Failed to load champion mastery:', err);
       // Mark as unavailable instead of showing error
@@ -212,15 +224,24 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
       const championName = spellsFilters.championName || undefined;
       const matchCount = spellsFilters.matchCount ? parseInt(spellsFilters.matchCount) : undefined;
 
-      console.log('🔄 Loading summoner spells analysis with filters:', { championName, matchCount });
-      const response = await apiService.getSummonerSpellsAnalysis(
-        userData.puuid,
-        userCredentials.region,
-        championName,
-        matchCount
-      );
-      console.log('✅ Summoner spells response:', response);
-      setSummonerSpells(response);
+      const cacheKey = CACHE_KEYS.SUMMONER_SPELLS(userData.puuid, championName, matchCount);
+      const cached = cache.get<SummonerSpellsResponse>(cacheKey);
+
+      if (cached) {
+        console.log('✅ Using cached summoner spells:', cached);
+        setSummonerSpells(cached);
+      } else {
+        console.log('🔄 Loading summoner spells analysis with filters:', { championName, matchCount });
+        const response = await apiService.getSummonerSpellsAnalysis(
+          userData.puuid,
+          userCredentials.region,
+          championName,
+          matchCount
+        );
+        console.log('✅ Summoner spells response:', response);
+        setSummonerSpells(response);
+        cache.set(cacheKey, response, 15);
+      }
     } catch (err: any) {
       console.error('❌ Failed to load summoner spells:', err);
       setError(`Failed to load summoner spells: ${err.message}`);
@@ -239,15 +260,24 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
       const championName = runesFilters.championName || undefined;
       const matchCount = runesFilters.matchCount ? parseInt(runesFilters.matchCount) : undefined;
 
-      console.log('🔄 Loading rune masteries with filters:', { championName, matchCount });
-      const response = await apiService.getRuneMasteries(
-        userData.puuid,
-        userCredentials.region,
-        championName,
-        matchCount
-      );
-      console.log('✅ Rune masteries response:', response);
-      setRuneMasteries(response);
+      const cacheKey = CACHE_KEYS.RUNE_MASTERIES(userData.puuid, championName, matchCount);
+      const cached = cache.get<RuneMasteriesResponse>(cacheKey);
+
+      if (cached) {
+        console.log('✅ Using cached rune masteries:', cached);
+        setRuneMasteries(cached);
+      } else {
+        console.log('🔄 Loading rune masteries with filters:', { championName, matchCount });
+        const response = await apiService.getRuneMasteries(
+          userData.puuid,
+          userCredentials.region,
+          championName,
+          matchCount
+        );
+        console.log('✅ Rune masteries response:', response);
+        setRuneMasteries(response);
+        cache.set(cacheKey, response, 15);
+      }
     } catch (err: any) {
       console.error('❌ Failed to load rune masteries:', err);
       setError(`Failed to load rune masteries: ${err.message}`);

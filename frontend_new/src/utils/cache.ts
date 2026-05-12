@@ -114,7 +114,10 @@ export const CACHE_KEYS = {
   TEAM_COMPOSITION: (champions: string[]) => `team_comp_${champions.sort().join('_')}`,
   // Performance Analysis cache keys
   PLAYER_PERFORMANCE: (puuid: string) => `player_performance_${puuid}`,
-  CHAMPION_MASTERY: (puuid: string) => `champion_mastery_${puuid}`,
-  SUMMONER_SPELLS: (puuid: string) => `summoner_spells_${puuid}`,
-  RUNE_MASTERIES: (puuid: string) => `rune_masteries_${puuid}`,
+  CHAMPION_MASTERY: (puuid: string, champId?: number, top?: number, total?: boolean) => 
+    `champion_mastery_${puuid}_${champId ?? 'all'}_${top ?? 'all'}_${total ?? 'false'}`,
+  SUMMONER_SPELLS: (puuid: string, champName?: string, count?: number) => 
+    `summoner_spells_${puuid}_${champName ?? 'all'}_${count ?? 'default'}`,
+  RUNE_MASTERIES: (puuid: string, champName?: string, count?: number) => 
+    `rune_masteries_${puuid}_${champName ?? 'all'}_${count ?? 'default'}`,
 } as const;

@@ -193,7 +193,10 @@ export const GameAssets: React.FC<GameAssetsProps> = ({ onBack }) => {
             {filteredChampions.map(([id, champion]) => (
               <button
                 key={id}
-                onClick={() => setSelectedChampionForDetails(champion.name)}
+                onClick={() => {
+                  setSelectedChampionForDetails(champion.name);
+                  localStorage.setItem('rift_rewind_current_champion_name', champion.name);
+                }}
                 className="group relative panel-bevel rounded-sm p-3 flex flex-col items-center gap-2 text-center transition-all duration-200 hover:border-primary hover:shadow-halo hover:-translate-y-0.5 cursor-pointer"
               >
                 <div className="relative w-20 h-20 rounded-sm overflow-hidden border-2 border-primary/50 shadow-bevel">
@@ -230,7 +233,10 @@ export const GameAssets: React.FC<GameAssetsProps> = ({ onBack }) => {
             {filteredItems.map(([id, item]) => (
               <button
                 key={id}
-                onClick={() => setSelectedItemForDetails(id)}
+                onClick={() => {
+                  setSelectedItemForDetails(id);
+                  localStorage.setItem('rift_rewind_current_item_id', id);
+                }}
                 className="group relative panel-bevel rounded-sm p-3 flex flex-col items-center gap-2 text-center transition-all duration-200 hover:border-primary hover:shadow-halo hover:-translate-y-0.5 cursor-pointer"
               >
                 <div className="relative w-16 h-16 rounded-sm overflow-hidden border-2 border-gold/60 shadow-bevel">
