@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { apiService } from '../../services/api';
 import { storage } from '../../utils/storage';
 import { cache, CACHE_KEYS } from '../../utils/cache';
+import championsData from '../../data/champions_id_name.json';
 
 interface PerformanceAnalysisProps {
   onBack: () => void;
@@ -309,6 +310,10 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
     return treeName;
   };
 
+  const getChampionName = (championId: number): string => {
+    return (championsData as Record<string, string>)[championId.toString()] || `Champion #${championId}`;
+  };
+
   return (
     <div className="performance-page">
       <div className="mb-4">
@@ -607,7 +612,7 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
                           )}
                         </div>
                         <div className="mastery-info">
-                          <h4>Champion #{mastery.championId}</h4>
+                          <h4>{getChampionName(mastery.championId)} #{mastery.championId}</h4>
                           <div className="mastery-points">
                             <span className="points">{formatNumber(mastery.championPoints)} points</span>
                           </div>
