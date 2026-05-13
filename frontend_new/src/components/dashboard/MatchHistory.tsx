@@ -128,6 +128,8 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
   const [matchDetails, setMatchDetails] = useState<MatchDetails | null>(null);
   const [matchParticipants, setMatchParticipants] = useState<MatchParticipant[]>([]);
   const [teamComposition, setTeamComposition] = useState<TeamComposition | null>(null);
+  const [losingTeamComposition, setLosingTeamComposition] = useState<TeamComposition | null>(null);
+  const [showTeamComposition, setShowTeamComposition] = useState(false);
   const [matchTimeline, setMatchTimeline] = useState<MatchTimeline | null>(null);
   const [matchPrediction, setMatchPrediction] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
@@ -226,6 +228,8 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
     setMatchDetails(null);
     setMatchParticipants([]);
     setTeamComposition(null);
+    setLosingTeamComposition(null);
+    setShowTeamComposition(false);
     setMatchTimeline(null);
     setMatchPrediction(null);
     setShowTimeline(false);
@@ -517,19 +521,28 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
       const losingTeamOriginal = participants.filter(p => p.win === false).map(p => p.championName);
 
       if (winningTeamOriginal.length > 0 && losingTeamOriginal.length > 0 && winningTeamOriginal.length === losingTeamOriginal.length) {
-        // Try to get composition with smart name resolution
-        const result = await tryCompositionWithNameResolution(winningTeamOriginal, losingTeamOriginal);
+        // Try to get composition with smart name resolution for both teams
+        const [winningResult, losingResult] = await Promise.all([
+          tryCompositionWithNameResolution(winningTeamOriginal, losingTeamOriginal),
+          tryCompositionWithNameResolution(losingTeamOriginal, winningTeamOriginal)
+        ]);
 
-        if (result.success) {
-          console.log('✅ Team composition analysis loaded:', result.response);
-          setTeamComposition(result.response);
+        if (winningResult.success) {
+          console.log('✅ Winning Team composition analysis loaded:', winningResult.response);
+          setTeamComposition(winningResult.response);
 
           // Cache for 30 minutes using the successful names
-          const cacheKey = CACHE_KEYS.TEAM_COMPOSITION(result.winningTeam!);
-          cache.set(cacheKey, result.response, 30);
+          const cacheKey = CACHE_KEYS.TEAM_COMPOSITION(winningResult.winningTeam!);
+          cache.set(cacheKey, winningResult.response, 30);
         } else {
-          console.error('❌ Failed to resolve champion names for composition:', result.error);
-          // Don't set error for team composition as it's not critical
+          console.error('❌ Failed to resolve champion names for winning composition:', winningResult.error);
+        }
+
+        if (losingResult.success) {
+          console.log('✅ Losing Team composition analysis loaded:', losingResult.response);
+          setLosingTeamComposition(losingResult.response);
+        } else {
+          console.error('❌ Failed to resolve champion names for losing composition:', losingResult.error);
         }
       }
 
@@ -1146,58 +1159,84 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
                 </div>
               )}
 
-              {teamComposition && (
+              {(teamComposition || losingTeamComposition) && (
                 <section className="panel-bevel rounded-sm p-5 space-y-4">
-                  <div>
-                    <h4 className="font-blackletter text-lg text-primary text-glow m-0 pb-2 border-b border-primary/25">
-                      ◆ Winning Team Composition
+                  <div 
+                    className="pb-2 border-b border-primary/25 cursor-pointer hover:bg-primary/5 transition-colors group"
+                    onClick={() => setShowTeamComposition(!showTeamComposition)}
+                  >
+                    <h4 className="font-blackletter text-lg text-primary text-glow m-0">
+                      {showTeamComposition ? '▼' : '▶'} ◆ Team Compositions
                     </h4>
-                    <p className="font-display text-sm text-ink/80 mt-3 m-0">
-                      <strong className="text-primary">{teamComposition.team_composition.archetype}</strong>
-                      {" — "}
-                      {teamComposition.team_composition.archetype_description}
+                    <p className="font-pixel text-[10px] uppercase tracking-[0.14em] text-ink/65 mt-2 m-0">
+                      Toggle to view detailed composition analysis for both teams
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    {[
-                      ["Attack", teamComposition.team_stats.averages.attack],
-                      ["Defense", teamComposition.team_stats.averages.defense],
-                      ["Magic", teamComposition.team_stats.averages.magic],
-                      ["Difficulty", teamComposition.team_stats.averages.difficulty],
-                    ].map(([label, value]) => (
-                      <div
-                        key={label as string}
-                        className="panel-bevel rounded-sm p-3 flex flex-col items-center gap-1"
-                      >
-                        <span className="font-pixel text-[9px] uppercase tracking-[0.16em] text-ink/65">
-                          {label}
-                        </span>
-                        <span className="font-blackletter text-xl text-primary text-glow">{value}</span>
-                      </div>
-                    ))}
-                  </div>
+                  {showTeamComposition && (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                      {[
+                        { data: teamComposition, title: "Winning Team Composition", color: "text-primary", border: "border-primary/25" },
+                        { data: losingTeamComposition, title: "Losing Team Composition", color: "text-danger", border: "border-danger/25" }
+                      ].map(({ data, title, color, border }) => {
+                        if (!data) return null;
+                        return (
+                          <div key={title} className={`border ${border} rounded-sm p-4 bg-surface-inset/20 space-y-4`}>
+                            <div>
+                              <h4 className={`font-blackletter text-lg ${color} text-glow m-0 pb-2 border-b ${border}`}>
+                                ◆ {title}
+                              </h4>
+                              <p className="font-display text-sm text-ink/80 mt-3 m-0">
+                                <strong className={color}>{data.team_composition.archetype}</strong>
+                                {" — "}
+                                {data.team_composition.archetype_description}
+                              </p>
+                            </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    {[
-                      { title: "Strengths", items: teamComposition.analysis.strengths, color: "text-success" },
-                      { title: "Weaknesses", items: teamComposition.analysis.weaknesses, color: "text-danger" },
-                      { title: "Strategic Recommendations", items: teamComposition.strategic_recommendations, color: "text-gold" },
-                    ].map(({ title, items, color }) => (
-                      <div key={title} className="panel-bevel rounded-sm p-3">
-                        <h5 className={`font-pixel text-[10px] uppercase tracking-[0.16em] mb-2 ${color}`}>
-                          ▸ {title}
-                        </h5>
-                        <ul className="space-y-1 m-0 pl-0 list-none">
-                          {items.map((it, i) => (
-                            <li key={i} className="font-display text-xs text-ink/80 leading-snug">
-                              ◆ {it}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    ))}
-                  </div>
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                              {[
+                                ["Attack", data.team_stats.averages.attack],
+                                ["Defense", data.team_stats.averages.defense],
+                                ["Magic", data.team_stats.averages.magic],
+                                ["Difficulty", data.team_stats.averages.difficulty],
+                              ].map(([label, value]) => (
+                                <div
+                                  key={label as string}
+                                  className="panel-bevel rounded-sm p-3 flex flex-col items-center gap-1"
+                                >
+                                  <span className="font-pixel text-[9px] uppercase tracking-[0.16em] text-ink/65">
+                                    {label}
+                                  </span>
+                                  <span className={`font-blackletter text-xl ${color} text-glow`}>{value}</span>
+                                </div>
+                              ))}
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                              {[
+                                { subTitle: "Strengths", items: data.analysis.strengths, subColor: "text-success" },
+                                { subTitle: "Weaknesses", items: data.analysis.weaknesses, subColor: "text-danger" },
+                                { subTitle: "Strategic Recs", items: data.strategic_recommendations, subColor: "text-gold" },
+                              ].map(({ subTitle, items, subColor }) => (
+                                <div key={subTitle} className="panel-bevel rounded-sm p-3">
+                                  <h5 className={`font-pixel text-[10px] uppercase tracking-[0.16em] mb-2 ${subColor} truncate`} title={subTitle}>
+                                    ▸ {subTitle}
+                                  </h5>
+                                  <ul className="space-y-1 m-0 pl-0 list-none">
+                                    {items.map((it: any, i: number) => (
+                                      <li key={i} className="font-display text-xs text-ink/80 leading-snug">
+                                        ◆ {it}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </section>
               )}
 
