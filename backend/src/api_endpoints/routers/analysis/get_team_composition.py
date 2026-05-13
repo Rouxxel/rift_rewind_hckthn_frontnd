@@ -80,8 +80,17 @@ async def get_team_composition(
             champions_data = response.json().get("data", {})
 
         def get_champion_info(champion_name):
+            # Normalize the input name for robust matching
+            search_name = champion_name.lower().replace(" ", "").replace("'", "").replace(".", "")
+            
             for champ_id, champ_info in champions_data.items():
-                if champ_info.get("name", "").lower() == champion_name.lower():
+                # Try matching against normalized ID (key in Data Dragon)
+                if champ_id.lower().replace(" ", "").replace("'", "").replace(".", "") == search_name:
+                    return champ_info
+                    
+                # Try matching against normalized Name
+                champ_name_normalized = champ_info.get("name", "").lower().replace(" ", "").replace("'", "").replace(".", "")
+                if champ_name_normalized == search_name:
                     return champ_info
             return None
 
