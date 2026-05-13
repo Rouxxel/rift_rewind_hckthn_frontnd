@@ -931,9 +931,8 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
                     ].map(([label, value], idx) => (
                       <div
                         key={label as string}
-                        className={`flex items-center justify-between gap-3 px-3 py-2 border-b border-border/40 ${
-                          idx % 2 === 0 ? "bg-surface-inset/40" : ""
-                        }`}
+                        className={`flex items-center justify-between gap-3 px-3 py-2 border-b border-border/40 ${idx % 2 === 0 ? "bg-surface-inset/40" : ""
+                          }`}
                       >
                         <span className="font-pixel text-[9px] uppercase tracking-[0.16em] text-ink/65">
                           {label}
@@ -964,11 +963,10 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
                       <div className="flex items-center justify-between pb-2 mb-3 border-b border-primary/25">
                         <h4 className="font-blackletter text-lg text-primary text-glow m-0">◆ {label}</h4>
                         <span
-                          className={`font-pixel text-[9px] uppercase tracking-[0.18em] px-2 py-1 rounded-sm border ${
-                            accent === "primary"
+                          className={`font-pixel text-[9px] uppercase tracking-[0.18em] px-2 py-1 rounded-sm border ${accent === "primary"
                               ? "text-success border-success/50 bg-success/10"
                               : "text-danger border-danger/50 bg-danger/10"
-                          }`}
+                            }`}
                         >
                           {accent === "primary" ? "Victory" : "Defeat"}
                         </span>
@@ -988,9 +986,8 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
                         {participants.map((participant, i) => (
                           <div
                             key={i}
-                            className={`grid grid-cols-[2fr_1fr_1fr_0.7fr_0.9fr] min-w-[520px] items-center px-3 py-2 border-b border-border/40 last:border-b-0 ${
-                              i % 2 === 0 ? "bg-surface-inset/30" : ""
-                            }`}
+                            className={`grid grid-cols-[2fr_1fr_1fr_0.7fr_0.9fr] min-w-[520px] items-center px-3 py-2 border-b border-border/40 last:border-b-0 ${i % 2 === 0 ? "bg-surface-inset/30" : ""
+                              }`}
                           >
                             <div className="flex items-center gap-2 min-w-0">
                               <img
@@ -1015,9 +1012,8 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
                               {participant.totalMinionsKilled}
                             </span>
                             <span
-                              className={`font-pixel text-[9px] uppercase tracking-[0.14em] ${
-                                participant.win ? "text-success" : "text-danger"
-                              }`}
+                              className={`font-pixel text-[9px] uppercase tracking-[0.14em] ${participant.win ? "text-success" : "text-danger"
+                                }`}
                             >
                               {participant.win ? "Victory" : "Defeat"}
                             </span>
@@ -1041,17 +1037,16 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
                           <button
                             onClick={() => loadMatchPrediction(matchParticipants)}
                             disabled={disabled}
-                            className={`px-5 py-3 rounded-sm font-pixel text-[10px] uppercase tracking-[0.18em] border transition-all ${
-                              disabled
+                            className={`px-5 py-3 rounded-sm font-pixel text-[10px] uppercase tracking-[0.18em] border transition-all ${disabled
                                 ? "bg-surface-inset/60 border-border text-ink/50 cursor-not-allowed"
                                 : "bg-gradient-coral text-primary-foreground border-primary/80 shadow-halo hover:-translate-y-0.5"
-                            }`}
+                              }`}
                           >
                             {loadingStates.prediction
                               ? "Analyzing Match..."
                               : !isValidForPrediction
-                              ? "🚫 Prediction Not Available"
-                              : "🔮 Get AI Match Prediction"}
+                                ? "Prediction Not Available"
+                                : "Get Match Prediction"}
                           </button>
                           <p className="font-display text-xs text-ink/70 m-0 max-w-md">
                             {!isValidForPrediction ? (
@@ -1189,11 +1184,10 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
                       AI Predicted Winner: {matchPrediction.prediction.predicted_winner}
                     </p>
                     <p
-                      className={`font-pixel text-[10px] uppercase tracking-[0.16em] mt-2 m-0 ${
-                        matchPrediction.prediction.predicted_winner === "Blue Team"
+                      className={`font-pixel text-[10px] uppercase tracking-[0.16em] mt-2 m-0 ${matchPrediction.prediction.predicted_winner === "Blue Team"
                           ? "text-success"
                           : "text-danger"
-                      }`}
+                        }`}
                     >
                       {matchPrediction.prediction.predicted_winner === "Blue Team"
                         ? "✅ Prediction was CORRECT!"
@@ -1315,9 +1309,8 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
                       {matchTimeline.frames.map((frame, index) => (
                         <div
                           key={index}
-                          className={`flex items-center gap-3 px-3 py-2 ${
-                            index % 2 === 0 ? "bg-surface-inset/30" : ""
-                          }`}
+                          className={`flex items-center gap-3 px-3 py-2 ${index % 2 === 0 ? "bg-surface-inset/30" : ""
+                            }`}
                         >
                           <span className="font-pixel text-[10px] text-gold w-12 shrink-0">
                             {frame.minute}:00
