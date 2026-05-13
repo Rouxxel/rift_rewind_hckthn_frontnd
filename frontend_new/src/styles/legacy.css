@@ -1836,6 +1836,7 @@ All class names from the original frontend are preserved. JSX is untouched.
 }
 /* Marks — beside tokens, distinct color (purple/violet) */
 .performance-page .mastery-card .mark-badge {
+  font-family: 'MedievalSharp', 'Cinzel', serif;
   background: linear-gradient(180deg, #9c6bd8, #5a2ea0);
   border-color: #3d1e75;
 }

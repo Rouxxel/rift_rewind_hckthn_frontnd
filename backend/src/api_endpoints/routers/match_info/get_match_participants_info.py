@@ -128,9 +128,15 @@ async def get_match_participants_full_info(
                         "description": info.get("description", "")
                     })
 
+            # Handle display name (Riot ID preferred in Match-V5)
+            game_name = participant.get("riotIdGameName")
+            tag_line = participant.get("riotIdTagline")
+            summoner_name = participant.get("summonerName")
+            display_name = f"{game_name}#{tag_line}" if game_name and tag_line else (summoner_name or f"Player {participant.get('participantId')}")
+
             if simplified:
                 simplified_data = {
-                    "summonerName": participant.get("summonerName"),
+                    "summonerName": display_name,
                     "championName": participant.get("championName"),
                     "kills": participant.get("kills"),
                     "deaths": participant.get("deaths"),
@@ -138,6 +144,7 @@ async def get_match_participants_full_info(
                     "goldEarned": participant.get("goldEarned"),
                     "totalMinionsKilled": participant.get("totalMinionsKilled") + participant.get("neutralMinionsKilled", 0),
                     "win": participant.get("win"),
+                    "teamId": participant.get("teamId"),
                     "items_detailed": items_detailed
                 }
                 detailed_participants.append(simplified_data)
@@ -146,12 +153,12 @@ async def get_match_participants_full_info(
                 enriched_participant["items_detailed"] = items_detailed
                 detailed_participants.append(enriched_participant)
 
-            return {
-                "match_id": match_id,
-                "region": region,
-                "num_participants": len(detailed_participants),
-                "participants": detailed_participants
-            }
+        return {
+            "match_id": match_id,
+            "region": region,
+            "num_participants": len(detailed_participants),
+            "participants": detailed_participants
+        }
 
     except httpx.RequestError as e:
         log_handler.error(f"Riot API request failed: {e}")
