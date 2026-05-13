@@ -1134,51 +1134,6 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
                       </div>
                     </div>
                   ))}
-
-                  {/* Match Prediction Button */}
-                  <div className="panel-bevel rounded-sm p-5 flex flex-col items-center gap-3 text-center">
-                    {(() => {
-                      const winningTeam = matchParticipants.filter((p) => p.win === true);
-                      const losingTeam = matchParticipants.filter((p) => p.win === false);
-                      const isCorrectTeamSize = winningTeam.length === 5 && losingTeam.length === 5;
-                      const isClassicMode = matchDetails?.match_info?.gameMode === "CLASSIC";
-                      const isValidForPrediction = isCorrectTeamSize && isClassicMode;
-                      const disabled = loadingStates.prediction || matchParticipants.length === 0 || !isValidForPrediction;
-                      return (
-                        <>
-                          <button
-                            onClick={() => loadMatchPrediction(matchParticipants)}
-                            disabled={disabled}
-                            className={`px-5 py-3 rounded-sm font-pixel text-[10px] uppercase tracking-[0.18em] border transition-all ${disabled
-                              ? "bg-surface-inset/60 border-border text-ink/50 cursor-not-allowed"
-                              : "bg-gradient-coral text-primary-foreground border-primary/80 shadow-halo hover:-translate-y-0.5"
-                              }`}
-                          >
-                            {loadingStates.prediction
-                              ? "Analyzing Match..."
-                              : !isValidForPrediction
-                                ? "Prediction Not Available"
-                                : "Get Match Prediction"}
-                          </button>
-                          <p className="font-display text-xs text-ink/70 m-0 max-w-md">
-                            {!isValidForPrediction ? (
-                              <>
-                                AI match prediction is only available for 5v5 Classic matches.
-                                {!isCorrectTeamSize && (
-                                  <> This match has {winningTeam.length}v{losingTeam.length} teams.</>
-                                )}
-                                {!isClassicMode && (
-                                  <> This match is {matchDetails?.match_info?.gameMode || "Unknown"} mode.</>
-                                )}
-                              </>
-                            ) : (
-                              <>Get prediction analysis for this match using the actual teams that played.</>
-                            )}
-                          </p>
-                        </>
-                      );
-                    })()}
-                  </div>
                 </section>
               )}
 
@@ -1245,6 +1200,51 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
                   </div>
                 </section>
               )}
+
+              {/* Match Prediction Button */}
+              <div className="panel-bevel rounded-sm p-5 flex flex-col items-center gap-3 text-center">
+                {(() => {
+                  const winningTeam = matchParticipants.filter((p) => p.win === true);
+                  const losingTeam = matchParticipants.filter((p) => p.win === false);
+                  const isCorrectTeamSize = winningTeam.length === 5 && losingTeam.length === 5;
+                  const isClassicMode = matchDetails?.match_info?.gameMode === "CLASSIC";
+                  const isValidForPrediction = isCorrectTeamSize && isClassicMode;
+                  const disabled = loadingStates.prediction || matchParticipants.length === 0 || !isValidForPrediction;
+                  return (
+                    <>
+                      <button
+                        onClick={() => loadMatchPrediction(matchParticipants)}
+                        disabled={disabled}
+                        className={`px-5 py-3 rounded-sm font-pixel text-[10px] uppercase tracking-[0.18em] border transition-all ${disabled
+                          ? "bg-surface-inset/60 border-border text-ink/50 cursor-not-allowed"
+                          : "bg-gradient-coral text-primary-foreground border-primary/80 shadow-halo hover:-translate-y-0.5"
+                          }`}
+                      >
+                        {loadingStates.prediction
+                          ? "Analyzing Match..."
+                          : !isValidForPrediction
+                            ? "Prediction Not Available"
+                            : "Get Match Prediction"}
+                      </button>
+                      <p className="font-display text-xs text-ink/70 m-0 max-w-md">
+                        {!isValidForPrediction ? (
+                          <>
+                            AI match prediction is only available for 5v5 Classic matches.
+                            {!isCorrectTeamSize && (
+                              <> This match has {winningTeam.length}v{losingTeam.length} teams.</>
+                            )}
+                            {!isClassicMode && (
+                              <> This match is {matchDetails?.match_info?.gameMode || "Unknown"} mode.</>
+                            )}
+                          </>
+                        ) : (
+                          <>Get prediction analysis for this match using the actual teams that played.</>
+                        )}
+                      </p>
+                    </>
+                  );
+                })()}
+              </div>
 
               {loadingStates.prediction && (
                 <div className="panel-bevel rounded-sm p-6 flex flex-col items-center gap-3">
