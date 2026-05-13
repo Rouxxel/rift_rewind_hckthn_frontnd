@@ -107,7 +107,19 @@ interface MatchTimeline {
 }
 
 export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
+  // Add animation styles
+  const animationStyles = `
+    @keyframes glow-5hz {
+      0%, 100% { text-shadow: 0 0 5px rgba(var(--color-primary-rgb), 0.5), 0 0 10px rgba(var(--color-primary-rgb), 0.3); }
+      50% { text-shadow: 0 0 15px rgba(var(--color-primary-rgb), 0.8), 0 0 25px rgba(var(--color-primary-rgb), 0.6); }
+    }
+    .animate-glow-5hz {
+      animation: glow-5hz 0.2s infinite;
+    }
+  `;
+
   const [showDetails, setShowDetails] = useState(false);
+  const [showTimeline, setShowTimeline] = useState(false);
   const [userData, setUserData] = useState<UserData | null>(null);
   const [userCredentials, setUserCredentials] = useState<UserCredentials | null>(null);
   const [matchHistory, setMatchHistory] = useState<string[]>([]);
@@ -216,6 +228,7 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
     setTeamComposition(null);
     setMatchTimeline(null);
     setMatchPrediction(null);
+    setShowTimeline(false);
 
     // Load match details
     await loadMatchDetails(matchId);
@@ -369,6 +382,8 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
       'LeeSin': ['Lee Sin', 'LeeSin'],
       'AurelionSol': ['Aurelion Sol', 'AurelionSol'],
       'DrMundo': ['Dr. Mundo', 'DrMundo', 'Dr Mundo'],
+      'Kaisa': ['Kai\'Sa', 'KaiSa', 'Kaisa'],
+      'KaiSa': ['Kai\'Sa', 'KaiSa', 'Kaisa'],
       'Yunara': ['Yunara', 'Yuumi'], // In case of typos
     };
 
@@ -795,6 +810,7 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
 
   return (
     <div className="match-history-page">
+      <style>{animationStyles}</style>
       {showDetails && selectedMatch && (
         <div className="container pt-4">
           <button
@@ -944,6 +960,102 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
                 </section>
               )}
 
+              {loadingStates.timeline && (
+                <div className="panel-bevel rounded-sm p-6 flex flex-col items-center gap-3">
+                  <div className="loading-spinner" />
+                  <p className="font-pixel text-[10px] uppercase tracking-widest text-ink/70 m-0">
+                    Loading match timeline...
+                  </p>
+                </div>
+              )}
+
+              {matchTimeline && (
+                <section className="panel-bevel rounded-sm p-5 space-y-4">
+                  <div
+                    className="pb-2 border-b border-primary/25 cursor-pointer hover:bg-primary/5 transition-colors group"
+                    onClick={() => setShowTimeline(!showTimeline)}
+                  >
+                    <h4 className="font-blackletter text-lg text-primary text-glow m-0 animate-glow-5hz">
+                      {showTimeline ? '▼' : '▶'} Match Timeline
+                    </h4>
+                  </div>
+
+                  {showTimeline && (
+                    <>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+                        {[
+                          ["Game Duration", formatDuration(matchTimeline.game_duration / 1000)],
+                          ["Total Frames", matchTimeline.summary.total_frames],
+                          ["Total Kills", matchTimeline.summary.total_kills],
+                          ["Item Events", matchTimeline.summary.total_item_events],
+                          ["Ward Events", matchTimeline.summary.total_ward_events],
+                          ["Objectives", matchTimeline.summary.total_objective_events],
+                        ].map(([label, value]) => (
+                          <div
+                            key={label as string}
+                            className="panel-bevel rounded-sm p-3 flex flex-col items-center gap-1"
+                          >
+                            <span className="font-pixel text-[9px] uppercase tracking-[0.14em] text-ink/65 text-center">
+                              {label}
+                            </span>
+                            <span className="font-blackletter text-lg text-primary text-glow">{value}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div>
+                        <h5 className="font-pixel text-[10px] uppercase tracking-[0.16em] text-primary mb-2">
+                          ▸ Key Events by Minute
+                        </h5>
+                        <div className="border border-border/60 rounded-sm divide-y divide-border/40 max-h-96 overflow-y-auto">
+                          {matchTimeline.frames.map((frame, index) => (
+                            <div
+                              key={index}
+                              className={`flex items-center gap-3 px-3 py-2 ${index % 2 === 0 ? "bg-surface-inset/30" : ""
+                                }`}
+                            >
+                              <span className="font-pixel text-[10px] text-gold w-12 shrink-0">
+                                {frame.minute}:00
+                              </span>
+                              <div className="flex flex-wrap gap-2">
+                                {frame.events.kills.length > 0 && (
+                                  <span className="px-2 py-0.5 rounded-sm border border-danger/40 bg-danger/10 text-danger font-pixel text-[9px] uppercase tracking-[0.12em]">
+                                    Kills: {frame.events.kills.length}
+                                  </span>
+                                )}
+                                {frame.events.objective_events.length > 0 && (
+                                  <span className="px-2 py-0.5 rounded-sm border border-gold/40 bg-gold/10 text-gold font-pixel text-[9px] uppercase tracking-[0.12em]">
+                                    Objectives: {frame.events.objective_events.length}
+                                  </span>
+                                )}
+                                {frame.events.item_events.length > 0 && (
+                                  <span className="px-2 py-0.5 rounded-sm border border-primary/40 bg-primary/10 text-primary font-pixel text-[9px] uppercase tracking-[0.12em]">
+                                    Items: {frame.events.item_events.length}
+                                  </span>
+                                )}
+                                {frame.events.ward_events && frame.events.ward_events.length > 0 && (
+                                  <span className="px-2 py-0.5 rounded-sm border border-success/40 bg-success/10 text-success font-pixel text-[9px] uppercase tracking-[0.12em]">
+                                    Wards: {frame.events.ward_events.length}
+                                  </span>
+                                )}
+                                {frame.events.kills.length === 0 &&
+                                  frame.events.objective_events.length === 0 &&
+                                  frame.events.item_events.length === 0 &&
+                                  (!frame.events.ward_events || frame.events.ward_events.length === 0) && (
+                                    <span className="font-pixel text-[9px] uppercase tracking-[0.12em] text-ink/45">
+                                      No major events
+                                    </span>
+                                  )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </section>
+              )}
+
               {loadingStates.participants && (
                 <div className="panel-bevel rounded-sm p-6 flex flex-col items-center gap-3">
                   <div className="loading-spinner" />
@@ -964,8 +1076,8 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
                         <h4 className="font-blackletter text-lg text-primary text-glow m-0">◆ {label}</h4>
                         <span
                           className={`font-pixel text-[9px] uppercase tracking-[0.18em] px-2 py-1 rounded-sm border ${accent === "primary"
-                              ? "text-success border-success/50 bg-success/10"
-                              : "text-danger border-danger/50 bg-danger/10"
+                            ? "text-success border-success/50 bg-success/10"
+                            : "text-danger border-danger/50 bg-danger/10"
                             }`}
                         >
                           {accent === "primary" ? "Victory" : "Defeat"}
@@ -1038,8 +1150,8 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
                             onClick={() => loadMatchPrediction(matchParticipants)}
                             disabled={disabled}
                             className={`px-5 py-3 rounded-sm font-pixel text-[10px] uppercase tracking-[0.18em] border transition-all ${disabled
-                                ? "bg-surface-inset/60 border-border text-ink/50 cursor-not-allowed"
-                                : "bg-gradient-coral text-primary-foreground border-primary/80 shadow-halo hover:-translate-y-0.5"
+                              ? "bg-surface-inset/60 border-border text-ink/50 cursor-not-allowed"
+                              : "bg-gradient-coral text-primary-foreground border-primary/80 shadow-halo hover:-translate-y-0.5"
                               }`}
                           >
                             {loadingStates.prediction
@@ -1150,7 +1262,7 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
                       ◆ Match Prediction Analysis
                     </h4>
                     <p className="font-pixel text-[10px] uppercase tracking-[0.16em] text-ink/65 mt-2 m-0">
-                      AI-powered analysis based on the actual teams that played
+                      Analysis based on the actual teams that played and stored data
                     </p>
                   </div>
 
@@ -1181,17 +1293,17 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
 
                   <div className="panel-bevel rounded-sm p-4 text-center">
                     <p className="font-blackletter text-base text-primary text-glow m-0">
-                      AI Predicted Winner: {matchPrediction.prediction.predicted_winner}
+                      Predicted Winner: {matchPrediction.prediction.predicted_winner}
                     </p>
                     <p
                       className={`font-pixel text-[10px] uppercase tracking-[0.16em] mt-2 m-0 ${matchPrediction.prediction.predicted_winner === "Blue Team"
-                          ? "text-success"
-                          : "text-danger"
+                        ? "text-success"
+                        : "text-danger"
                         }`}
                     >
                       {matchPrediction.prediction.predicted_winner === "Blue Team"
-                        ? "✅ Prediction was CORRECT!"
-                        : "❌ Prediction was WRONG — Blue Team actually won"}
+                        ? "Prediction was CORRECT!"
+                        : "Prediction was WRONG — Blue Team actually won"}
                     </p>
                   </div>
 
@@ -1257,98 +1369,6 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
                   <p className="font-display text-[11px] italic text-ink/55 m-0 pt-2 border-t border-border/40">
                     {matchPrediction.disclaimer}
                   </p>
-                </section>
-              )}
-
-              {loadingStates.timeline && (
-                <div className="panel-bevel rounded-sm p-6 flex flex-col items-center gap-3">
-                  <div className="loading-spinner" />
-                  <p className="font-pixel text-[10px] uppercase tracking-widest text-ink/70 m-0">
-                    Loading match timeline...
-                  </p>
-                </div>
-              )}
-
-              {matchTimeline && (
-                <section className="panel-bevel rounded-sm p-5 space-y-4">
-                  <div className="pb-2 border-b border-primary/25">
-                    <h4 className="font-blackletter text-lg text-primary text-glow m-0">◆ Match Timeline</h4>
-                    <p className="font-pixel text-[10px] uppercase tracking-[0.14em] text-ink/65 mt-2 m-0">
-                      {matchTimeline.summary.total_frames} frames · {matchTimeline.summary.total_kills} kills ·{" "}
-                      {matchTimeline.summary.total_item_events} items · {matchTimeline.summary.total_ward_events} wards ·{" "}
-                      {matchTimeline.summary.total_objective_events} objectives
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
-                    {[
-                      ["Game Duration", formatDuration(matchTimeline.game_duration / 1000)],
-                      ["Total Frames", matchTimeline.summary.total_frames],
-                      ["Total Kills", matchTimeline.summary.total_kills],
-                      ["Item Events", matchTimeline.summary.total_item_events],
-                      ["Ward Events", matchTimeline.summary.total_ward_events],
-                      ["Objectives", matchTimeline.summary.total_objective_events],
-                    ].map(([label, value]) => (
-                      <div
-                        key={label as string}
-                        className="panel-bevel rounded-sm p-3 flex flex-col items-center gap-1"
-                      >
-                        <span className="font-pixel text-[9px] uppercase tracking-[0.14em] text-ink/65 text-center">
-                          {label}
-                        </span>
-                        <span className="font-blackletter text-lg text-primary text-glow">{value}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div>
-                    <h5 className="font-pixel text-[10px] uppercase tracking-[0.16em] text-primary mb-2">
-                      ▸ Key Events by Minute
-                    </h5>
-                    <div className="border border-border/60 rounded-sm divide-y divide-border/40 max-h-96 overflow-y-auto">
-                      {matchTimeline.frames.map((frame, index) => (
-                        <div
-                          key={index}
-                          className={`flex items-center gap-3 px-3 py-2 ${index % 2 === 0 ? "bg-surface-inset/30" : ""
-                            }`}
-                        >
-                          <span className="font-pixel text-[10px] text-gold w-12 shrink-0">
-                            {frame.minute}:00
-                          </span>
-                          <div className="flex flex-wrap gap-2">
-                            {frame.events.kills.length > 0 && (
-                              <span className="px-2 py-0.5 rounded-sm border border-danger/40 bg-danger/10 text-danger font-pixel text-[9px] uppercase tracking-[0.12em]">
-                                Kills: {frame.events.kills.length}
-                              </span>
-                            )}
-                            {frame.events.objective_events.length > 0 && (
-                              <span className="px-2 py-0.5 rounded-sm border border-gold/40 bg-gold/10 text-gold font-pixel text-[9px] uppercase tracking-[0.12em]">
-                                Objectives: {frame.events.objective_events.length}
-                              </span>
-                            )}
-                            {frame.events.item_events.length > 0 && (
-                              <span className="px-2 py-0.5 rounded-sm border border-primary/40 bg-primary/10 text-primary font-pixel text-[9px] uppercase tracking-[0.12em]">
-                                Items: {frame.events.item_events.length}
-                              </span>
-                            )}
-                            {frame.events.ward_events && frame.events.ward_events.length > 0 && (
-                              <span className="px-2 py-0.5 rounded-sm border border-success/40 bg-success/10 text-success font-pixel text-[9px] uppercase tracking-[0.12em]">
-                                Wards: {frame.events.ward_events.length}
-                              </span>
-                            )}
-                            {frame.events.kills.length === 0 &&
-                              frame.events.objective_events.length === 0 &&
-                              frame.events.item_events.length === 0 &&
-                              (!frame.events.ward_events || frame.events.ward_events.length === 0) && (
-                                <span className="font-pixel text-[9px] uppercase tracking-[0.12em] text-ink/45">
-                                  No major events
-                                </span>
-                              )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
                 </section>
               )}
             </div>
