@@ -101,7 +101,7 @@
         function displayCacheItems() {
             const cacheList = document.getElementById('cacheList');
             const items = [];
-            
+
             for (let i = 0; i < localStorage.length; i++) {
                 const key = localStorage.key(i);
                 if (key && key.startsWith('rift_')) {
@@ -109,13 +109,27 @@
                 }
             }
 
+            //Clear existing content
+            cacheList.replaceChildren();
+
             if (items.length === 0) {
-                cacheList.innerHTML = '<div class="cache-item">No cache items found</div>';
-            } else {
-                cacheList.innerHTML = items.map(key => 
-                    `<div class="cache-item">${key}</div>`
-                ).join('');
+                const empty = document.createElement('div');
+                empty.className = 'cache-item';
+                empty.textContent = 'No cache items found';
+                cacheList.appendChild(empty);
+                return;
             }
+
+            const fragment = document.createDocumentFragment();
+
+            items.forEach(key => {
+                const div = document.createElement('div');
+                div.className = 'cache-item';
+                div.textContent = key; //prevents XSS
+                fragment.appendChild(div);
+            });
+
+            cacheList.appendChild(fragment);
         }
 
         function clearAllCache() {
