@@ -23,6 +23,15 @@ RUN npm run build
 # Stage 2: Serve with Nginx
 FROM nginx:alpine
 
+# Create non-root user
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
+# Fix permissions for nginx directories
+RUN chown -R appuser:appgroup /var/cache/nginx \
+    /var/run \
+    /var/log/nginx \
+    /usr/share/nginx/html
+
 # Copy built assets from builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
 
@@ -36,5 +45,7 @@ EXPOSE 80
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD wget --quiet --tries=1 --spider http://localhost/ || exit 1
 
-# Start nginx
+#run as non-root
+USER appuser
+
 CMD ["nginx", "-g", "daemon off;"]
