@@ -134,6 +134,45 @@ All colors are HSL semantic tokens defined in `src/index.css` and mapped in `tai
 
 ## Deployment
 
+### Docker Deployment
+
+The frontend includes Docker configuration files for containerized deployment:
+
+- **Dockerfile** - Multi-stage build configuration (Node.js builder + Nginx server)
+- **docker-compose.yml** - Docker Compose configuration for running the frontend service
+- **nginx.conf** - Nginx configuration for serving the built React app
+- **.dockerignore** - Files to exclude from Docker build context
+
+#### Quick Start with Docker
+
+**Windows (Batch Script):**
+```bash
+start-docker.bat
+```
+
+**Manual Docker Commands:**
+```bash
+# Build and run with Docker Compose
+docker-compose up --build
+
+# Access at http://localhost:3000
+```
+
+#### Local Development
+
+**Windows (Batch Script):**
+```bash
+start-local.bat
+```
+
+**Manual Commands:**
+```bash
+cd rift_frontend
+npm run dev
+```
+
+### Other Deployment Options
+
 Deploy directly from Lovable via the **Publish** button (top right of the editor). Frontend changes require clicking **Update** in the publish dialog to go live.
 
 For self-hosting on Vercel, Netlify, etc., see [DEPLOYMENT.md](./DEPLOYMENT.md).
