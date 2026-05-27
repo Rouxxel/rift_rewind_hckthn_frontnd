@@ -72,11 +72,20 @@
 The fastest way to get started:
 
 ```bash
+# Navigate to frontend directory
+cd frontend_new
+
 # Build and run with Docker Compose
 docker-compose up -d
 
 # Access the application
 open http://localhost:3000
+```
+
+Or use the provided batch script (Windows):
+```bash
+cd frontend_new
+start-docker.bat
 ```
 
 See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed Docker instructions.
@@ -85,7 +94,7 @@ See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed Docker instructions.
 
 1. Navigate to frontend directory:
 ```bash
-cd rift_frontend
+cd frontend_new/rift_frontend
 ```
 
 2. Install dependencies:
@@ -101,6 +110,12 @@ npm run dev
 4. Build for production:
 ```bash
 npm run build
+```
+
+Or use the provided batch script (Windows):
+```bash
+cd frontend_new
+start-local.bat
 ```
 
 ### Backend Setup
@@ -217,6 +232,9 @@ Automatically handles champion names with special characters:
 ### Quick Start
 
 ```bash
+# Navigate to frontend directory
+cd frontend_new
+
 # Build and run
 docker-compose up -d
 
@@ -230,6 +248,9 @@ docker-compose down
 ### Manual Docker Build
 
 ```bash
+# Navigate to frontend directory
+cd frontend_new
+
 # Build image
 docker build -t rift-rewind-frontend .
 
