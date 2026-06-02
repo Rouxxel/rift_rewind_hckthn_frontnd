@@ -1,5 +1,51 @@
 import React, { useState, useEffect } from 'react';
 import { apiService } from '../../services/api';
+import mapDataRaw from '../../data/map_data.csv?raw';
+
+const parseCSV = (csvText: string) => {
+  const lines = csvText.trim().split('\n');
+  if (lines.length === 0) return [];
+  const headers = lines[0].split(',').map(h => h.trim());
+  const result = [];
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i];
+    const rowValues = [];
+    let insideQuote = false;
+    let currentVal = '';
+    for (let j = 0; j < line.length; j++) {
+      const char = line[j];
+      if (char === '"') {
+        if (j + 1 < line.length && line[j + 1] === '"') {
+          currentVal += '"';
+          j++;
+        } else {
+          insideQuote = !insideQuote;
+        }
+      } else if (char === ',' && !insideQuote) {
+        rowValues.push(currentVal);
+        currentVal = '';
+      } else {
+        currentVal += char;
+      }
+    }
+    rowValues.push(currentVal);
+    
+    const obj: Record<string, string> = {};
+    headers.forEach((h, idx) => {
+      obj[h] = rowValues[idx] || '';
+    });
+    result.push(obj);
+  }
+  return result;
+};
+
+const parsedMaps = parseCSV(mapDataRaw);
+const MAP_NAMES: Record<string, string> = {};
+parsedMaps.forEach(row => {
+  if (row.id && row.map_name) {
+    MAP_NAMES[row.id] = row.map_name;
+  }
+});
 
 interface ItemDetailsProps {
   itemId: string;
@@ -148,25 +194,7 @@ export const ItemDetails: React.FC<ItemDetailsProps> = ({ itemId, itemData: cach
   };
 
   const getMapName = (mapId: string): string => {
-    const mapNames: { [key: string]: string } = {
-      '3': 'Proving Grounds',
-      '8': 'Crystal Scar',
-      '10': 'Twisted Treeline',
-      '11': 'Summoner\'s Rift',
-      '12': 'Howling Abyss',
-      '13': 'Magma Chamber',
-      '14': 'Butcher\'s Bridge',
-      '16': 'Cosmic Ruins',
-      '18': 'Valoran City Park',
-      '19': 'Substructure 43',
-      '20': 'Crash Site',
-      '21': 'Temple of Lily and Lotus',
-      '22': 'Nexus Blitz',
-      '30': 'Arena: Rings of Wrath',
-      '35': 'The Bandlewood'
-    };
-
-    return mapNames[mapId] || `Unknown Map (${mapId})`;
+    return MAP_NAMES[mapId] || `Unknown Map (${mapId})`;
   };
 
   const formatTag = (tag: string): string => {

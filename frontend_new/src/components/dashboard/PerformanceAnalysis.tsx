@@ -3,6 +3,52 @@ import { apiService } from '../../services/api';
 import { storage } from '../../utils/storage';
 import { cache, CACHE_KEYS } from '../../utils/cache';
 import championsData from '../../data/champions_id_name.json';
+import keyStonesRaw from '../../data/key_stones.csv?raw';
+
+const parseCSV = (csvText: string) => {
+  const lines = csvText.trim().split('\n');
+  if (lines.length === 0) return [];
+  const headers = lines[0].split(',').map(h => h.trim());
+  const result = [];
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i];
+    const rowValues = [];
+    let insideQuote = false;
+    let currentVal = '';
+    for (let j = 0; j < line.length; j++) {
+      const char = line[j];
+      if (char === '"') {
+        if (j + 1 < line.length && line[j + 1] === '"') {
+          currentVal += '"';
+          j++;
+        } else {
+          insideQuote = !insideQuote;
+        }
+      } else if (char === ',' && !insideQuote) {
+        rowValues.push(currentVal);
+        currentVal = '';
+      } else {
+        currentVal += char;
+      }
+    }
+    rowValues.push(currentVal);
+    
+    const obj: Record<string, string> = {};
+    headers.forEach((h, idx) => {
+      obj[h] = rowValues[idx] || '';
+    });
+    result.push(obj);
+  }
+  return result;
+};
+
+const parsedKeystones = parseCSV(keyStonesRaw);
+const KEYSTONE_NAMES: Record<number, string> = {};
+parsedKeystones.forEach(row => {
+  if (row.id && row.name) {
+    KEYSTONE_NAMES[parseInt(row.id)] = row.name;
+  }
+});
 
 interface PerformanceAnalysisProps {
   onBack: () => void;
@@ -336,19 +382,7 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
     return new Date(timestamp).toLocaleDateString();
   };
 
-  // Keystone mapping
-  const KEYSTONE_NAMES: Record<number, string> = {
-    8005: 'Press the Attack',
-    8008: 'Lethal Tempo',
-    8021: 'Fleet Footwork',
-    8010: 'Conqueror',
-    8112: 'Electrocute',
-    8128: 'Dark Harvest',
-    9923: 'Hail of Blades',
-    8351: 'Glacial Augment',
-    8360: 'Unsealed Spellbook',
-    8369: 'First Strike'
-  };
+  // Keystone mapping loaded globally from CSV
 
   const getKeystoneName = (keystoneId: number): string => {
     if (keystoneId === 0) return 'Not Selected';
