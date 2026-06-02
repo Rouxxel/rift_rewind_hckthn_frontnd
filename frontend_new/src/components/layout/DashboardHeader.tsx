@@ -2,12 +2,19 @@ import { Link, useNavigate } from "react-router-dom";
 import { GlossButton } from "@/components/ui-retro/GlossButton";
 import { useAuth } from "@/context/AuthContext";
 import logoHelmet from "@/assets/logo_helmet.png";
+import { Switch } from "@/components/ui/switch";
 
 interface DashboardHeaderProps {
   rankBadge?: string | null;
+  isAssistantVisible?: boolean;
+  onToggleAssistant?: () => void;
 }
 
-export const DashboardHeader = ({ rankBadge }: DashboardHeaderProps) => {
+export const DashboardHeader = ({ 
+  rankBadge, 
+  isAssistantVisible = false, 
+  onToggleAssistant 
+}: DashboardHeaderProps) => {
   const { userData, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -36,9 +43,20 @@ export const DashboardHeader = ({ rankBadge }: DashboardHeaderProps) => {
           </span>
         </Link>
 
-        <GlossButton size="sm" variant="ghost" onClick={handleLogout}>
-          Change Account
-        </GlossButton>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <span className="font-pixel text-[10px] uppercase tracking-wider text-primary/80">
+              AI Coach
+            </span>
+            <Switch 
+              checked={isAssistantVisible} 
+              onCheckedChange={onToggleAssistant} 
+            />
+          </div>
+          <GlossButton size="sm" variant="ghost" onClick={handleLogout}>
+            Change Account
+          </GlossButton>
+        </div>
       </div>
     </header>
   );

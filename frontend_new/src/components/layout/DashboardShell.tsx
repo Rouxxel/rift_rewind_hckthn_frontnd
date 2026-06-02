@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 import { useLocation, Link } from "react-router-dom";
 import { DashboardHeader } from "./DashboardHeader";
 import { SiteFooter } from "./SiteFooter";
@@ -24,6 +24,7 @@ interface DashboardShellProps {
 export const DashboardShell = ({ children, rankBadge, showBack }: DashboardShellProps) => {
   const location = useLocation();
   const page: Page = ROUTE_TO_PAGE[location.pathname] ?? "dashboard";
+  const [isAssistantVisible, setIsAssistantVisible] = useState(false);
 
   return (
     <div className="relative min-h-screen flex flex-col">
@@ -35,7 +36,11 @@ export const DashboardShell = ({ children, rankBadge, showBack }: DashboardShell
             "radial-gradient(ellipse at center, transparent 50%, hsl(278 60% 4% / 0.7) 100%)",
         }}
       />
-      <DashboardHeader rankBadge={rankBadge} />
+      <DashboardHeader 
+        rankBadge={rankBadge} 
+        isAssistantVisible={isAssistantVisible}
+        onToggleAssistant={() => setIsAssistantVisible(!isAssistantVisible)}
+      />
       {showBack && (
         <div className="container pt-4">
           <Link
@@ -48,7 +53,7 @@ export const DashboardShell = ({ children, rankBadge, showBack }: DashboardShell
       )}
       <main className="relative z-10 flex-1">{children}</main>
       <SiteFooter />
-      <AIAssistant currentPage={page} />
+      {isAssistantVisible && <AIAssistant currentPage={page} />}
     </div>
   );
 };
