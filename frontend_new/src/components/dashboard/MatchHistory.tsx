@@ -1,6 +1,87 @@
 import React, { useState, useEffect } from 'react';
 import { apiService } from '../../services/api';
 import { cache, CACHE_KEYS } from '../../utils/cache';
+import championDataRaw from '../../data/champion_id_name.csv?raw';
+import mapDataRaw from '../../data/map_data.csv?raw';
+
+// A simple CSV parser to read the data correctly
+const parseCSV = (csvText: string) => {
+  const lines = csvText.trim().split('\n');
+  if (lines.length === 0) return [];
+  const headers = lines[0].split(',').map(h => h.trim());
+  const result = [];
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i];
+    const rowValues = [];
+    let insideQuote = false;
+    let currentVal = '';
+    for (let j = 0; j < line.length; j++) {
+      const char = line[j];
+      if (char === '"') {
+        if (j + 1 < line.length && line[j + 1] === '"') {
+          currentVal += '"';
+          j++;
+        } else {
+          insideQuote = !insideQuote;
+        }
+      } else if (char === ',' && !insideQuote) {
+        rowValues.push(currentVal);
+        currentVal = '';
+      } else {
+        currentVal += char;
+      }
+    }
+    rowValues.push(currentVal);
+    
+    const obj: Record<string, string> = {};
+    headers.forEach((h, idx) => {
+      obj[h] = rowValues[idx] || '';
+    });
+    result.push(obj);
+  }
+  return result;
+};
+
+const parsedMaps = parseCSV(mapDataRaw);
+const MAP_NAMES: Record<number, string> = {};
+parsedMaps.forEach(row => {
+  if (row.id && row.map_name) {
+    MAP_NAMES[parseInt(row.id)] = row.map_name;
+  }
+});
+
+const parsedChampions = parseCSV(championDataRaw);
+const CHAMPION_ALTERNATE_NAMES: Record<string, string[]> = {};
+const CHAMPION_FORMAT_NAMES: Record<string, string> = {};
+
+parsedChampions.forEach(row => {
+  if (!row.name) return;
+  const name = row.name;
+  
+  const sanitizedName = name.replace(/[\s'.-]/g, '');
+  if (sanitizedName !== name) {
+    CHAMPION_FORMAT_NAMES[sanitizedName] = name;
+  }
+  
+  if (row.special_names) {
+    try {
+      let cleaned = row.special_names.replace(/'/g, '"');
+      const arr = JSON.parse(cleaned);
+      if (Array.isArray(arr)) {
+        CHAMPION_ALTERNATE_NAMES[sanitizedName] = arr;
+        CHAMPION_ALTERNATE_NAMES[name] = arr;
+      }
+    } catch (e) {
+      console.warn("Could not parse special_names for", name);
+    }
+  }
+});
+
+// Explicit API overrides for names the API returns differently from our CSV base logic
+CHAMPION_FORMAT_NAMES['FiddleSticks'] = 'Fiddlesticks';
+CHAMPION_FORMAT_NAMES['RenataGlasc'] = 'Renata Glasc';
+CHAMPION_FORMAT_NAMES['Nunu'] = 'Nunu & Willump';
+CHAMPION_FORMAT_NAMES['Wukong'] = 'Wukong';
 
 interface MatchHistoryProps {
   onBack: () => void;
@@ -367,29 +448,8 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
       }
     }
 
-    // 6. Common special cases
-    const specialCases: Record<string, string[]> = {
-      'Velkoz': ['Vel\'Koz', 'VelKoz', 'Vel Koz'],
-      'VelKoz': ['Vel\'Koz', 'Velkoz', 'Vel Koz'],
-      'KSante': ['K\'Sante', 'KSante', 'K Sante'],
-      'KhaZix': ['Kha\'Zix', 'KhaZix', 'Kha Zix'],
-      'RekSai': ['Rek\'Sai', 'RekSai', 'Rek Sai'],
-      'ChoGath': ['Cho\'Gath', 'ChoGath', 'Cho Gath'],
-      'KogMaw': ['Kog\'Maw', 'KogMaw', 'Kog Maw'],
-      'LeBlanc': ['LeBlanc', 'Leblanc', 'Le Blanc'],
-      'MissFortune': ['Miss Fortune', 'MissFortune'],
-      'MasterYi': ['Master Yi', 'MasterYi'],
-      'TahmKench': ['Tahm Kench', 'TahmKench'],
-      'TwistedFate': ['Twisted Fate', 'TwistedFate'],
-      'XinZhao': ['Xin Zhao', 'XinZhao'],
-      'JarvanIV': ['Jarvan IV', 'JarvanIV', 'Jarvan4'],
-      'LeeSin': ['Lee Sin', 'LeeSin'],
-      'AurelionSol': ['Aurelion Sol', 'AurelionSol'],
-      'DrMundo': ['Dr. Mundo', 'DrMundo', 'Dr Mundo'],
-      'Kaisa': ['Kai\'Sa', 'KaiSa', 'Kaisa'],
-      'KaiSa': ['Kai\'Sa', 'KaiSa', 'Kaisa'],
-      'Yunara': ['Yunara', 'Yuumi'], // In case of typos
-    };
+    // 6. Common special cases loaded from CSV
+    const specialCases = CHAMPION_ALTERNATE_NAMES;
 
     const normalizedName = championName.replace(/[\s'.-]/g, '');
     if (specialCases[normalizedName]) {
@@ -758,49 +818,12 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
   };
 
   const getMapName = (mapId: number) => {
-    const mapNames: Record<number, string> = {
-      1: "Summoner's Rift (Original Summer)",
-      2: "Summoner's Rift (Original Autumn)",
-      3: "The Proving Grounds",
-      4: "Twisted Treeline (Original)",
-      8: "The Crystal Scar",
-      10: "Twisted Treeline (Last)",
-      11: "Summoner's Rift",
-      12: "Howling Abyss",
-      14: "Butcher's Bridge",
-      16: "Cosmic Ruins",
-      18: "Valoran City Park",
-      19: "Substructure 43",
-      20: "Crash Site",
-      21: "Nexus Blitz",
-      22: "Convergence",
-      30: "Rings of Wrath"
-    };
-    return mapNames[mapId] || `Unknown Map (ID: ${mapId})`;
+    return MAP_NAMES[mapId] || `Unknown Map (ID: ${mapId})`;
   };
 
   const formatChampionName = (championName: string) => {
-    // Handle special cases first
-    const specialCases: Record<string, string> = {
-      'MissFortune': 'Miss Fortune',
-      'FiddleSticks': 'Fiddlesticks',
-      'DrMundo': 'Dr. Mundo',
-      'JarvanIV': 'Jarvan IV',
-      'KhaZix': "Kha'Zix",
-      'KogMaw': "Kog'Maw",
-      'LeBlanc': 'LeBlanc',
-      'LeeSin': 'Lee Sin',
-      'MasterYi': 'Master Yi',
-      'RekSai': "Rek'Sai",
-      'TahmKench': 'Tahm Kench',
-      'TwistedFate': 'Twisted Fate',
-      'VelKoz': "Vel'Koz",
-      'XinZhao': 'Xin Zhao',
-      'AurelionSol': 'Aurelion Sol',
-      'Wukong': 'Wukong',
-      'Nunu': 'Nunu & Willump',
-      'RenataGlasc': 'Renata Glasc'
-    };
+    // Handle special cases first from CSV parsing logic
+    const specialCases = CHAMPION_FORMAT_NAMES;
 
     if (specialCases[championName]) {
       return specialCases[championName];
