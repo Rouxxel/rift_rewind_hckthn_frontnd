@@ -25,6 +25,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ puuid, onLogout }) => {
   const [showPredictions, setShowPredictions] = useState(false);
   const [showMatchHistory, setShowMatchHistory] = useState(false);
   const [showPerformanceAnalysis, setShowPerformanceAnalysis] = useState(false);
+  const [isAssistantVisible, setIsAssistantVisible] = useState(false);
 
   useEffect(() => {
     loadUserData();
@@ -79,7 +80,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ puuid, onLogout }) => {
     return (
       <>
         <GameAssets onBack={() => setShowGameAssets(false)} />
-        <AIAssistant currentPage="game-assets" />
+        {isAssistantVisible && <AIAssistant currentPage="game-assets" />}
       </>
     );
   }
@@ -89,7 +90,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ puuid, onLogout }) => {
     return (
       <>
         <Predictions onBack={() => setShowPredictions(false)} />
-        <AIAssistant currentPage="predictions" />
+        {isAssistantVisible && <AIAssistant currentPage="predictions" />}
       </>
     );
   }
@@ -99,7 +100,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ puuid, onLogout }) => {
     return (
       <>
         <MatchHistory onBack={() => setShowMatchHistory(false)} />
-        <AIAssistant currentPage="match-history" />
+        {isAssistantVisible && <AIAssistant currentPage="match-history" />}
       </>
     );
   }
@@ -109,7 +110,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ puuid, onLogout }) => {
     return (
       <>
         <PerformanceAnalysis onBack={() => setShowPerformanceAnalysis(false)} />
-        <AIAssistant currentPage="performance" />
+        {isAssistantVisible && <AIAssistant currentPage="performance" />}
       </>
     );
   }
@@ -154,9 +155,20 @@ export const Dashboard: React.FC<DashboardProps> = ({ puuid, onLogout }) => {
             </div>
           )}
         </div>
-        <button onClick={handleLogout} className="logout-button">
-          Change Account
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#fff', fontSize: '14px', cursor: 'pointer' }}>
+            <span>AI Coach</span>
+            <input 
+              type="checkbox" 
+              checked={isAssistantVisible}
+              onChange={(e) => setIsAssistantVisible(e.target.checked)}
+              style={{ cursor: 'pointer' }}
+            />
+          </label>
+          <button onClick={handleLogout} className="logout-button">
+            Change Account
+          </button>
+        </div>
       </header>
 
       <div className="dashboard-content">
@@ -274,7 +286,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ puuid, onLogout }) => {
         )}
       </div>
 
-      <AIAssistant currentPage="dashboard" />
+      {isAssistantVisible && <AIAssistant currentPage="dashboard" />}
     </div>
   );
 };
