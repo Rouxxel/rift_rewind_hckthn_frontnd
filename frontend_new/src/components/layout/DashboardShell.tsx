@@ -3,7 +3,7 @@ import { useLocation, Link } from "react-router-dom";
 import { DashboardHeader } from "./DashboardHeader";
 import { SiteFooter } from "./SiteFooter";
 import { AIAssistant } from "@/components/AIAssistant";
-import "@/styles/legacy.css";
+
 
 type Page = "dashboard" | "match-history" | "performance" | "predictions" | "game-assets";
 
