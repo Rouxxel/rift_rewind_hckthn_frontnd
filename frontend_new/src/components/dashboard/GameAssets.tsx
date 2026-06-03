@@ -117,7 +117,7 @@ export const GameAssets: React.FC<GameAssetsProps> = ({ onBack }) => {
   );
 
   return (
-    <div className="game-assets-page flex flex-col gap-4">
+    <div className="flex flex-col gap-4">
       {/* Tabs */}
       <div>
         <div className="relative flex flex-wrap items-center gap-2 p-2 rounded-sm border border-border bg-gradient-panel shadow-bevel">
