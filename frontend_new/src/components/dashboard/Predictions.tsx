@@ -3,6 +3,7 @@ import { apiService } from '../../services/api';
 import { storage } from '../../utils/storage';
 import { cache, CACHE_KEYS } from '../../utils/cache';
 import { getChampions } from '../../services/championCache';
+import { LoadingSpinner } from '@/components/ui-retro/LoadingSpinner';
 
 interface PredictionsProps {
   onBack: () => void;
@@ -505,7 +506,7 @@ export const Predictions: React.FC<PredictionsProps> = ({ onBack }) => {
   );
 
   return (
-    <div className="predictions-page">
+    <div>
 
       <div className="mb-4">
         <div className="relative flex flex-wrap items-center gap-2 p-2 rounded-sm border border-border bg-gradient-panel shadow-bevel">
@@ -545,18 +546,21 @@ export const Predictions: React.FC<PredictionsProps> = ({ onBack }) => {
         </div>
       </div>
 
-      <div className="predictions-content">
+      <div>
         {loading && (
-          <div className="loading-state">
-            <div className="loading-spinner"></div>
-            <p>Loading {activeTab === 'winrates' ? 'champion winrates' : 'match prediction'}...</p>
+          <div className="flex flex-col items-center justify-center gap-3 py-12 text-center text-ink/80">
+            <LoadingSpinner />
+            <p className="font-display text-sm">Loading {activeTab === 'winrates' ? 'champion winrates' : 'match prediction'}...</p>
           </div>
         )}
 
         {error && (
-          <div className="error-state">
-            <p>{error}</p>
-            <button onClick={() => activeTab === 'winrates' ? loadWinrates() : predictMatch()}>
+          <div className="flex flex-col items-center justify-center gap-3 py-8 text-center">
+            <p className="font-display text-sm text-secondary">{error}</p>
+            <button
+              onClick={() => activeTab === 'winrates' ? loadWinrates() : predictMatch()}
+              className="px-4 py-2 rounded-sm border border-primary/70 bg-surface-inset text-primary font-display text-xs uppercase tracking-[0.18em] hover:bg-primary/10 transition-colors"
+            >
               Retry
             </button>
           </div>
