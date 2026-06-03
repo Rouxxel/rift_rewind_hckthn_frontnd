@@ -252,10 +252,14 @@ export const ItemDetails: React.FC<ItemDetailsProps> = ({ itemId, itemData: cach
 
 
 
+  const overlayClasses = "fixed inset-0 z-[999] flex items-center justify-center p-6 backdrop-blur-md bg-[radial-gradient(ellipse_at_center,hsl(277_40%_22%/0.7),hsl(277_70%_4%/0.92))] animate-fade-in-up";
+  const modalClasses = "relative w-full max-w-[1000px] max-h-[90vh] overflow-y-auto rounded-sm border-2 border-primary/80 bg-gradient-to-b from-[hsl(277_35%_22%)] to-[hsl(277_40%_14%)] shadow-[inset_0_1px_0_hsl(38_60%_90%/0.2),inset_0_-2px_0_hsl(277_50%_6%/0.6),0_18px_60px_hsl(277_80%_4%/0.7),0_0_60px_hsl(10_96%_70%/0.35)] animate-fade-in-up before:content-[''] before:absolute before:inset-[4px] before:border before:border-primary/20 before:rounded-[inherit] before:pointer-events-none";
+  const closeBtnClasses = "flex-shrink-0 w-9 h-9 inline-flex items-center justify-center rounded-sm border border-border bg-surface-inset text-ink/75 text-xl leading-none cursor-pointer transition-colors hover:text-secondary hover:border-secondary hover:bg-secondary/10";
+
   if (loading) {
     return (
-      <div className="item-details-overlay" onClick={handleOverlayClick}>
-        <div className="item-details-modal flex items-center justify-center p-12">
+      <div className={overlayClasses} onClick={handleOverlayClick}>
+        <div className={`${modalClasses} flex items-center justify-center p-12`}>
           <div className="flex flex-col items-center gap-3">
             <span className="h-8 w-8 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
             <p className="font-display text-sm text-ink/80">Loading item details...</p>
@@ -267,8 +271,8 @@ export const ItemDetails: React.FC<ItemDetailsProps> = ({ itemId, itemData: cach
 
   if (error) {
     return (
-      <div className="item-details-overlay" onClick={handleOverlayClick}>
-        <div className="item-details-modal p-8">
+      <div className={overlayClasses} onClick={handleOverlayClick}>
+        <div className={`${modalClasses} p-8`}>
           <div className="flex flex-col items-center gap-3 text-center">
             <h3 className="font-blackletter text-xl text-secondary m-0">Error Loading Item</h3>
             <p className="font-display text-sm text-ink/80 m-0">{error}</p>
@@ -315,11 +319,11 @@ export const ItemDetails: React.FC<ItemDetailsProps> = ({ itemId, itemData: cach
   );
 
   return (
-    <div className="item-details-overlay" onClick={handleOverlayClick}>
-      <div className="item-details-modal">
-        <div className="item-details-header">
-          <div className="item-title-section">
-            <div className="item-portrait relative h-16 w-16 rounded-sm overflow-hidden border-2 border-primary/60 shadow-bevel flex-shrink-0">
+    <div className={overlayClasses} onClick={handleOverlayClick}>
+      <div className={modalClasses}>
+        <div className="sticky top-0 z-[5] flex items-start justify-between flex-wrap gap-4 px-6 py-5 backdrop-blur-sm bg-gradient-to-b from-[hsl(277_40%_18%)] to-[hsl(277_40%_12%)] border-b border-primary/35">
+          <div className="flex flex-row items-center gap-4 min-w-0 flex-1">
+            <div className="relative h-16 w-16 rounded-sm overflow-hidden border-2 border-primary/60 shadow-bevel flex-shrink-0">
               <img
                 src={`https://ddragon.leagueoflegends.com/cdn/14.22.1/img/item/${itemData.image.full}`}
                 alt={itemData.name}
@@ -329,24 +333,35 @@ export const ItemDetails: React.FC<ItemDetailsProps> = ({ itemId, itemData: cach
                 }}
               />
             </div>
-            <div className="item-title-info flex flex-col gap-1 min-w-0">
-              <h2 className="m-0 truncate">
+            <div className="flex flex-col gap-1 min-w-0">
+              <h2 className="m-0 truncate font-blackletter text-2xl leading-tight text-primary text-glow">
                 {itemData.name}{' '}
                 <span className="font-pixel text-[10px] uppercase tracking-[0.15em] text-muted-foreground align-middle">
                   Id: {itemId}
                 </span>
               </h2>
-              <p className="item-title m-0">{itemData.plaintext}</p>
+              <p className="m-0 font-display italic text-sm text-ink/75">{itemData.plaintext}</p>
               {formattedTags.length > 0 && (
-                <div className="item-tags">
+                <div className="flex flex-wrap gap-1.5 mt-1">
                   {formattedTags.map((tag) => (
-                    <span key={tag} className="item-tag">{tag}</span>
+                    <span 
+                      key={tag} 
+                      className="px-2 py-0.5 rounded-[2px] border border-primary/40 bg-primary/10 text-primary font-pixel text-[8px] uppercase tracking-[0.12em]"
+                    >
+                      {tag}
+                    </span>
                   ))}
                 </div>
               )}
             </div>
           </div>
-          <button onClick={onClose} className="item-close-button" aria-label="Close">×</button>
+          <button 
+            onClick={onClose} 
+            className={closeBtnClasses} 
+            aria-label="Close"
+          >
+            ×
+          </button>
         </div>
 
         <div className="p-5 sm:p-6 flex flex-col gap-5">
