@@ -77,8 +77,36 @@
       transparent 1px,
       transparent 3px
     );
+
+    /* ---------- Legacy aliases (consumed by legacy.css during migration) ---------- */
+    /* HSL components (used with hsl(var(--x))) */
+    --coral: 10 96% 70%;
+    --coral-bright: 10 100% 78%;
+    --coral-deep: 8 100% 50%;
+    --hot: 8 100% 61%;
+    --hot-bright: 8 100% 70%;
+    --hot-deep: 0 85% 42%;
+    --ink-dim: 38 18% 72%;
+    --ink-muted: 38 14% 58%;
+    --gold-deep: 38 80% 35%;
+    --success: 142 60% 50%;
+    --danger: 0 84% 60%;
+    --base-500: 277 30% 28%;
+    --base-700: 277 35% 18%;
+    --base-800: 277 42% 12%;
+
+    /* Composite tokens used as raw values in legacy.css (var(--x) directly) */
+    --grad-panel: linear-gradient(180deg, hsl(277 35% 22%) 0%, hsl(277 40% 14%) 100%);
+    --grad-panel-hover: linear-gradient(180deg, hsl(277 38% 26%) 0%, hsl(277 42% 16%) 100%);
+    --grad-coral: linear-gradient(180deg, hsl(10 100% 78%) 0%, hsl(10 96% 62%) 50%, hsl(8 100% 50%) 100%);
+    --grad-gold: linear-gradient(180deg, hsl(46 90% 70%) 0%, hsl(38 80% 48%) 100%);
+    --grad-hot: linear-gradient(180deg, hsl(8 100% 70%) 0%, hsl(8 100% 55%) 50%, hsl(0 85% 42%) 100%);
+    --bevel: inset 0 1px 0 hsl(38 60% 90% / 0.2),
+             inset 0 -2px 0 hsl(277 50% 6% / 0.6),
+             0 4px 12px hsl(277 60% 4% / 0.5);
   }
 }
+
 
 @layer base {
   * {

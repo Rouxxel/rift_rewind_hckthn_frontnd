@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { apiService } from '../services/api';
 import { RotateCcw, X, Maximize2, Minimize2, SendHorizontal, Loader2 } from 'lucide-react';
+import { GlossButton } from "@/components/ui-retro/GlossButton";
 import assistantIcon from '../assets/ic_launcher.png';
 
 interface Message {
@@ -124,17 +125,17 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ currentPage, pageConte
             try {
                 const cached = JSON.parse(localStorage.getItem(key) || '{}');
                 const data = cached.data;
-                
+
                 if (data) {
                     if (key.includes('champions')) {
                         if (currentPage === 'game-assets' || currentPage === 'predictions') {
-                            context.champions_sample = Object.values(data).slice(0, 30).map((c: any) => ({ 
-                                name: c.name, 
-                                title: c.title, 
-                                tags: c.tags 
+                            context.champions_sample = Object.values(data).slice(0, 30).map((c: any) => ({
+                                name: c.name,
+                                title: c.title,
+                                tags: c.tags
                             }));
                         }
-                        if (currentPage === 'game-assets' && currentChampionName && 
+                        if (currentPage === 'game-assets' && currentChampionName &&
                             (key.includes(currentChampionName) || (typeof data === 'object' && data[currentChampionName]))) {
                             context.selected_champion_details = data[currentChampionName] || data;
                         }
@@ -309,44 +310,57 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ currentPage, pageConte
         return welcomeMessages[currentPage] || 'How can I help you today?';
     };
 
+    const ghostBtn =
+        "inline-flex items-center justify-center w-9 h-9 rounded-md bg-gradient-to-b from-base-500 to-base-700 border text-ink transition-colors hover:from-coral hover:to-hot hover:text-[#2a0d18]";
+
     return (
         <>
             {!isOpen && (
                 <button
-                    className="ai-assistant-toggle"
                     onClick={() => setIsOpen(true)}
                     title="Open AI Assistant"
+                    className="fixed right-5 bottom-5 z-[900] w-16 h-16 rounded-full flex items-center justify-center border-2 shadow-[0_8px_22px_rgba(0,0,0,0.55),0_0_24px_hsl(10_96%_70%/0.55)] animate-pulse-glow"
                 >
                     <img src={assistantIcon} alt="AI Assistant Icon" className="w-6 h-6 object-contain" />
                 </button>
             )}
 
             {isOpen && (
-                <div className={`ai-assistant-window ${isFullScreen ? 'ai-assistant-window--fullscreen' : ''}`}>
-                    <div className="ai-assistant-header">
-                        <div className="header-title"><span>Lol Coach</span></div>
-                        <div className="header-actions">
+                <div
+                    className={
+                        (isFullScreen
+                            ? "fixed inset-6 "
+                            : "fixed right-5 bottom-[6.5rem] w-[380px] max-w-[calc(100vw-2rem)] h-[540px] max-h-[75vh] max-sm:right-4 max-sm:bottom-[5.5rem] max-sm:w-[calc(100vw-2rem)] ") +
+                        "z-[901] flex flex-col overflow-hidden rounded-md border-2 bg-gradient-panel shadow-bevel animate-fade-in-up"
+                    }
+                >
+                    <div className="flex items-center justify-between gap-2 px-4 py-[0.85rem] border-b bg-[linear-gradient(180deg,hsl(var(--base-500)),hsl(var(--base-800)))]">
+                        <div className="mt-3 font-blackletter text-3xl text-ink text-glow"><span>Lol Coach</span></div>
+                        <div className="flex items-center gap-2">
                             <button
                                 onClick={() => setIsFullScreen(prev => !prev)}
                                 title={isFullScreen ? 'Restore size' : 'Full screen'}
-                                className="fullscreen-btn"
+                                className={ghostBtn}
                             >
                                 {isFullScreen ? <Minimize2 size={20} strokeWidth={2.5} /> : <Maximize2 size={20} strokeWidth={2.5} />}
                             </button>
-                            <button onClick={resetChat} title="New Chat" className="reset-btn">
+                            <button onClick={resetChat} title="New Chat" className={ghostBtn}>
                                 <RotateCcw size={20} strokeWidth={2.5} />
                             </button>
-                            <button onClick={() => setIsOpen(false)} className="close-btn">
+                            <button
+                                onClick={() => setIsOpen(false)}
+                                className="inline-flex items-center justify-center w-9 h-9 bg-gradient-to-b from-hot to-hot-deep border border-hot-deep text-ink hover:brightness-110 transition"
+                            >
                                 <X size={20} strokeWidth={2.5} />
                             </button>
                         </div>
                     </div>
 
-                    <div className="ai-assistant-messages">
+                    <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 bg-[hsl(277_38%_16%)]">
                         {messages.length === 0 && (
-                            <div className="welcome-message">
+                            <div className="p-8 text-center italic text-ink/70">
                                 <p>{getWelcomeMessage()}</p>
-                                <div className="flex flex-col gap-2 mt-4 w-full">
+                                <div className="flex flex-col gap-2 mt-4 w-full not-italic">
                                     {['What can this app do?', 'How can I improve my gameplay?', 'Explain this page'].map((q) => (
                                         <button
                                             key={q}
@@ -361,9 +375,17 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ currentPage, pageConte
                         )}
 
                         {messages.map((msg, idx) => (
-                            <div key={idx} className={`message ${msg.role}`}>
-                                <div className="message-content">
-                                    <div className="message-text">
+                            <div
+                                key={idx}
+                                className={
+                                    "px-[0.9rem] py-3 rounded-md max-w-[85%] text-base leading-[1.55] text-black shadow-[0_2px_6px_rgba(0,0,0,0.55)] border " +
+                                    (msg.role === 'user'
+                                        ? "self-end bg-coral border-coral-bright"
+                                        : "self-start bg-hot")
+                                }
+                            >
+                                <div className="flex flex-col gap-1">
+                                    <div className="whitespace-pre-wrap">
                                         {msg.role === 'user' ? (
                                             msg.content
                                         ) : (
@@ -380,7 +402,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ currentPage, pageConte
                                                             <code style={{ display: 'block', background: 'rgba(200, 155, 60, 0.2)', padding: '0.75rem', borderRadius: '6px', fontFamily: 'monospace', overflowX: 'auto', marginTop: '0.5rem' }} {...props} />
                                                         ),
                                                     strong: ({ node, ...props }) => <strong style={{ fontWeight: 'bold', fontFamily: 'MedievalSharp' }} {...props} />,
-                                                    em: ({ node, ...props }) => <em style={{ fontSize: '1.1rem', fontFamily: 'monospace'}} {...props} />,
+                                                    em: ({ node, ...props }) => <em style={{ fontSize: '1.1rem', fontFamily: 'monospace' }} {...props} />,
                                                 }}
                                             >
                                                 {msg.displayedContent || msg.content}
@@ -393,7 +415,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ currentPage, pageConte
                         <div ref={messagesEndRef} />
                     </div>
 
-                    <div className="ai-assistant-input">
+                    <div className="flex gap-2 px-[1.1rem] py-3 border-t bg-[#1a0d24]">
                         <input
                             type="text"
                             value={input}
@@ -401,10 +423,16 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ currentPage, pageConte
                             onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
                             placeholder="Ask me anything..."
                             disabled={loading}
+                            className="flex-1 min-w-0 px-4 py-3 bg-surface-inset text-ink border border-border font-display text-sm leading-tight outline-none transition-colors focus:border-primary focus:shadow-inner-glow placeholder:text-muted-foreground/60"
                         />
-                        <button className="send-button" onClick={sendMessage} disabled={loading || !input.trim()}>
+                        <GlossButton
+                            variant="primary"
+                            onClick={sendMessage}
+                            disabled={loading || !input.trim()}
+                            className=""
+                        >
                             {loading ? <Loader2 className="animate-spin" /> : <SendHorizontal />}
-                        </button>
+                        </GlossButton>
                     </div>
                 </div>
             )}

@@ -51,10 +51,36 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        gold: "hsl(var(--gold))",
-        ink: "hsl(var(--ink))",
+        gold: {
+          DEFAULT: "hsl(var(--gold))",
+          deep: "hsl(var(--gold-deep))",
+        },
+        ink: {
+          DEFAULT: "hsl(var(--ink))",
+          dim: "hsl(var(--ink-dim))",
+          muted: "hsl(var(--ink-muted))",
+        },
         parchment: "hsl(var(--parchment))",
+        coral: {
+          DEFAULT: "hsl(var(--coral))",
+          bright: "hsl(var(--coral-bright))",
+          deep: "hsl(var(--coral-deep))",
+        },
+        hot: {
+          DEFAULT: "hsl(var(--hot))",
+          bright: "hsl(var(--hot-bright))",
+          deep: "hsl(var(--hot-deep))",
+        },
+        success: "hsl(var(--success))",
+        danger: "hsl(var(--danger))",
+        base: {
+          500: "hsl(var(--base-500))",
+          700: "hsl(var(--base-700))",
+          800: "hsl(var(--base-800))",
+        },
       },
+
+
       fontFamily: {
         display: ["Cinzel", "serif"],
         blackletter: ["MedievalSharp", "Cinzel", "serif"],
@@ -69,11 +95,14 @@ export default {
       backgroundImage: {
         "gradient-hero": "var(--gradient-hero)",
         "gradient-panel": "var(--gradient-panel)",
+        "gradient-panel-hover": "var(--grad-panel-hover)",
         "gradient-coral": "var(--gradient-coral)",
         "gradient-gold": "var(--gradient-gold)",
+        "gradient-hot": "var(--grad-hot)",
         sheen: "var(--sheen)",
         scanlines: "var(--scanlines)",
       },
+
       boxShadow: {
         bevel: "var(--shadow-bevel)",
         halo: "var(--shadow-halo)",
