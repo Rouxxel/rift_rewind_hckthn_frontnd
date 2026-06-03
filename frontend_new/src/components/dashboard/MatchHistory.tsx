@@ -3,6 +3,7 @@ import { apiService } from '../../services/api';
 import { cache, CACHE_KEYS } from '../../utils/cache';
 import championDataRaw from '../../data/champion_id_name.csv?raw';
 import mapDataRaw from '../../data/map_data.csv?raw';
+import { LoadingSpinner } from '../ui-retro/LoadingSpinner';
 
 // A simple CSV parser to read the data correctly
 const parseCSV = (csvText: string) => {
@@ -835,17 +836,23 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
 
   if (!userData || !userCredentials) {
     return (
-      <div className="match-history-page">
-        <div className="error-state">
-          <p>{error || 'Loading user data...'}</p>
-          <button onClick={onBack}>Return to Dashboard</button>
+      <div>
+        <div className="container py-10 flex flex-col items-center gap-4 text-center min-h-[60vh] justify-center">
+          <p className="font-display text-sm text-danger m-0">{error || 'Loading user data...'}</p>
+          <button
+            onClick={onBack}
+            className="px-4 py-2 rounded-sm border border-primary/70 bg-surface-inset text-primary font-pixel text-[10px] uppercase tracking-[0.18em] hover:bg-primary/10 transition-colors"
+          >
+            Return to Dashboard
+          </button>
         </div>
       </div>
     );
   }
 
+
   return (
-    <div className="match-history-page">
+    <div>
       <style>{animationStyles}</style>
       {showDetails && selectedMatch && (
         <div className="container pt-4">
@@ -861,7 +868,7 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
         </div>
       )}
 
-      <div className="match-history-content">
+      <div>
         <div className="container py-6 space-y-6">
           {/* Page heading */}
           <div className="panel-bevel rounded-sm p-5 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
@@ -884,7 +891,7 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
 
           {loading && (
             <div className="panel-bevel rounded-sm p-8 flex flex-col items-center gap-3">
-              <div className="loading-spinner" />
+              <LoadingSpinner />
               <p className="font-pixel text-[10px] uppercase tracking-widest text-ink/70 m-0">
                 Loading match history...
               </p>
@@ -956,7 +963,7 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
             <div className="space-y-6">
               {loadingStates.details && (
                 <div className="panel-bevel rounded-sm p-6 flex flex-col items-center gap-3">
-                  <div className="loading-spinner" />
+                  <LoadingSpinner />
                   <p className="font-pixel text-[10px] uppercase tracking-widest text-ink/70 m-0">
                     Loading match details...
                   </p>
@@ -998,7 +1005,7 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
 
               {loadingStates.timeline && (
                 <div className="panel-bevel rounded-sm p-6 flex flex-col items-center gap-3">
-                  <div className="loading-spinner" />
+                  <LoadingSpinner />
                   <p className="font-pixel text-[10px] uppercase tracking-widest text-ink/70 m-0">
                     Loading match timeline...
                   </p>
@@ -1094,7 +1101,7 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
 
               {loadingStates.participants && (
                 <div className="panel-bevel rounded-sm p-6 flex flex-col items-center gap-3">
-                  <div className="loading-spinner" />
+                  <LoadingSpinner />
                   <p className="font-pixel text-[10px] uppercase tracking-widest text-ink/70 m-0">
                     Loading participants...
                   </p>
@@ -1175,7 +1182,7 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
 
               {loadingStates.composition && (
                 <div className="panel-bevel rounded-sm p-6 flex flex-col items-center gap-3">
-                  <div className="loading-spinner" />
+                  <LoadingSpinner />
                   <p className="font-pixel text-[10px] uppercase tracking-widest text-ink/70 m-0">
                     Loading team composition analysis...
                   </p>
@@ -1310,7 +1317,7 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
 
               {loadingStates.prediction && (
                 <div className="panel-bevel rounded-sm p-6 flex flex-col items-center gap-3">
-                  <div className="loading-spinner" />
+                  <LoadingSpinner />
                   <p className="font-pixel text-[10px] uppercase tracking-widest text-ink/70 m-0">
                     Loading match prediction...
                   </p>
