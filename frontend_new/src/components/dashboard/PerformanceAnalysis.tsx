@@ -4,6 +4,9 @@ import { storage } from '../../utils/storage';
 import { cache, CACHE_KEYS } from '../../utils/cache';
 import championsData from '../../data/champions_id_name.json';
 import keyStonesRaw from '../../data/key_stones.csv?raw';
+import { LoadingSpinner } from '../ui-retro/LoadingSpinner';
+import { style } from "./peformancestyles.ts";
+import { cn } from '@/lib/utils';
 
 const parseCSV = (csvText: string) => {
   const lines = csvText.trim().split('\n');
@@ -32,7 +35,7 @@ const parseCSV = (csvText: string) => {
       }
     }
     rowValues.push(currentVal);
-    
+
     const obj: Record<string, string> = {};
     headers.forEach((h, idx) => {
       obj[h] = rowValues[idx] || '';
@@ -144,6 +147,14 @@ interface PlayerPerformance {
   }>;
 }
 
+const posNegClass = (good: boolean) =>
+  good
+    ? "!text-[#6fd58a] [text-shadow:0_0_10px_rgba(111,213,138,0.45)]"
+    : "!text-hot [text-shadow:0_0_10px_hsl(8_100%_61%/0.45)]";
+
+const posNegInlineClass = (good: boolean) =>
+  good ? "text-[#6fd58a] font-bold" : "text-hot font-bold";
+
 export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack }) => {
   const [activeTab, setActiveTab] = useState<'overview' | 'mastery' | 'spells' | 'runes'>('overview');
   const [loading, setLoading] = useState(false);
@@ -232,9 +243,9 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
       // (This is a bit simplified, but ensures we don't end up with multiple keys)
       if (cached && !loading) {
         const masteryData = cached.mastery_data || cached.data?.mastery_data || cached;
-        const isSameSearch = cached.searchParams?.championId === championId && 
-                             cached.searchParams?.top === top && 
-                             cached.searchParams?.totalScore === totalScore;
+        const isSameSearch = cached.searchParams?.championId === championId &&
+          cached.searchParams?.top === top &&
+          cached.searchParams?.totalScore === totalScore;
 
         if (isSameSearch) {
           console.log('✅ Using cached champion mastery (same filters):', cached);
@@ -258,7 +269,7 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
       const masteryData = response.mastery_data || response.data?.mastery_data || [];
       setChampionMastery(Array.isArray(masteryData) ? masteryData : [masteryData]);
       setHasSearched(true);
-      
+
       // Cache the result, overwriting any existing cache for this user
       // First, remove any old-style keys that might exist
       cache.removeByPattern(`champion_mastery_${userData.puuid}`);
@@ -412,8 +423,9 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
     return (championsData as Record<string, string>)[championId.toString()] || `Champion #${championId}`;
   };
 
+  // ---------- Renders ----------
   return (
-    <div className="performance-page">
+    <div className="flex flex-col">
       <div className="mb-4">
         <div className="relative flex flex-wrap items-center gap-2 p-2 rounded-sm border border-border bg-gradient-panel shadow-bevel">
           <span className="pointer-events-none absolute inset-x-3 top-0 h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
@@ -428,7 +440,7 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as typeof activeTab)}
-                className={[
+                className={cn(
                   "group relative inline-flex items-center gap-2 px-4 py-2 rounded-sm",
                   "font-display text-xs uppercase tracking-[0.18em]",
                   "border transition-all duration-200",
@@ -436,14 +448,16 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
                   isActive
                     ? "bg-gradient-coral text-primary-foreground border-primary/80 shadow-halo"
                     : "bg-surface-inset/70 text-ink/75 border-border hover:text-primary hover:border-primary/60 hover:bg-surface-raised/60",
-                ].join(" ")}
+                )}
               >
                 <span
                   aria-hidden
-                  className={[
+                  className={cn(
                     "relative z-10 inline-block h-1.5 w-1.5 rotate-45",
-                    isActive ? "bg-primary-foreground shadow-[0_0_6px_hsl(var(--primary-foreground)/0.8)]" : "bg-primary/70 group-hover:bg-primary",
-                  ].join(" ")}
+                    isActive
+                      ? "bg-primary-foreground shadow-[0_0_6px_hsl(var(--primary-foreground)/0.8)]"
+                      : "bg-primary/70 group-hover:bg-primary",
+                  )}
                 />
                 <span className="relative z-10 drop-shadow-[0_1px_0_hsl(277_50%_8%/0.6)]">
                   {tab.label}
@@ -454,23 +468,26 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
         </div>
       </div>
 
-      <div className="performance-content">
+      <div>
         {loading && (
-          <div className="loading-state">
-            <div className="loading-spinner"></div>
-            <p>Loading {activeTab} data...</p>
+          <div className={style.loadingState}>
+            <LoadingSpinner />
+            <p className="font-display text-sm">Loading {activeTab} data...</p>
           </div>
         )}
 
         {error && (
-          <div className="error-state">
+          <div className={style.errorState}>
             <p>{error}</p>
-            <button onClick={() => {
-              if (activeTab === 'overview') loadPlayerPerformance();
-              else if (activeTab === 'mastery') loadChampionMastery();
-              else if (activeTab === 'spells') loadSummonerSpells();
-              else if (activeTab === 'runes') loadRuneMasteries();
-            }}>
+            <button
+              className={style.retryBtn}
+              onClick={() => {
+                if (activeTab === 'overview') loadPlayerPerformance();
+                else if (activeTab === 'mastery') loadChampionMastery();
+                else if (activeTab === 'spells') loadSummonerSpells();
+                else if (activeTab === 'runes') loadRuneMasteries();
+              }}
+            >
               Retry
             </button>
           </div>
@@ -479,82 +496,82 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
         {!loading && !error && (
           <>
             {activeTab === 'overview' && playerPerformance && (
-              <div className="overview-section">
-                <div className="stats-cards">
-                  <div className="stat-card">
-                    <h3>Overall Performance</h3>
-                    <div className="stat-grid">
-                      <div className="stat-item">
-                        <span className="stat-label">Matches Analyzed</span>
-                        <span className="stat-value">{playerPerformance.matches_analyzed}</span>
+              <div className="my-8 flex flex-col gap-6">
+                <div className={style.statsCards}>
+                  <div className={style.statCard}>
+                    <h3 className={style.h3}>Overall Performance</h3>
+                    <div className={style.statGrid}>
+                      <div className={style.statItem}>
+                        <span className={style.statLabel}>Matches Analyzed</span>
+                        <span className={style.statValue}>{playerPerformance.matches_analyzed}</span>
                       </div>
-                      <div className="stat-item">
-                        <span className="stat-label">Win Rate</span>
-                        <span className={`stat-value ${playerPerformance.overall_performance.win_rate >= 50 ? 'positive' : 'negative'}`}>
+                      <div className={style.statItem}>
+                        <span className={style.statLabel}>Win Rate</span>
+                        <span className={cn(style.statValue, posNegClass(playerPerformance.overall_performance.win_rate >= 50))}>
                           {formatWinRate(playerPerformance.overall_performance.win_rate)}
                         </span>
                       </div>
-                      <div className="stat-item">
-                        <span className="stat-label">Average KDA</span>
-                        <span className="stat-value">{formatKDA(playerPerformance.overall_performance.avg_kda)}</span>
+                      <div className={style.statItem}>
+                        <span className={style.statLabel}>Average KDA</span>
+                        <span className={style.statValue}>{formatKDA(playerPerformance.overall_performance.avg_kda)}</span>
                       </div>
-                      <div className="stat-item">
-                        <span className="stat-label">Median KDA</span>
-                        <span className="stat-value">{formatKDA(playerPerformance.overall_performance.median_kda)}</span>
+                      <div className={style.statItem}>
+                        <span className={style.statLabel}>Median KDA</span>
+                        <span className={style.statValue}>{formatKDA(playerPerformance.overall_performance.median_kda)}</span>
                       </div>
-                      <div className="stat-item">
-                        <span className="stat-label">CS per Min</span>
-                        <span className="stat-value">{playerPerformance.overall_performance.avg_cs_per_min.toFixed(1)}</span>
+                      <div className={style.statItem}>
+                        <span className={style.statLabel}>CS per Min</span>
+                        <span className={style.statValue}>{playerPerformance.overall_performance.avg_cs_per_min.toFixed(1)}</span>
                       </div>
-                      <div className="stat-item">
-                        <span className="stat-label">Damage per Min</span>
-                        <span className="stat-value">{formatNumber(Math.round(playerPerformance.overall_performance.avg_damage_per_min))}</span>
+                      <div className={style.statItem}>
+                        <span className={style.statLabel}>Damage per Min</span>
+                        <span className={style.statValue}>{formatNumber(Math.round(playerPerformance.overall_performance.avg_damage_per_min))}</span>
                       </div>
-                      <div className="stat-item">
-                        <span className="stat-label">Gold per Min</span>
-                        <span className="stat-value">{formatNumber(Math.round(playerPerformance.overall_performance.avg_gold_per_min))}</span>
+                      <div className={style.statItem}>
+                        <span className={style.statLabel}>Gold per Min</span>
+                        <span className={style.statValue}>{formatNumber(Math.round(playerPerformance.overall_performance.avg_gold_per_min))}</span>
                       </div>
-                      <div className="stat-item">
-                        <span className="stat-label">Kill Participation</span>
-                        <span className="stat-value">{playerPerformance.overall_performance.avg_kill_participation.toFixed(1)}%</span>
+                      <div className={style.statItem}>
+                        <span className={style.statLabel}>Kill Participation</span>
+                        <span className={style.statValue}>{playerPerformance.overall_performance.avg_kill_participation.toFixed(1)}%</span>
                       </div>
-                      <div className="stat-item">
-                        <span className="stat-label">Vision Score</span>
-                        <span className="stat-value">{playerPerformance.overall_performance.avg_vision_score.toFixed(1)}</span>
+                      <div className={style.statItem}>
+                        <span className={style.statLabel}>Vision Score</span>
+                        <span className={style.statValue}>{playerPerformance.overall_performance.avg_vision_score.toFixed(1)}</span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="stat-card">
-                    <h3>Performance Trends</h3>
-                    <div className="trends-grid">
-                      <div className="trend-section">
-                        <h4>Recent 5 Games</h4>
-                        <div className="stat-grid">
-                          <div className="stat-item">
-                            <span className="stat-label">Win Rate</span>
-                            <span className={`stat-value ${playerPerformance.performance_trends.recent_5_games.win_rate >= 50 ? 'positive' : 'negative'}`}>
+                  <div className={style.statCard}>
+                    <h3 className={style.h3}>Performance Trends</h3>
+                    <div className={style.trendsGrid}>
+                      <div className={style.trendSection}>
+                        <h4 className={style.h4}>Recent 5 Games</h4>
+                        <div className={style.statGrid}>
+                          <div className={style.statItem}>
+                            <span className={style.statLabel}>Win Rate</span>
+                            <span className={cn(style.statValue, posNegClass(playerPerformance.performance_trends.recent_5_games.win_rate >= 50))}>
                               {formatWinRate(playerPerformance.performance_trends.recent_5_games.win_rate)}
                             </span>
                           </div>
-                          <div className="stat-item">
-                            <span className="stat-label">Avg KDA</span>
-                            <span className="stat-value">{formatKDA(playerPerformance.performance_trends.recent_5_games.avg_kda)}</span>
+                          <div className={style.statItem}>
+                            <span className={style.statLabel}>Avg KDA</span>
+                            <span className={style.statValue}>{formatKDA(playerPerformance.performance_trends.recent_5_games.avg_kda)}</span>
                           </div>
                         </div>
                       </div>
-                      <div className="trend-section">
-                        <h4>Recent 10 Games</h4>
-                        <div className="stat-grid">
-                          <div className="stat-item">
-                            <span className="stat-label">Win Rate</span>
-                            <span className={`stat-value ${playerPerformance.performance_trends.recent_10_games.win_rate >= 50 ? 'positive' : 'negative'}`}>
+                      <div className={style.trendSection}>
+                        <h4 className={style.h4}>Recent 10 Games</h4>
+                        <div className={style.statGrid}>
+                          <div className={style.statItem}>
+                            <span className={style.statLabel}>Win Rate</span>
+                            <span className={cn(style.statValue, posNegClass(playerPerformance.performance_trends.recent_10_games.win_rate >= 50))}>
                               {formatWinRate(playerPerformance.performance_trends.recent_10_games.win_rate)}
                             </span>
                           </div>
-                          <div className="stat-item">
-                            <span className="stat-label">Avg KDA</span>
-                            <span className="stat-value">{formatKDA(playerPerformance.performance_trends.recent_10_games.avg_kda)}</span>
+                          <div className={style.statItem}>
+                            <span className={style.statLabel}>Avg KDA</span>
+                            <span className={style.statValue}>{formatKDA(playerPerformance.performance_trends.recent_10_games.avg_kda)}</span>
                           </div>
                         </div>
                       </div>
@@ -562,43 +579,43 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
                   </div>
                 </div>
 
-                <div className="stats-cards">
-                  <div className="stat-card">
-                    <h3>Champion Statistics</h3>
-                    <div className="stat-grid">
-                      <div className="stat-item">
-                        <span className="stat-label">Unique Champions</span>
-                        <span className="stat-value">{playerPerformance.champion_stats.total_unique_champions}</span>
+                <div className={style.statsCards}>
+                  <div className={style.statCard}>
+                    <h3 className={style.h3}>Champion Statistics</h3>
+                    <div className={style.statGrid}>
+                      <div className={style.statItem}>
+                        <span className={style.statLabel}>Unique Champions</span>
+                        <span className={style.statValue}>{playerPerformance.champion_stats.total_unique_champions}</span>
                       </div>
                     </div>
-                    <div className="most-played-section">
-                      <h4>Most Played Champions</h4>
-                      <div className="most-played-list">
+                    <div className="mt-4">
+                      <h4 className={style.h4}>Most Played Champions</h4>
+                      <div className={style.mostPlayedList}>
                         {Object.entries(playerPerformance.champion_stats.most_played).map(([champion, games], index) => (
-                          <div key={index} className="most-played-item">
-                            <span className="champion-name">{champion}</span>
-                            <span className="games-count">{games} games</span>
+                          <div key={index} className={style.mostPlayedItem}>
+                            <span className={style.championName}>{champion}</span>
+                            <span className={style.gamesCount}>{games} games</span>
                           </div>
                         ))}
                       </div>
                     </div>
                   </div>
 
-                  <div className="stat-card">
-                    <h3>Role Distribution</h3>
-                    <div className="role-distribution-list">
+                  <div className={style.statCard}>
+                    <h3 className={style.h3}>Role Distribution</h3>
+                    <div className={style.roleList}>
                       {Object.entries(playerPerformance.role_distribution)
                         .sort(([, a], [, b]) => b - a)
                         .map(([role, count], index) => (
-                          <div key={index} className="role-item">
-                            <span className="role-name">{role}</span>
-                            <div className="role-bar-container">
+                          <div key={index} className={style.roleItem}>
+                            <span className={style.roleName}>{role}</span>
+                            <div className={style.roleBarContainer}>
                               <div
-                                className="role-bar"
+                                className={style.roleBar}
                                 style={{ width: `${(count / playerPerformance.matches_analyzed) * 100}%` }}
-                              ></div>
+                              />
                             </div>
-                            <span className="role-count">{count} games</span>
+                            <span className={style.roleCount}>{count} games</span>
                           </div>
                         ))}
                     </div>
@@ -606,34 +623,33 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
                 </div>
 
                 {playerPerformance.detailed_matches.length > 0 && (
-                  <div className="detailed-matches-section">
-                    <h3>Recent Matches</h3>
-                    <div className="performance-table">
-                      <div className="table-header">
-                        <div className="table-cell">Champion</div>
-                        <div className="table-cell">Role</div>
-                        <div className="table-cell">KDA</div>
-                        <div className="table-cell">CS/min</div>
-                        <div className="table-cell">DMG/min</div>
-                        <div className="table-cell">Gold/min</div>
-                        <div className="table-cell">Vision</div>
-                        <div className="table-cell">KP%</div>
-                        <div className="table-cell">Result</div>
+                  <div className="my-4">
+                    <h3 className={style.h3}>Recent Matches</h3>
+                    <div className={style.perfTable}>
+                      <div className={cn(style.perfRowGrid, style.perfHeader)}>
+                        {['Champion', 'Role', 'KDA', 'CS/min', 'DMG/min', 'Gold/min', 'Vision', 'KP%', 'Result'].map((h) => (
+                          <div key={h} className={style.perfHeaderCell}>{h}</div>
+                        ))}
                       </div>
                       {playerPerformance.detailed_matches.slice(0, 10).map((match, index) => (
-                        <div key={index} className={`table-row ${index % 2 === 0 ? 'even' : 'odd'}`}>
-                          <div className="table-cell">{match.champion}</div>
-                          <div className="table-cell">{match.role}</div>
-                          <div className="table-cell">{formatKDA(match.kda)}</div>
-                          <div className="table-cell">{match.cs_per_min.toFixed(1)}</div>
-                          <div className="table-cell">{Math.round(match.damage_per_min)}</div>
-                          <div className="table-cell">{Math.round(match.gold_per_min)}</div>
-                          <div className="table-cell">{match.vision_score}</div>
-                          <div className="table-cell">{match.kill_participation}%</div>
-                          <div className="table-cell">
-                            <span className={match.win ? 'positive' : 'negative'}>
-                              {match.win ? 'Win' : 'Loss'}
-                            </span>
+                        <div
+                          key={index}
+                          className={cn(
+                            style.perfRowGrid,
+                            "hover:bg-coral/10 last:[&_>_*]:border-b-0",
+                            index % 2 === 0 ? "bg-base-800/35" : "bg-base-800/15",
+                          )}
+                        >
+                          <div className={style.perfRowCell}>{match.champion}</div>
+                          <div className={style.perfRowCell}>{match.role}</div>
+                          <div className={style.perfRowCell}>{formatKDA(match.kda)}</div>
+                          <div className={style.perfRowCell}>{match.cs_per_min.toFixed(1)}</div>
+                          <div className={style.perfRowCell}>{Math.round(match.damage_per_min)}</div>
+                          <div className={style.perfRowCell}>{Math.round(match.gold_per_min)}</div>
+                          <div className={style.perfRowCell}>{match.vision_score}</div>
+                          <div className={style.perfRowCell}>{match.kill_participation}%</div>
+                          <div className={style.perfRowCell}>
+                            <span className={posNegInlineClass(match.win)}>{match.win ? 'Win' : 'Loss'}</span>
                           </div>
                         </div>
                       ))}
@@ -644,35 +660,36 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
             )}
 
             {activeTab === 'mastery' && (
-              <div className={`mastery-section ${masteryUnavailable ? 'unavailable' : ''}`}>
-                <div className="filters-card">
-                  <h3>Champion Mastery Filters</h3>
+              <div className="my-8 flex flex-col gap-4">
+                <div className={style.filtersCard}>
+                  <h3 className={style.h3}>Champion Mastery Filters</h3>
                   {masteryUnavailable && (
-                    <div className="unavailable-notice">
+                    <div className={style.noticeBox}>
                       ⚠️ Champion mastery data is currently unavailable for this account. This may be due to API limitations or account restrictions.
                     </div>
                   )}
-                  <p className="filter-description">
+                  <p className={style.noticeBox}>
                     View your champion mastery data. Leave Champion ID empty to see multiple champions, or enter a specific champion ID to see details for that champion only.
                   </p>
-                  <div className="filters-grid">
-                    <div className="filter-group">
-                      <label>Champion ID:</label>
+                  <div className={style.filtersGrid}>
+                    <div className={style.filterGroup}>
+                      <label className={style.filterLabel}>Champion ID:</label>
                       <input
                         type="number"
                         placeholder="e.g., 103"
                         value={masteryFilters.championId}
                         onChange={(e) => setMasteryFilters({ ...masteryFilters, championId: e.target.value, totalScore: false })}
                         disabled={masteryUnavailable}
-                        className="bg-surface-inset border-border rounded-sm px-2 py-1 text-xs text-ink focus:outline-none focus:border-primary/50 transition-colors w-full"
+                        className={style.input}
                       />
                     </div>
-                    <div className="filter-group">
-                      <label>Top N:</label>
+                    <div className={style.filterGroup}>
+                      <label className={style.filterLabel}>Top N:</label>
                       <select
                         value={masteryFilters.top}
                         onChange={(e) => setMasteryFilters({ ...masteryFilters, top: e.target.value })}
                         disabled={masteryFilters.championId !== '' || masteryFilters.totalScore || masteryUnavailable}
+                        className={style.select}
                       >
                         <option value="5">Top 5</option>
                         <option value="10">Top 10</option>
@@ -680,69 +697,72 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
                         <option value="">All</option>
                       </select>
                     </div>
-                    <div className="filter-group checkbox-group">
-                      <label>
+                    <div className={cn(style.filterGroup, style.checkboxGroup)}>
+                      <label className={style.checkboxLabel}>
                         <input
                           type="checkbox"
                           checked={masteryFilters.totalScore}
                           onChange={(e) => setMasteryFilters({ ...masteryFilters, totalScore: e.target.checked })}
                           disabled={masteryUnavailable}
+                          className={style.checkbox}
                         />
                         Get Total Mastery Score Only
                       </label>
                     </div>
                   </div>
-                  <button onClick={loadChampionMastery} disabled={loading || masteryUnavailable} className="analyze-button">
+                  <button onClick={loadChampionMastery} disabled={loading || masteryUnavailable} className={style.analyzeBtn}>
                     {loading ? 'Loading...' : masteryUnavailable ? 'Unavailable' : 'Analyze Mastery'}
                   </button>
                 </div>
 
                 {championMastery.length > 0 && !masteryFilters.totalScore && (
-                  <div className="mastery-grid">
+                  <div className={style.masteryGrid}>
                     {championMastery.map((mastery, index) => (
-                      <div key={index} className="mastery-card">
-                        <div className="mastery-level">
-                          <span className="level-badge">Level {mastery.championLevel}</span>
+                      <div key={index} className={style.masteryCard}>
+                        <div className={style.masteryLevel}>
+                          <span className={cn(style.badgeBase, style.levelBadgeColor)}>Level {mastery.championLevel}</span>
                           {mastery.championSeasonMilestone !== undefined && (
-                            <span className="milestone-badge" title="Season Milestone">
+                            <span className={cn(style.badgeBase, style.milestoneBadge)} title="Season Milestone">
                               M{mastery.championSeasonMilestone}
                             </span>
                           )}
                         </div>
-                        <div className="mastery-info">
-                          <h4>{getChampionName(mastery.championId)} #{mastery.championId}</h4>
-                          <div className="mastery-points">
-                            <span className="points">{formatNumber(mastery.championPoints)} points</span>
+                        <div className={style.masteryInfo}>
+                          <h4 className={style.masteryH4}>{getChampionName(mastery.championId)} #{mastery.championId}</h4>
+                          <div>
+                            <span className={style.pointsValue}>{formatNumber(mastery.championPoints)} points</span>
                           </div>
 
                           {(mastery.championPointsUntilNextLevel !== undefined && mastery.championPointsUntilNextLevel > 0) && (
-                            <div className="mastery-progress">
-                              <div className="progress-labels">
+                            <div className={style.masteryProgress}>
+                              <div className={style.progressLabels}>
                                 <span>{formatNumber(mastery.championPointsSinceLastLevel || 0)}</span>
                                 <span>{formatNumber((mastery.championPointsSinceLastLevel || 0) + (mastery.championPointsUntilNextLevel || 0))}</span>
                               </div>
-                              <div className="progress-bar-bg">
+                              <div className={style.progressBarBg}>
                                 <div
-                                  className="progress-bar-fill"
+                                  className={style.progressBarFill}
                                   style={{
-                                    width: `${((mastery.championPointsSinceLastLevel || 0) / ((mastery.championPointsSinceLastLevel || 0) + (mastery.championPointsUntilNextLevel || 0))) * 100}%`
+                                    width: `${((mastery.championPointsSinceLastLevel || 0) / ((mastery.championPointsSinceLastLevel || 0) + (mastery.championPointsUntilNextLevel || 0))) * 100}%`,
                                   }}
                                 />
                               </div>
-                              <div className="next-level-label">
+                              <div className={style.nextLevelLabel}>
                                 {formatNumber(mastery.championPointsUntilNextLevel)} to next level
                               </div>
                             </div>
                           )}
 
-                          <div className="mastery-details">
-                            {mastery.chestGranted && <span className="chest-badge">✓ Chest</span>}
-                            {mastery.tokensEarned > 0 && <span className="token-badge">{mastery.tokensEarned} Tokens</span>}
+                          <div className={style.masteryDetails}>
+                            {mastery.chestGranted && <span className={cn(style.badgeBase, style.levelBadgeColor)}>✓ Chest</span>}
+                            {mastery.tokensEarned > 0 && (
+                              <span className={cn(style.badgeBase, style.levelBadgeColor)}>{mastery.tokensEarned} Tokens</span>
+                            )}
                             {mastery.markRequiredForNextLevel !== undefined && mastery.markRequiredForNextLevel > 0 && (
-                              <span className="mark-badge">{mastery.markRequiredForNextLevel} Marks</span>
+                              <span className={cn(style.badgeBase, style.markBadge)}>{mastery.markRequiredForNextLevel} Marks</span>
                             )}
                           </div>
-                          <div className="last-played">
+                          <div className={style.lastPlayed}>
                             Last played: {formatDate(mastery.lastPlayTime)}
                           </div>
                         </div>
@@ -752,11 +772,11 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
                 )}
 
                 {masteryFilters.totalScore && championMastery.length > 0 && (
-                  <div className="stat-card">
-                    <h3>Total Mastery Score</h3>
-                    <div className="total-score-display">
-                      <span className="total-score-value">{formatNumber(championMastery[0] as any)}</span>
-                      <span className="total-score-label">Total Mastery Points</span>
+                  <div className={style.statCard}>
+                    <h3 className={style.h3}>Total Mastery Score</h3>
+                    <div className="text-center p-4">
+                      <span className={style.totalScoreValue}>{formatNumber(championMastery[0] as any)}</span>
+                      <span className={style.totalScoreLabel}>Total Mastery Points</span>
                     </div>
                   </div>
                 )}
@@ -779,15 +799,16 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
             )}
 
             {activeTab === 'spells' && (
-              <div className="spells-section">
-                <div className="filters-card">
-                  <h3>Summoner Spells Analysis Filters</h3>
-                  <div className="filters-grid">
-                    <div className="filter-group">
-                      <label>Match Count:</label>
+              <div className="my-8 flex flex-col gap-4">
+                <div className={style.filtersCard}>
+                  <h3 className={style.h3}>Summoner Spells Analysis Filters</h3>
+                  <div className={style.filtersGrid}>
+                    <div className={style.filterGroup}>
+                      <label className={style.filterLabel}>Match Count:</label>
                       <select
                         value={spellsFilters.matchCount}
                         onChange={(e) => setSpellsFilters({ ...spellsFilters, matchCount: e.target.value })}
+                        className={style.select}
                       >
                         <option value="5">5 matches</option>
                         <option value="10">10 matches</option>
@@ -797,52 +818,56 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
                       </select>
                     </div>
                   </div>
-                  <button onClick={loadSummonerSpells} disabled={loading} className="analyze-button">
+                  <button onClick={loadSummonerSpells} disabled={loading} className={style.analyzeBtn}>
                     {loading ? 'Loading...' : 'Analyze Spells'}
                   </button>
                 </div>
 
                 {summonerSpells && (
-                  <div className="spells-results">
-                    <div className="stat-card">
-                      <h3>Overall Statistics</h3>
+                  <div className={style.resultsSection}>
+                    <div className={style.statCard}>
+                      <h3 className={style.h3}>Overall Statistics</h3>
                       <p>Matches Analyzed: {summonerSpells.matches_analyzed}</p>
                       {summonerSpells.champion_filter && <p>Champion Filter: {summonerSpells.champion_filter}</p>}
 
-                      <div className="section-divider"></div>
+                      <div className={style.sectionDivider} />
                       <div>
-                        <h4>Most Used Combinations</h4>
-                        <div className="combinations-list">
+                        <h4 className={style.h4}>Most Used Combinations</h4>
+                        <div className={style.combinationsList}>
                           {Object.entries(summonerSpells.overall_stats.most_used_combinations)
                             .map(([combo, count], index) => (
-                              <div key={index} className="combination-item">
+                              <div key={index} className={style.combinationItem}>
                                 <span>{formatSpellName(combo)}</span>
-                                <span className="count">{count} games</span>
+                                <span className={style.count}>{count} games</span>
                               </div>
                             ))}
                         </div>
                       </div>
 
-                      <div className="section-divider"></div>
+                      <div className={style.sectionDivider} />
 
-                      <h4>Spell Effectiveness</h4>
-                      <div className="spells-table">
-                        <div className="table-header">
-                          <div className="table-cell">Spell Combination</div>
-                          <div className="table-cell">Games</div>
-                          <div className="table-cell">Wins</div>
-                          <div className="table-cell">Win Rate</div>
+                      <h4 className={style.h4}>Spell Effectiveness</h4>
+                      <div className={style.spellsTable}>
+                        <div className={cn(style.spellsRowGrid, style.spellsHeader)}>
+                          {['Spell Combination', 'Games', 'Wins', 'Win Rate'].map((h) => (
+                            <div key={h} className={style.perfHeaderCell}>{h}</div>
+                          ))}
                         </div>
                         {Object.entries(summonerSpells.overall_stats.spell_effectiveness)
                           .map(([combo, stats], index) => (
-                            <div key={index} className={`table-row ${index % 2 === 0 ? 'even' : 'odd'}`}>
-                              <div className="table-cell">{formatSpellName(combo)}</div>
-                              <div className="table-cell">{stats.games}</div>
-                              <div className="table-cell">{stats.wins}</div>
-                              <div className="table-cell">
-                                <span className={stats.win_rate >= 50 ? 'positive' : 'negative'}>
-                                  {stats.win_rate}%
-                                </span>
+                            <div
+                              key={index}
+                              className={cn(
+                                style.spellsRowGrid,
+                                "hover:bg-coral/10 last:[&_>_*]:border-b-0",
+                                index % 2 === 0 ? "bg-base-800/35" : "bg-base-800/15",
+                              )}
+                            >
+                              <div className={style.perfRowCell}>{formatSpellName(combo)}</div>
+                              <div className={style.perfRowCell}>{stats.games}</div>
+                              <div className={style.perfRowCell}>{stats.wins}</div>
+                              <div className={style.perfRowCell}>
+                                <span className={posNegInlineClass(stats.win_rate >= 50)}>{stats.win_rate}%</span>
                               </div>
                             </div>
                           ))}
@@ -850,29 +875,27 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
                     </div>
 
                     {Object.keys(summonerSpells.champion_breakdown).length > 0 && (
-                      <div className="stat-card">
-                        <h3>Champion Breakdown</h3>
-                        <div className="legend">
-                          <span className="legend-label">Legend:</span>
-                          <span className="legend-label">G = Games</span>
-                          <span className="legend-label">W = Wins</span>
-                          <span className="legend-label">% = Win Rate</span>
+                      <div className={style.statCard}>
+                        <h3 className={style.h3}>Champion Breakdown</h3>
+                        <div className={style.legend}>
+                          <span className={style.legendLabel}>Legend:</span>
+                          <span className={style.legendLabel}>G = Games</span>
+                          <span className={style.legendLabel}>W = Wins</span>
+                          <span className={style.legendLabel}>% = Win Rate</span>
                         </div>
-                        <div className="champion-breakdown-grid">
+                        <div className={style.cbGrid}>
                           {Object.entries(summonerSpells.champion_breakdown).map(([champion, spells], index) => (
-                            <div key={index} className="champion-breakdown-item">
-                              <h4>{champion}</h4>
-                              <div className="breakdown-spells-list">
+                            <div key={index} className={style.cbItem}>
+                              <h4 className={style.cbH4}>{champion}</h4>
+                              <div className="mt-2 flex flex-col gap-0">
                                 {Object.entries(spells)
                                   .map(([combo, stats], idx) => (
-                                    <div key={idx} className="breakdown-spell-item">
-                                      <span className="spell-combo">{formatSpellName(combo)}</span>
-                                      <div className="spell-stats">
+                                    <div key={idx} className={style.cbItemSmall}>
+                                      <span className="flex flex-wrap gap-2 items-center text-ink font-medium">{formatSpellName(combo)}</span>
+                                      <div className="flex flex-wrap gap-2 items-center">
                                         <span>{stats.games}G</span>
                                         <span>{stats.wins}W</span>
-                                        <span className={stats.win_rate >= 50 ? 'positive' : 'negative'}>
-                                          {stats.win_rate}%
-                                        </span>
+                                        <span className={posNegInlineClass(stats.win_rate >= 50)}>{stats.win_rate}%</span>
                                       </div>
                                     </div>
                                   ))}
@@ -888,15 +911,16 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
             )}
 
             {activeTab === 'runes' && (
-              <div className="runes-section">
-                <div className="filters-card">
-                  <h3>Runes Analysis Filters</h3>
-                  <div className="filters-grid">
-                    <div className="filter-group">
-                      <label>Match Count:</label>
+              <div className="my-8 flex flex-col gap-4">
+                <div className={style.filtersCard}>
+                  <h3 className={style.h3}>Runes Analysis Filters</h3>
+                  <div className={style.filtersGrid}>
+                    <div className={style.filterGroup}>
+                      <label className={style.filterLabel}>Match Count:</label>
                       <select
                         value={runesFilters.matchCount}
                         onChange={(e) => setRunesFilters({ ...runesFilters, matchCount: e.target.value })}
+                        className={style.select}
                       >
                         <option value="5">5 matches</option>
                         <option value="10">10 matches</option>
@@ -905,59 +929,59 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
                       </select>
                     </div>
                   </div>
-                  <button onClick={loadRuneMasteries} disabled={loading} className="analyze-button">
+                  <button onClick={loadRuneMasteries} disabled={loading} className={style.analyzeBtn}>
                     {loading ? 'Loading...' : 'Analyze Runes'}
                   </button>
                 </div>
 
                 {runeMasteries && (
-                  <div className="runes-results">
-                    <div className="stat-card">
-                      <h3>Overall Statistics</h3>
+                  <div className={style.resultsSection}>
+                    <div className={style.statCard}>
+                      <h3 className={style.h3}>Overall Statistics</h3>
                       <p>Matches Analyzed: {runeMasteries.matches_analyzed}</p>
                       {runeMasteries.champion_filter && <p>Champion Filter: {runeMasteries.champion_filter}</p>}
 
-                      <div className="section-divider"></div>
-                      <div className="runes-stats-grid">
+                      <div className={style.sectionDivider} />
+                      <div className={style.runesStatsGrid}>
                         <div>
-                          <h4>Primary Trees</h4>
-                          <div className="runes-list">
+                          <h4 className={style.h4}>Primary Trees</h4>
+                          <div className={style.combinationsList}>
                             {Object.entries(runeMasteries.overall_stats.most_used_primary_trees).map(([tree, count], index) => (
-                              <div key={index} className="rune-item">
+                              <div key={index} className={style.combinationItem}>
                                 <span>{formatRuneTreeName(tree)}</span>
-                                <span className="count">{count} games</span>
+                                <span className={style.count}>{count} games</span>
                               </div>
                             ))}
                           </div>
                         </div>
 
                         <div>
-                          <h4>Secondary Trees</h4>
-                          <div className="runes-list">
+                          <h4 className={style.h4}>Secondary Trees</h4>
+                          <div className={style.combinationsList}>
                             {Object.entries(runeMasteries.overall_stats.most_used_secondary_trees).map(([tree, count], index) => (
-                              <div key={index} className="rune-item">
+                              <div key={index} className={style.combinationItem}>
                                 <span>{formatRuneTreeName(tree)}</span>
-                                <span className="count">{count} games</span>
+                                <span className={style.count}>{count} games</span>
                               </div>
                             ))}
                           </div>
                         </div>
 
                         <div>
-                          <h4>Keystones</h4>
-                          <div className="runes-list">
+                          <h4 className={style.h4}>Keystones</h4>
+                          <div className={style.combinationsList}>
                             {Object.entries(runeMasteries.overall_stats.most_used_keystones).length === 0 ||
                               Object.entries(runeMasteries.overall_stats.most_used_keystones).every(([keystoneId]) => parseInt(keystoneId) === 0) ? (
-                              <div className="rune-item">
-                                <span className="no-data">No Keystone</span>
+                              <div className={style.combinationItem}>
+                                <span className={style.noData}>No Keystone</span>
                               </div>
                             ) : (
                               Object.entries(runeMasteries.overall_stats.most_used_keystones)
                                 .filter(([keystoneId]) => parseInt(keystoneId) !== 0)
                                 .map(([keystoneId, count], index) => (
-                                  <div key={index} className="rune-item">
+                                  <div key={index} className={style.combinationItem}>
                                     <span>{getKeystoneName(parseInt(keystoneId))}</span>
-                                    <span className="count">{count} games</span>
+                                    <span className={style.count}>{count} games</span>
                                   </div>
                                 ))
                             )}
@@ -967,51 +991,52 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({ onBack
                     </div>
 
                     {Object.keys(runeMasteries.champion_breakdown).length > 0 && (
-                      <div className="stat-card">
-                        <h3>Champion Breakdown</h3>
-                        <div className="champion-breakdown-grid">
+                      <div className={style.statCard}>
+                        <h3 className={style.h3}>Champion Breakdown</h3>
+                        <div className={style.cbGrid}>
                           {Object.entries(runeMasteries.champion_breakdown).map(([champion, data], index) => (
-                            <div key={index} className="champion-breakdown-item">
-                              <h4>{champion}</h4>
-                              <div className="breakdown-section">
-                                <h5>Primary Trees</h5>
-                                <div className="breakdown-list">
+                            <div key={index} className={style.cbItem}>
+                              <h4 className={style.cbH4}>{champion}</h4>
+
+                              <div className={style.cbSection}>
+                                <h5 className={style.cbH5}>Primary Trees</h5>
+                                <div className="flex flex-col gap-0">
                                   {Object.entries(data.primary_trees).map(([tree, count], idx) => (
-                                    <div key={idx} className="breakdown-item-small">
-                                      <span>{formatRuneTreeName(tree)}</span>
-                                      <span className="count">{count}</span>
+                                    <div key={idx} className={style.cbItemSmall}>
+                                      <span className="text-ink font-medium">{formatRuneTreeName(tree)}</span>
+                                      <span className={style.cbCount}>{count}</span>
                                     </div>
                                   ))}
                                 </div>
                               </div>
 
-                              <div className="breakdown-section">
-                                <h5>Secondary Trees</h5>
-                                <div className="breakdown-list">
+                              <div className={style.cbSection}>
+                                <h5 className={style.cbH5}>Secondary Trees</h5>
+                                <div className="flex flex-col gap-0">
                                   {Object.entries(data.secondary_trees).map(([tree, count], idx) => (
-                                    <div key={idx} className="breakdown-item-small">
-                                      <span>{formatRuneTreeName(tree)}</span>
-                                      <span className="count">{count}</span>
+                                    <div key={idx} className={style.cbItemSmall}>
+                                      <span className="text-ink font-medium">{formatRuneTreeName(tree)}</span>
+                                      <span className={style.cbCount}>{count}</span>
                                     </div>
                                   ))}
                                 </div>
                               </div>
 
-                              <div className="breakdown-section">
-                                <h5>Keystones</h5>
-                                <div className="breakdown-list">
+                              <div className={style.cbSection}>
+                                <h5 className={style.cbH5}>Keystones</h5>
+                                <div className="flex flex-col gap-0">
                                   {Object.entries(data.keystones).length === 0 ||
                                     Object.entries(data.keystones).every(([keystoneId]) => parseInt(keystoneId) === 0) ? (
-                                    <div className="breakdown-item-small">
-                                      <span className="no-data">No Keystone</span>
+                                    <div className={style.cbItemSmall}>
+                                      <span className={style.noData}>No Keystone</span>
                                     </div>
                                   ) : (
                                     Object.entries(data.keystones)
                                       .filter(([keystoneId]) => parseInt(keystoneId) !== 0)
                                       .map(([keystoneId, count], idx) => (
-                                        <div key={idx} className="breakdown-item-small">
-                                          <span>{getKeystoneName(parseInt(keystoneId))}</span>
-                                          <span className="count">{count}</span>
+                                        <div key={idx} className={style.cbItemSmall}>
+                                          <span className="text-ink font-medium">{getKeystoneName(parseInt(keystoneId))}</span>
+                                          <span className={style.cbCount}>{count}</span>
                                         </div>
                                       ))
                                   )}
