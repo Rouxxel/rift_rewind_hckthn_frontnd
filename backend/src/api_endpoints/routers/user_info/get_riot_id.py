@@ -67,7 +67,7 @@ async def get_puuid_endpoint(
         region_lower = region.lower()
         validate_region_routing(region_lower)
     except HTTPException as e:
-        log_handler.warning(f"Validation failed: {e.detail}")
+        log_handler.warning(f"[get_riot_id] Validation failed: {e.detail}")
         raise
 
     #Riot API call
@@ -79,12 +79,12 @@ async def get_puuid_endpoint(
             response = await client.get(url, headers=headers)
             if response.status_code == 200:
                 data = response.json()
-                log_handler.info(f"Found user: {data['gameName']}#{data['tagLine']} | PUUID: {data['puuid']}")
+                log_handler.info(f"[get_riot_id] Found user: {data['gameName']}#{data['tagLine']} | PUUID: {data['puuid']}")
                 return data
             elif response.status_code == 404:
                 raise HTTPException(status_code=404, detail="User not found.")
             else:
                 raise HTTPException(status_code=response.status_code, detail=response.text)
     except httpx.RequestError as e:
-        log_handler.error(f"Riot API request failed: {e}")
+        log_handler.error(f"[get_riot_id] Riot API request failed: {e}")
         raise HTTPException(status_code=500, detail="Failed to connect to Riot API.")

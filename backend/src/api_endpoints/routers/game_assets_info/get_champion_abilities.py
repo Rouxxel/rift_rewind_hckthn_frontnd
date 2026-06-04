@@ -194,9 +194,9 @@ async def get_champion_abilities(
                 "difficulty": info.get("difficulty", 0)
             }
 
-            log_handler.info(f"Fetched abilities for champion: {champion_data.get('name')}")
+            log_handler.info(f"[get_champion_abilities] Fetched abilities for champion: {champion_data.get('name')}")
             return result
 
     except httpx.RequestException as e:
-        log_handler.error(f"Failed to fetch champion data: {e}")
+        log_handler.error(f"[get_champion_abilities] Failed to fetch champion data: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch champion data from Data Dragon.")

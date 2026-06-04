@@ -85,10 +85,10 @@ async def get_items(
                 # Return detailed information if requested
                 if detailed:
                     result = parse_detailed_item_data(found_item, item_key, items_data, include_recipe, include_stats)
-                    log_handler.info(f"Fetched detailed info for item '{item_name_or_id}' from Data Dragon")
+                    log_handler.info(f"[get_item_info] Fetched detailed info for item '{item_name_or_id}' from Data Dragon")
                     return {"item": result}
                 else:
-                    log_handler.info(f"Fetched basic info for item '{item_name_or_id}' from Data Dragon")
+                    log_handler.info(f"[get_item_info] Fetched basic info for item '{item_name_or_id}' from Data Dragon")
                     return {"item": found_item}
 
             # Filter by category if specified
@@ -108,20 +108,20 @@ async def get_items(
                 detailed_items = {}
                 for item_id, item_info in list(filtered_items.items())[:50]:  # Limit to 50 for performance
                     detailed_items[item_id] = parse_detailed_item_data(item_info, item_id, items_data, include_recipe, include_stats)
-                
-                log_handler.info(f"Fetched detailed info for {len(detailed_items)} items from Data Dragon")
+                log_handler.info(f"[get_item_info] Fetched detailed info for {len(detailed_items)} items from Data Dragon")
+                log_handler.info(f"[get_item_info] Fetched detailed info for {len(detailed_items)} items from Data Dragon")
                 return {"items": detailed_items, "total_count": len(filtered_items)}
             else:
-                log_handler.info(f"Fetched {len(filtered_items)} items from Data Dragon")
+                log_handler.info(f"[get_item_info] Fetched {len(filtered_items)} items from Data Dragon")
                 return {"items": filtered_items, "total_count": len(filtered_items)}
 
     except httpx.RequestError as e:
-        log_handler.error(f"Failed to fetch items from Data Dragon: {e}")
+        log_handler.error(f"[get_item_info] Failed to fetch items from Data Dragon: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch item data from Data Dragon.")
 
 
 def parse_detailed_item_data(item_data: dict, item_key: str, all_items: dict, 
-                           include_recipe: bool, include_stats: bool) -> Dict[str, Any]:
+                            include_recipe: bool, include_stats: bool) -> Dict[str, Any]:
     """Parse detailed item data with enhanced information."""
     
     # Extract basic item info

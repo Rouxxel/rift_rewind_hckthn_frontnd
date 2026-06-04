@@ -67,7 +67,7 @@ async def get_player_performance(
         region_lower = region.lower()
         validate_region_routing(region_lower)
     except HTTPException as e:
-        log_handler.warning(f"Validation failed: {e.detail}")
+        log_handler.warning(f"[get_player_performance] Validation failed: {e.detail}")
         raise
 
     if match_count > 30:
@@ -199,7 +199,7 @@ async def get_player_performance(
                     })
 
                 except httpx.RequestError as e:
-                    log_handler.warning(f"Failed to fetch match {match_id}: {e}")
+                    log_handler.warning(f"[get_player_performance] Failed to fetch match {match_id}: {e}")
                     continue
 
             if not performance_data:
@@ -247,12 +247,12 @@ async def get_player_performance(
             "detailed_matches": performance_data[-10:]  # Return last 10 matches for detailed view
         }
 
-        log_handler.info(f"Analyzed performance for {total_games} matches for PUUID: {puuid}")
+        log_handler.info(f"[get_player_performance] Analyzed performance for {total_games} matches for PUUID: {puuid}")
         return result
 
     except httpx.HTTPStatusError as e:
-        log_handler.error(f"HTTP Error: {e}")
+        log_handler.error(f"[get_player_performance] HTTP Error: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch match data from Riot API.")
     except httpx.RequestError as e:
-        log_handler.error(f"Request failed: {e}")
+        log_handler.error(f"[get_player_performance] Request failed: {e}")
         raise HTTPException(status_code=500, detail="Failed to connect to Riot API.")

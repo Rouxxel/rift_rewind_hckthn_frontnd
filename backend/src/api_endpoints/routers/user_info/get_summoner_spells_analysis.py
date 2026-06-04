@@ -81,7 +81,7 @@ async def get_summoner_spells_analysis(
         region_lower = region.lower()
         validate_region_routing(region_lower)
     except HTTPException as e:
-        log_handler.warning(f"Validation failed: {e.detail}")
+        log_handler.warning(f"[get_summoner_spells_analysis] Validation failed: {e.detail}")
         raise
 
     if match_count > 25:
@@ -179,7 +179,7 @@ async def get_summoner_spells_analysis(
                         role_spells[role]["wins"][spell_combo] += 1
 
                 except httpx.RequestError as e:
-                    log_handler.warning(f"Failed to fetch match {match_id}: {e}")
+                    log_handler.warning(f"[get_summoner_spells_analysis] Failed to fetch match {match_id}: {e}")
                     continue
 
             if not spell_combinations:
@@ -235,12 +235,12 @@ async def get_summoner_spells_analysis(
             "role_breakdown": role_breakdown
         }
 
-        log_handler.info(f"Analyzed summoner spells from matches for PUUID: {puuid}")
+        log_handler.info(f"[get_summoner_spells_analysis] Analyzed summoner spells from matches for PUUID: {puuid}")
         return result
 
     except httpx.HTTPStatusError as e:
-        log_handler.error(f"HTTP Error: {e}")
+        log_handler.error(f"[get_summoner_spells_analysis] HTTP Error: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch match data from Riot API.")
     except httpx.RequestError as e:
-        log_handler.error(f"Request failed: {e}")
+        log_handler.error(f"[get_summoner_spells_analysis] Request failed: {e}")
         raise HTTPException(status_code=500, detail="Failed to connect to Riot API.")

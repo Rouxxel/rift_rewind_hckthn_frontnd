@@ -61,7 +61,7 @@ async def get_match_details(
         region_lower = region.lower()
         validate_region_routing(region_lower)
     except HTTPException as e:
-        log_handler.warning(f"Validation failed: {e.detail}")
+        log_handler.warning(f"[get_match_details] Validation failed: {e.detail}")
         raise
 
     try:
@@ -81,7 +81,7 @@ async def get_match_details(
                 #Keep only match-level info (exclude participants)
                 match_info_only = {k: v for k, v in match_data.get("info", {}).items() if k != "participants"}
 
-                log_handler.info(f"Fetched match info (no participants) for match ID: {match_id}")
+                log_handler.info(f"[get_match_details] Fetched match info (no participants) for match ID: {match_id}")
                 return {
                     "match_id": match_id,
                     "region": region,
@@ -96,5 +96,5 @@ async def get_match_details(
                 raise HTTPException(status_code=response.status_code, detail=response.text)
 
     except httpx.RequestError as e:
-        log_handler.error(f"Riot API request failed: {e}")
+        log_handler.error(f"[get_match_details] Riot API request failed: {e}")
         raise HTTPException(status_code=500, detail="Failed to connect to Riot API.")

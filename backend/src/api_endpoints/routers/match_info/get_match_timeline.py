@@ -65,7 +65,7 @@ async def get_match_timeline(
         region_lower = region.lower()
         validate_region_routing(region_lower)
     except HTTPException as e:
-        log_handler.warning(f"Validation failed: {e.detail}")
+        log_handler.warning(f"[get_match_timeline] Validation failed: {e.detail}")
         raise
 
     try:
@@ -191,7 +191,7 @@ async def get_match_timeline(
                     "frames": processed_frames
                 }
 
-                log_handler.info(f"Fetched timeline for match ID: {match_id} with {len(processed_frames)} frames")
+                log_handler.info(f"[get_match_timeline] Fetched timeline for match ID: {match_id} with {len(processed_frames)} frames")
                 return result
 
             elif response.status_code == 403:
@@ -202,5 +202,5 @@ async def get_match_timeline(
                 raise HTTPException(status_code=response.status_code, detail=response.text)
 
     except httpx.RequestError as e:
-        log_handler.error(f"Riot API request failed: {e}")
+        log_handler.error(f"[get_match_timeline] Riot API request failed: {e}")
         raise HTTPException(status_code=500, detail="Failed to connect to Riot API.")

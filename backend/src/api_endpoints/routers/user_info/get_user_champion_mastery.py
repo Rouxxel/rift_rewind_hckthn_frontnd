@@ -131,7 +131,7 @@ async def get_champion_mastery(
 
     if mastery_data is None:
         if last_error:
-            log_handler.error(f"Failed to find champion mastery after trying all platforms. Last error: {last_error}")
+            log_handler.error(f"[get_user_champion_mastery] Failed to find champion mastery after trying all platforms. Last error: {last_error}")
             raise HTTPException(status_code=500, detail=f"Failed to connect to Riot API. Last error: {last_error}")
         else:
             raise HTTPException(status_code=404, detail="Champion mastery not found on any platform.")
@@ -139,13 +139,13 @@ async def get_champion_mastery(
     # Calculate count based on response type
     if total_score:
         count = 1
-        log_handler.info(f"Fetched total mastery score for PUUID {puuid} on {successful_platform}")
+        log_handler.info(f"[get_user_champion_mastery] Fetched total mastery score for PUUID {puuid} on {successful_platform}")
     elif isinstance(mastery_data, list):
         count = len(mastery_data)
-        log_handler.info(f"Fetched {count} mastery entries for PUUID {puuid} on {successful_platform}")
+        log_handler.info(f"[get_user_champion_mastery] Fetched {count} mastery entries for PUUID {puuid} on {successful_platform}")
     else:
         count = 1
-        log_handler.info(f"Fetched mastery for champion {champion_id} for PUUID {puuid} on {successful_platform}")
+        log_handler.info(f"[get_user_champion_mastery] Fetched mastery for champion {champion_id} for PUUID {puuid} on {successful_platform}")
 
     return {
         "region": region,

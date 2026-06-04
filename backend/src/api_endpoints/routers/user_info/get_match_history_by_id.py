@@ -42,7 +42,7 @@ router = APIRouter(
     f"{config_loader['endpoints']['get_match_ids_by_puuid_endpoint']['request_limit']}/"
     f"{config_loader['endpoints']['get_match_ids_by_puuid_endpoint']['unit_of_time_for_limit']}"
 )
-async def get_match_ids_by_puuid(
+async def get_match_history_by_id(
     request: Request,
     puuid: str = Body(...),
     region: str = Body(...),
@@ -65,7 +65,7 @@ async def get_match_ids_by_puuid(
         region_lower = region.lower()
         validate_region_routing(region_lower)
     except HTTPException as e:
-        log_handler.warning(f"Validation failed: {e.detail}")
+        log_handler.warning(f"[get_match_history_by_id] Validation failed: {e.detail}")
         raise
 
     try:
@@ -83,7 +83,7 @@ async def get_match_ids_by_puuid(
             #Successful fetch
             if response.status_code == 200:
                 match_ids: List[str] = response.json()
-                log_handler.info(f"Fetched {len(match_ids)} matches for PUUID: {puuid}")
+                log_handler.info(f"[get_match_history_by_id] Fetched {len(match_ids)} matches for PUUID: {puuid}")
                 return {"puuid": puuid, "region": region, "match_ids": match_ids}
 
             #Handle common Riot API errors
@@ -95,5 +95,5 @@ async def get_match_ids_by_puuid(
                 raise HTTPException(status_code=response.status_code, detail=response.text)
 
     except httpx.RequestError as e:
-        log_handler.error(f"Riot API request failed: {e}")
+        log_handler.error(f"[get_match_history_by_id] Riot API request failed: {e}")
         raise HTTPException(status_code=500, detail="Failed to connect to Riot API.")

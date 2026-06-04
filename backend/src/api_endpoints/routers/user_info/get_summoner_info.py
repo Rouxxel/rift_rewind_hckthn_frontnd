@@ -93,7 +93,7 @@ async def get_summoner_info(
                 if response.status_code == 200:
                     summoner_data = response.json()
                     successful_platform = platform_lower
-                    log_handler.info(f"Found summoner on platform: {platform_lower}")
+                    log_handler.info(f"[get_summoner_info] Found summoner on platform: {platform_lower}")
                     break
                 elif response.status_code == 404:
                     # Summoner not found on this platform, try next one
@@ -110,7 +110,7 @@ async def get_summoner_info(
     # Check if we found the summoner
     if not summoner_data:
         if last_error:
-            log_handler.error(f"Failed to find summoner after trying all platforms. Last error: {last_error}")
+            log_handler.error(f"[get_summoner_info] Failed to find summoner after trying all platforms. Last error: {last_error}")
             raise HTTPException(status_code=500, detail=f"Failed to find summoner in {region} region. Last error: {last_error}")
         else:
             raise HTTPException(status_code=404, detail=f"Summoner not found in any platform within {region} region.")
@@ -129,5 +129,5 @@ async def get_summoner_info(
         "found_on_platform": successful_platform
     }
 
-    log_handler.info(f"Fetched Summoner info: {result['summoner_name']} (PUUID: {puuid})")
+    log_handler.info(f"[get_summoner_info] Fetched Summoner info: {result['summoner_name']} (PUUID: {puuid})")
     return result

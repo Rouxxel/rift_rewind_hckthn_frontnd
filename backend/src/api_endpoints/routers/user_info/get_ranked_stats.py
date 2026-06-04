@@ -61,16 +61,16 @@ async def get_summoner_id_from_puuid(puuid: str, region: str) -> str:
                     summoner_data = response.json()
                     summoner_id = summoner_data.get("id")
                     if summoner_id:
-                        log_handler.info(f"Found summoner_id on platform {platform_lower}: {summoner_id}")
+                        log_handler.info(f"[get_ranked_stats] Found summoner_id on platform {platform_lower}: {summoner_id}")
                         return summoner_id
                 elif response.status_code == 404:
                     continue  # Try next platform
                 else:
-                    log_handler.warning(f"Platform {platform_lower} returned {response.status_code}: {response.text}")
+                    log_handler.warning(f"[get_ranked_stats] Platform {platform_lower} returned {response.status_code}: {response.text}")
                     continue
                     
             except httpx.RequestError as e:
-                log_handler.warning(f"Platform {platform_lower} connection error: {e}")
+                log_handler.warning(f"[get_ranked_stats] Platform {platform_lower} connection error: {e}")
                 continue
     
     # If we get here, summoner not found on any platform
@@ -134,7 +134,7 @@ async def get_ranked_stats(
 
     # If PUUID is provided, get summoner_id first
     if puuid and not summoner_id:
-        log_handler.info(f"Getting summoner_id from PUUID: {puuid[:20]}...")
+        log_handler.info(f"[get_ranked_stats] Getting summoner_id from PUUID: {puuid[:20]}...")
         summoner_id = await get_summoner_id_from_puuid(puuid, region_lower)
 
     # Get all platform regions for this regional routing
@@ -156,24 +156,24 @@ async def get_ranked_stats(
                 if response.status_code == 200:
                     ranked_data = response.json()
                     successful_platform = platform_lower
-                    log_handler.info(f"Found ranked data on platform: {platform_lower}")
+                    log_handler.info(f"[get_ranked_stats] Found ranked data on platform: {platform_lower}")
                     break
                 elif response.status_code == 404:
                     # Summoner not found on this platform, try next one
                     continue
                 else:
                     # Other error, store it but continue trying
-                    last_error = f"Platform {platform_lower}: {response.status_code} - {response.text}"
+                    last_error = f"[get_ranked_stats] Platform {platform_lower}: {response.status_code} - {response.text}"
                     continue
                     
             except httpx.RequestError as e:
-                last_error = f"Platform {platform_lower}: Connection error - {str(e)}"
+                last_error = f"[get_ranked_stats] Platform {platform_lower}: Connection error - {str(e)}"
                 continue
     
     # Check if we found the ranked data
     if ranked_data is None:
         if last_error:
-            log_handler.error(f"Failed to find ranked data after trying all platforms. Last error: {last_error}")
+            log_handler.error(f"[get_ranked_stats] Failed to find ranked data after trying all platforms. Last error: {last_error}")
             raise HTTPException(status_code=500, detail=f"Failed to find ranked data in {region} region. Last error: {last_error}")
         else:
             raise HTTPException(status_code=404, detail=f"Summoner not found in any platform within {region} region.")
@@ -217,5 +217,5 @@ async def get_ranked_stats(
         else:
             organized_data["other_queues"].append(rank_info)
 
-    log_handler.info(f"Fetched ranked stats for summoner ID: {summoner_id}")
+    log_handler.info(f"[get_ranked_stats] Fetched ranked stats for summoner ID: {summoner_id}")
     return organized_data

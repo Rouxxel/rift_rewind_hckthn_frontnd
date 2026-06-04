@@ -80,17 +80,8 @@ async def get_team_composition(
             champions_data = response.json().get("data", {})
 
         def get_champion_info(champion_name):
-            # Normalize the input name for robust matching
-            search_name = champion_name.lower().replace(" ", "").replace("'", "").replace(".", "")
-            
             for champ_id, champ_info in champions_data.items():
-                # Try matching against normalized ID (key in Data Dragon)
-                if champ_id.lower().replace(" ", "").replace("'", "").replace(".", "") == search_name:
-                    return champ_info
-                    
-                # Try matching against normalized Name
-                champ_name_normalized = champ_info.get("name", "").lower().replace(" ", "").replace("'", "").replace(".", "")
-                if champ_name_normalized == search_name:
+                if champ_info.get("name", "").lower() == champion_name.lower():
                     return champ_info
             return None
 
@@ -309,9 +300,9 @@ async def get_team_composition(
             
             result["matchup_analysis"] = matchup_analysis
 
-            log_handler.info(f"Analyzed team composition: {team_archetype} archetype with {len(champions)} champions")
+            log_handler.info(f"[get_team_composition] Analyzed team composition: {team_archetype} archetype with {len(champions)} champions")
             return result
 
     except httpx.RequestError as e:
-        log_handler.error(f"Failed to fetch champion data: {e}")
+        log_handler.error(f"[get_team_composition] Failed to fetch champion data: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch champion data for analysis.")

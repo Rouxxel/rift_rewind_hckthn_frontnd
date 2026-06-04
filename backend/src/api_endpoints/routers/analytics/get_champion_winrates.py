@@ -213,9 +213,9 @@ async def get_champion_winrates(
                 "disclaimer": "This data is simulated for demonstration purposes. Production implementation would require extensive match data analysis."
             }
 
-            log_handler.info(f"Generated champion win rates for {total_champions} champions (rank: {rank}, role: {role})")
+            log_handler.info(f"[get_champion_winrates] Generated champion win rates for {total_champions} champions (rank: {rank}, role: {role})")
             return result
 
     except httpx.RequestError as e:
-        log_handler.error(f"Failed to fetch champion data: {e}")
+        log_handler.error(f"[get_champion_winrates] Failed to fetch champion data: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch champion data from Data Dragon.")

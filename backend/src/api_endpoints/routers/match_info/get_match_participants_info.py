@@ -48,7 +48,7 @@ router = APIRouter(
     f"{config_loader['endpoints']['get_match_participants_info_endpoint']['request_limit']}/"
     f"{config_loader['endpoints']['get_match_participants_info_endpoint']['unit_of_time_for_limit']}"
 )
-async def get_match_participants_full_info(
+async def get_match_participants_info(
     request: Request,
     match_id: str = Body(...),
     region: str = Body(...),
@@ -72,7 +72,7 @@ async def get_match_participants_full_info(
         region_lower = region.lower()
         validate_region_routing(region_lower)
     except HTTPException as e:
-        log_handler.warning(f"Validation failed: {e.detail}")
+        log_handler.warning(f"[get_match_participants_info] Validation failed: {e.detail}")
         raise
 
     try:
@@ -111,7 +111,7 @@ async def get_match_participants_full_info(
                 items_response.raise_for_status()
                 item_data = items_response.json().get('data', {})
             except httpx.RequestError:
-                log_handler.warning("Failed to fetch Data Dragon items")
+                log_handler.warning(f"[get_match_participants_info] Failed to fetch Data Dragon items")
                 item_data = {}
 
         detailed_participants: List[Dict[str, Any]] = []
@@ -161,5 +161,5 @@ async def get_match_participants_full_info(
         }
 
     except httpx.RequestError as e:
-        log_handler.error(f"Riot API request failed: {e}")
+        log_handler.error(f"[get_match_participants_info] Riot API request failed: {e}")
         raise HTTPException(status_code=500, detail="Failed to connect to Riot API.")

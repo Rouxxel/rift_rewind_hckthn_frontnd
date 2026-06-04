@@ -32,13 +32,13 @@ def read_data_from_data_json(file_path: str, exit_on_error: bool = True) -> dict
             config_data = json.load(file)
         return config_data
     except FileNotFoundError:
-        print(f"ERROR: Config file not found: {file_path}")
+        print(f"[data_loader] ERROR: Config file not found: {file_path}")
         if exit_on_error:
             sys.exit(1)
         else:
             return None
     except json.JSONDecodeError:
-        print(f"ERROR: Failed to parse JSON config file: {file_path}")
+        print(f"[data_loader] ERROR: Failed to parse JSON config file: {file_path}")
         if exit_on_error:
             sys.exit(1)
         else:

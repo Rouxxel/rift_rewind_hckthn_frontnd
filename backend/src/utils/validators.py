@@ -33,7 +33,7 @@ def validate_summoner_name(give_name: str):
         raise HTTPException(status_code=400, detail="Summoner name cannot have leading or trailing spaces.")
     if not re.fullmatch(r"[A-Za-z0-9 _\.]+", give_name):
         raise HTTPException(status_code=400, detail="Summoner name contains invalid characters.")
-    log_handler.debug(f"Summoner name '{give_name}' is valid.")
+    log_handler.debug(f"[validators] Summoner name '{give_name}' is valid.")
 
 def validate_tagline(given_tagline: str):
     """
@@ -47,7 +47,7 @@ def validate_tagline(given_tagline: str):
         raise HTTPException(status_code=400, detail="Tagline must be 2-5 characters long.")
     if not re.fullmatch(r"[A-Za-z0-9]+", given_tagline):
         raise HTTPException(status_code=400, detail="Tagline must be alphanumeric.")
-    log_handler.debug(f"Tagline '{given_tagline}' is valid.")
+    log_handler.debug(f"[validators] Tagline '{given_tagline}' is valid.")
 
 def validate_region_routing(given_region: str):
     """
@@ -69,7 +69,7 @@ def validate_region_routing(given_region: str):
             detail=f"Region '{given_region}' is invalid. Must be one of: {', '.join(general_regions)}."
         )
 
-    log_handler.debug(f"Region '{given_region}' is valid.")
+    log_handler.debug(f"[validators] Region '{given_region}' is valid.")
 
 def validate_platform_regions(given_region: str):
     """
@@ -91,5 +91,5 @@ def validate_platform_regions(given_region: str):
             detail=f"Region '{given_region}' is invalid. Must be one of: {', '.join(plat_regions)}."
         )
 
-    log_handler.debug(f"Region '{given_region}' is valid.")
+    log_handler.debug(f"[validators] Region '{given_region}' is valid.")
 

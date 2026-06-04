@@ -119,7 +119,7 @@ async def generate_ai_response(
     try:
         #Validate and select model
         model_name = ai_model if ai_model in AVAILABLE_MODELS else DEFAULT_MODEL
-        log_handler.debug(f"Using AI model: {model_name}")
+        log_handler.debug(f"[ai_call] Using AI model: {model_name}")
 
         #Build the full prompt with context
         full_prompt = SYSTEM_PROMPT + "\n\n"
@@ -154,7 +154,7 @@ async def generate_ai_response(
             timeout=timeout,
         )
 
-        log_handler.info(f"AI response generated successfully for prompt: '{prompt[:50]}...'")
+        log_handler.info(f"[ai_call] AI response generated successfully for prompt: '{prompt[:50]}...'")
         
         return {
             "ai_response": response.text,
@@ -162,15 +162,15 @@ async def generate_ai_response(
         }
 
     except asyncio.TimeoutError:
-        log_handler.warning(f"AI request timed out after {timeout} seconds")
+        log_handler.warning(f"[ai_call] AI request timed out after {timeout} seconds")
         raise HTTPException(
             status_code=504,
             detail=f"AI response took longer than {timeout} seconds. Try again or increase timeout."
         )
     
     except Exception as e:
-        log_handler.error(f"AI generation failed: {str(e)}")
+        log_handler.error(f"[ai_call] AI generation failed: {str(e)}")
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to generate AI response: {str(e)}"
+            detail=f" Failed to generate AI response: {str(e)}"
         )

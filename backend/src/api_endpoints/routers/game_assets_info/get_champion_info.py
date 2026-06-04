@@ -169,26 +169,26 @@ async def get_champions(
                         if champion_key in detailed_data:
                             detailed_champion = detailed_data[champion_key]
                             result = parse_detailed_champion_data(detailed_champion, champion_key, ability, include_stats, include_tips)
-                            log_handler.info(f"Fetched detailed info for champion '{champion_name}' from Data Dragon")
+                            log_handler.info(f"[get_champion_info] Fetched detailed info for champion '{champion_name}' from Data Dragon")
                             return {"champion": result}
-                        log_handler.warning(f"Detailed data not found for champion '{champion_name}', falling back to basic")
+                        log_handler.warning(f"[get_champion_info] Detailed data not found for champion '{champion_name}', falling back to basic")
                         return {"champion": found_champion}
                     except httpx.RequestError as e:
-                        log_handler.warning(f"Failed to fetch detailed data for champion '{champion_name}': {e}, falling back to basic")
+                        log_handler.warning(f"[get_champion_info] Failed to fetch detailed data for champion '{champion_name}': {e}, falling back to basic")
                         return {"champion": found_champion}
 
-                log_handler.info(f"Fetched basic info for champion '{champion_name}' from Data Dragon")
+                log_handler.info(f"[get_champion_info] Fetched basic info for champion '{champion_name}' from Data Dragon")
                 return {"champion": found_champion}
 
             # Return all champions (no champion_name)
             if detailed:
                 raise HTTPException(status_code=400, detail="Detailed information is only available for specific champions. Please specify champion_name.")
-            log_handler.info(f"Fetched {len(champions_data)} champions from Data Dragon")
+            log_handler.info(f"[get_champion_info] Fetched {len(champions_data)} champions from Data Dragon")
             return {"champions": champions_data}
     except HTTPException:
         raise
     except httpx.RequestError as e:
-        log_handler.error(f"Failed to fetch champions from Data Dragon: {e}")
+        log_handler.error(f"[get_champion_info] Failed to fetch champions from Data Dragon: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch champion data from Data Dragon.")
 
 

@@ -67,21 +67,21 @@ def get_riot_api_key():
         response = ssm.get_parameter(Name='/rift-rewind/riot-api-key', WithDecryption=True)
         return response['Parameter']['Value']
     except Exception as e:
-        log_handler.warning(f"Could not retrieve API key from AWS SSM: {e}")
+        log_handler.warning(f"[main] Could not retrieve API key from AWS SSM: {e}")
         return "RGAPI-REPLACE_ME"
 
 RIOT_API_KEY = get_riot_api_key()
 if not RIOT_API_KEY or RIOT_API_KEY == "RGAPI-REPLACE_ME":
-    log_handler.warning("RIOT_API_KEY is not properly configured")
+    log_handler.warning("[main] RIOT_API_KEY is not properly configured")
 
 """API APP-----------------------------------------------------------"""
 #Lifespan event manager (startup and shutdown)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     port = config_loader["network"]["server_port"]
-    log_handler.info(f"Rift Rewind backend server starting on port {port}")
+    log_handler.info(f"[main] Rift Rewind backend server starting on port {port}")
     yield
-    log_handler.info("Rift Rewind backend server shutting down")
+    log_handler.info("[main] Rift Rewind backend server shutting down")
 
 #Create FastAPI app
 app = FastAPI(lifespan=lifespan, title="Rift Rewind Backend")

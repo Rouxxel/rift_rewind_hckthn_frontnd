@@ -81,17 +81,8 @@ async def get_match_outcome(
             champions_data = response.json().get("data", {})
 
             def get_champion_data(champion_name):
-                # Normalize the input name for robust matching
-                search_name = champion_name.lower().replace(" ", "").replace("'", "").replace(".", "")
-                
                 for champ_id, champ_info in champions_data.items():
-                    # Try matching against normalized ID (key in Data Dragon)
-                    if champ_id.lower().replace(" ", "").replace("'", "").replace(".", "") == search_name:
-                        return champ_info
-                        
-                    # Try matching against normalized Name
-                    champ_name_normalized = champ_info.get("name", "").lower().replace(" ", "").replace("'", "").replace(".", "")
-                    if champ_name_normalized == search_name:
+                    if champ_info.get("name", "").lower() == champion_name.lower():
                         return champ_info
                 return None
 
@@ -271,9 +262,9 @@ async def get_match_outcome(
                 "disclaimer": "This prediction is based on champion data and simulated analysis. Actual match outcomes depend heavily on player skill, strategy, and execution."
             }
 
-            log_handler.info(f"Generated match prediction: Blue {blue_win_prob:.1f}% vs Red {red_win_prob:.1f}%")
+            log_handler.info(f"[get_match_outcome] Generated match prediction: Blue {blue_win_prob:.1f}% vs Red {red_win_prob:.1f}%")
             return result
 
     except httpx.RequestError as e:
-        log_handler.error(f"Failed to fetch champion data: {e}")
+        log_handler.error(f"[get_match_outcome] Failed to fetch champion data: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch champion data for analysis.")
