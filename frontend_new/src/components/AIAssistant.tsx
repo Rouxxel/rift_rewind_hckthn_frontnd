@@ -3,7 +3,7 @@ import ReactMarkdown from 'react-markdown';
 import { apiService } from '../services/api';
 import { RotateCcw, X, Maximize2, Minimize2, SendHorizontal, Loader2 } from 'lucide-react';
 import { GlossButton } from "@/components/ui-retro/GlossButton";
-import assistantIcon from '../assets/ic_launcher.png';
+import assistantIcon from '../assets/ic_launcher.jpeg';
 
 interface Message {
     role: 'user' | 'assistant';

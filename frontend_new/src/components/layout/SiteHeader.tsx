@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { GlossButton } from "@/components/ui-retro/GlossButton";
-import logoHelmet from "@/assets/logo_helmet.png";
+import logoHelmet from "@/assets/logo_helmet.jpeg";
 
 export const SiteHeader = () => {
   return (

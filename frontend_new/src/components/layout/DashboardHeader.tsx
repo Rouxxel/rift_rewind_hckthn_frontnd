@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { GlossButton } from "@/components/ui-retro/GlossButton";
 import { useAuth } from "@/context/AuthContext";
-import logoHelmet from "@/assets/logo_helmet.png";
+import logoHelmet from "@/assets/logo_helmet.jpeg";
 import { Switch } from "@/components/ui/switch";
 
 interface DashboardHeaderProps {
