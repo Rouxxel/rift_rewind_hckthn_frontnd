@@ -24,6 +24,8 @@ from src.utils.custom_logger import log_handler
 from src.utils.limiter import limiter as SlowLimiter
 from src.core_specs.configuration.config_loader import config_loader
 from src.utils.validators import validate_region_routing
+from src.resources.riot_cache_keys import match_timeline_key, TTL_MATCH
+from src.resources.riot_data_service import cached_or_fetch
 
 """VARIABLES-----------------------------------------------------------"""
 RIOT_API_KEY = os.getenv("RIOT_API_KEY")
@@ -68,11 +70,10 @@ async def get_match_timeline(
         log_handler.warning(f"[get_match_timeline] Validation failed: {e.detail}")
         raise
 
-    try:
-        # Build the Riot API request URL for timeline
+    async def _fetch() -> Dict[str, Any]:
         url = f"https://{region_lower}.api.riotgames.com/lol/match/v5/matches/{match_id}/timeline"
         headers = {"X-Riot-Token": RIOT_API_KEY}
-        
+
         async with httpx.AsyncClient() as client:
             response = await client.get(url, headers=headers)
 
@@ -81,28 +82,25 @@ async def get_match_timeline(
 
             if response.status_code == 200:
                 timeline_data = response.json()
-                
-                # Extract and process timeline frames
                 frames = timeline_data.get("info", {}).get("frames", [])
                 processed_frames = []
-            
+
                 for frame in frames:
                     timestamp = frame.get("timestamp", 0)
-                    minute = timestamp // 60000  # Convert to minutes
-                    
+                    minute = timestamp // 60000
                     events = frame.get("events", [])
-                    
-                    # Filter events if specified
+
                     if event_types:
                         events = [event for event in events if event.get("type") in event_types]
-                    
+
                     if participant_id:
-                        events = [event for event in events 
-                                 if event.get("participantId") == participant_id or 
-                                    event.get("killerId") == participant_id or
-                                    event.get("victimId") == participant_id]
-                    
-                    # Categorize events
+                        events = [
+                            event for event in events
+                            if event.get("participantId") == participant_id
+                            or event.get("killerId") == participant_id
+                            or event.get("victimId") == participant_id
+                        ]
+
                     categorized_events = {
                         "kills": [],
                         "deaths": [],
@@ -110,12 +108,12 @@ async def get_match_timeline(
                         "item_events": [],
                         "ward_events": [],
                         "objective_events": [],
-                        "other_events": []
+                        "other_events": [],
                     }
-                    
+
                     for event in events:
                         event_type = event.get("type")
-                        
+
                         if event_type == "CHAMPION_KILL":
                             categorized_events["kills"].append({
                                 "timestamp": event.get("timestamp"),
@@ -123,7 +121,7 @@ async def get_match_timeline(
                                 "victim_id": event.get("victimId"),
                                 "assisting_participants": event.get("assistingParticipantIds", []),
                                 "position": event.get("position", {}),
-                                "bounty": event.get("bounty", 0)
+                                "bounty": event.get("bounty", 0),
                             })
                         elif event_type in ["ITEM_PURCHASED", "ITEM_SOLD", "ITEM_DESTROYED", "ITEM_UNDO"]:
                             categorized_events["item_events"].append({
@@ -132,7 +130,7 @@ async def get_match_timeline(
                                 "participant_id": event.get("participantId"),
                                 "item_id": event.get("itemId"),
                                 "after_id": event.get("afterId"),
-                                "before_id": event.get("beforeId")
+                                "before_id": event.get("beforeId"),
                             })
                         elif event_type in ["WARD_PLACED", "WARD_KILL"]:
                             categorized_events["ward_events"].append({
@@ -140,7 +138,7 @@ async def get_match_timeline(
                                 "timestamp": event.get("timestamp"),
                                 "participant_id": event.get("participantId"),
                                 "ward_type": event.get("wardType"),
-                                "position": event.get("position", {})
+                                "position": event.get("position", {}),
                             })
                         elif event_type in ["BUILDING_KILL", "ELITE_MONSTER_KILL", "DRAGON_KILL", "BARON_KILL"]:
                             categorized_events["objective_events"].append({
@@ -153,24 +151,18 @@ async def get_match_timeline(
                                 "building_type": event.get("buildingType"),
                                 "lane_type": event.get("laneType"),
                                 "tower_type": event.get("towerType"),
-                                "position": event.get("position", {})
+                                "position": event.get("position", {}),
                             })
                         else:
                             categorized_events["other_events"].append(event)
-                    
-                    # Include participant frames (gold, xp, cs, position)
-                    participant_frames = frame.get("participantFrames", {})
-                    
-                    processed_frame = {
+
+                    processed_frames.append({
                         "timestamp": timestamp,
                         "minute": minute,
                         "events": categorized_events,
-                        "participant_frames": participant_frames
-                    }
-                    
-                    processed_frames.append(processed_frame)
+                        "participant_frames": frame.get("participantFrames", {}),
+                    })
 
-                # Calculate summary statistics
                 total_kills = sum(len(frame["events"]["kills"]) for frame in processed_frames)
                 total_items = sum(len(frame["events"]["item_events"]) for frame in processed_frames)
                 total_wards = sum(len(frame["events"]["ward_events"]) for frame in processed_frames)
@@ -186,21 +178,29 @@ async def get_match_timeline(
                         "total_kills": total_kills,
                         "total_item_events": total_items,
                         "total_ward_events": total_wards,
-                        "total_objective_events": total_objectives
+                        "total_objective_events": total_objectives,
                     },
-                    "frames": processed_frames
+                    "frames": processed_frames,
                 }
 
-                log_handler.info(f"[get_match_timeline] Fetched timeline for match ID: {match_id} with {len(processed_frames)} frames")
+                log_handler.info(
+                    f"[get_match_timeline] Fetched timeline for match ID: {match_id} with {len(processed_frames)} frames"
+                )
                 return result
 
-            elif response.status_code == 403:
+            if response.status_code == 403:
                 raise HTTPException(status_code=403, detail="Forbidden: Invalid or expired Riot API key.")
-            elif response.status_code == 404:
+            if response.status_code == 404:
                 raise HTTPException(status_code=404, detail="Match timeline not found for this ID.")
-            else:
-                raise HTTPException(status_code=response.status_code, detail=response.text)
+            raise HTTPException(status_code=response.status_code, detail=response.text)
 
+    try:
+        return await cached_or_fetch(
+            match_timeline_key(region_lower, match_id, event_types, participant_id),
+            TTL_MATCH,
+            _fetch,
+            log_prefix="get_match_timeline",
+        )
     except httpx.RequestError as e:
         log_handler.error(f"[get_match_timeline] Riot API request failed: {e}")
         raise HTTPException(status_code=500, detail="Failed to connect to Riot API.")
