@@ -47,6 +47,7 @@ Rift Rewind Backend serves as a middleware layer between client applications and
 ### Technical Features
 - **FastAPI Framework**: Modern, fast, and auto-documented API
 - **Async Support**: Non-blocking request handling
+- **Optional Redis Caching**: Shared Riot / Data Dragon response cache (Docker or Redis Cloud)
 - **Rate Limiting**: SlowAPI integration for request throttling
 - **Custom Logging**: Structured logging with file output
 - **Error Handling**: Graceful error responses and recovery
@@ -59,13 +60,14 @@ Rift Rewind Backend serves as a middleware layer between client applications and
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
 │   Client App    │───▶│  Rift Rewind    │───▶│   Riot Games    │
 │                 │    │    Backend      │    │      API        │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-                              │
-                              ▼
-                       ┌─────────────────┐
-                       │   Rate Limiter  │
-                       │   & Logger      │
-                       └─────────────────┘
+└─────────────────┘    └────────┬────────┘    └─────────────────┘
+                                │
+                     ┌──────────┴──────────┐
+                     ▼                     ▼
+              ┌─────────────┐       ┌─────────────┐
+              │ Redis cache │       │ Rate Limiter│
+              │  (optional) │       │  & Logger   │
+              └─────────────┘       └─────────────┘
 ```
 
 ## Prerequisites
@@ -105,10 +107,19 @@ Rift Rewind Backend serves as a middleware layer between client applications and
 
 ### Environment Variables
 
-Create a `.env` file in the root directory:
+Create a `.env` file in the root directory (see `.env.example` for the full template):
 
 ```env
 RIOT_API_KEY=RGAPI-your-api-key-here
+GEMINI_API_KEY=your-gemini-key-here
+
+# Optional Redis (off by default)
+REDIS_ENABLED=false
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=
+REDIS_DB=0
+REDIS_SSL=false
 ```
 
 ### Configuration Files
@@ -313,6 +324,8 @@ rift_rewind_hckthn_backend/
 │   ├── core_specs/                # Core configuration
 │   │   ├── configuration/         # App configuration loader
 │   │   └── data/                  # Data management
+│   ├── resources/                 # Service-layer helpers
+│   │   └── cache/                 # Optional Redis client + cache service
 │   └── utils/                     # Shared utilities
 │       ├── custom_logger.py       # Logging system
 │       ├── limiter.py            # Rate limiting setup
@@ -400,8 +413,66 @@ Comprehensive logging system with:
 |----------|-------------|----------|---------|
 | `RIOT_API_KEY` | Your Riot Games API key | Yes | None |
 | `GEMINI_API_KEY` | Google Gemini API key for AI assistant | No | None |
+| `REDIS_ENABLED` | Enable optional Redis response caching | No | `false` |
+| `REDIS_HOST` | Redis hostname (`localhost`, Compose service `redis`, or Redis Cloud host) | No | `localhost` |
+| `REDIS_PORT` | Redis port | No | `6379` |
+| `REDIS_PASSWORD` | Redis password (required for Redis Cloud) | No | empty |
+| `REDIS_DB` | Redis database index | No | `0` |
+| `REDIS_SSL` | Use TLS (`true` for Redis Cloud) | No | `false` |
 
 **Note**: The AI assistant endpoint (`/ai/generate_ai_response`) requires `GEMINI_API_KEY`. Get your key from [Google AI Studio](https://makersuite.google.com/app/apikey).
+
+## Redis Caching (Optional)
+
+Redis caches high-value Riot / Data Dragon responses so repeated requests do not hit the Riot API. It is **off by default** (`REDIS_ENABLED=false`). Connection failures are logged; the API still serves traffic with `"redis": "unavailable"` on `/`.
+
+TTLs are set in [`src/core_specs/configuration/config_file.json`](src/core_specs/configuration/config_file.json) (`redis_cache.ttl_seconds`). Full mapping: [`REDIS_CACHE_TTL.md`](src/core_specs/configuration/REDIS_CACHE_TTL.md).
+
+| Config key | Default TTL | What it caches | UI / usage |
+|---|---|---|---|
+| `match` | 86400 (24h) | Immutable match details, participants, and timeline | Match History page |
+| `match_ids` | 600 (10m) | List of recent match IDs for a player | Match History page |
+| `ddragon` | 21600 (6h) | Champions and items from Data Dragon (shared by all users) | Game Assets; also reused by winrates |
+| `puuid` | 3600 (60m) | Account lookup (`gameName#tag` → PUUID) | Login / auth, not Performance tabs |
+| `summoner` | 1800 (30m) | Summoner profile (level, icon, IDs) | Dashboard header more than Performance tabs |
+| `mastery` | 900 (15m) | Champion mastery entries for a player | Performance Analysis → Champion Mastery tab only |
+| `winrates` | 300 (5m) | Champion win/pick/ban rates by rank/role (shared meta data) | Predictions page → Champion Winrates |
+
+**Not Redis-cached yet:** Performance Overview, Summoner Spells, and Runes (`get_player_performance`, `get_summoner_spells_analysis`, `get_runes_masteries`).
+
+### A. Local Redis (Docker)
+
+```bash
+cd backend
+docker compose up -d redis
+
+# In .env:
+# REDIS_ENABLED=true
+# REDIS_HOST=localhost          # use "redis" if the API also runs in Compose
+# REDIS_PORT=6379
+# REDIS_PASSWORD=
+# REDIS_SSL=false
+
+pip install -r requirements.txt
+python main.py
+curl http://localhost:8000/     # expect "redis": "connected"
+```
+
+### B. Redis Cloud
+
+1. Create a Redis Cloud database and copy host, port, and password (enable TLS).
+2. Set in `.env` or Render:
+
+```env
+REDIS_ENABLED=true
+REDIS_HOST=<cloud-host>
+REDIS_PORT=<cloud-port>
+REDIS_PASSWORD=<cloud-password>
+REDIS_DB=0
+REDIS_SSL=true
+```
+
+3. Restart the backend and confirm `/` returns `"redis": "connected"`. First request to a cached route is a miss; the second should hit cache (see logs).
 
 ## Contributing
 

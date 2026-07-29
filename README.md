@@ -216,6 +216,8 @@ Automatically handles champion names with special characters:
 
 ### Caching Strategy
 
+**Server-side (optional Redis):** When `REDIS_ENABLED=true`, the FastAPI backend caches Riot / Data Dragon responses in Redis (local Docker or Redis Cloud). See [backend/README.md](./backend/README.md#redis-caching-optional).
+
 **LocalStorage Keys:**
 - `rift_rewind_cache_champions` - Champions data (60 min)
 - `rift_rewind_cache_items` - Items data (60 min)
