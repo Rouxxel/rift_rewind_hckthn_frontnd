@@ -24,6 +24,18 @@
         "proxy_headers": true
     },
 
+    "redis_cache": {
+        "ttl_seconds": {
+            "match": 86400,
+            "ddragon": 21600,
+            "puuid": 3600,
+            "summoner": 1800,
+            "match_ids": 600,
+            "mastery": 900,
+            "winrates": 300
+        }
+    },
+
     "endpoints": {
         "root_directory_endpoint":{
             "request_limit":25,
