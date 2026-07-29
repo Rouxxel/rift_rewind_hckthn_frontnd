@@ -1,4 +1,3 @@
-version: "3.9"
 services:
   backend:
     build: .
@@ -8,14 +7,20 @@ services:
     ports:
       - "8000:8000"
     restart: always
-    # depends_on:
-    #   - redis  #just in case to add Redis for caching or Celery
-    # volumes:
-    #   - .:/app  #just in case for live code reload during dev
+    # Redis is optional — do not hard-depend so the API starts without it.
+    # When using Compose Redis from the backend container, set REDIS_HOST=redis
+    # and REDIS_ENABLED=true in .env. When running Python on the host against
+    # this Redis service, use REDIS_HOST=localhost.
 
-  # redis:
-  #   image: redis:alpine
-  #   container_name: rift_redis
-  #   ports:
-  #     - "6379:6379"
-  #   restart: always
+  redis:
+    image: redis:7-alpine
+    container_name: rift_redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+
+volumes:
+  redis_data:

@@ -12,3 +12,15 @@ services:
         sync: false
       - key: GEMINI_API_KEY
         sync: false
+      - key: REDIS_ENABLED
+        sync: false
+      - key: REDIS_HOST
+        sync: false
+      - key: REDIS_PORT
+        sync: false
+      - key: REDIS_PASSWORD
+        sync: false
+      - key: REDIS_DB
+        sync: false
+      - key: REDIS_SSL
+        sync: false
