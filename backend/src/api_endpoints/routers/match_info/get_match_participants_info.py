@@ -27,6 +27,8 @@ from src.utils.limiter import limiter as SlowLimiter
 from src.core_specs.configuration.config_loader import config_loader
 from src.core_specs.data.data_loader import data_loader
 from src.utils.validators import validate_region_routing
+from src.resources.riot_cache_keys import match_participants_key, TTL_MATCH
+from src.resources.riot_data_service import cached_or_fetch
 
 """VARIABLES-----------------------------------------------------------"""
 RIOT_API_KEY = os.getenv("RIOT_API_KEY")
@@ -75,7 +77,7 @@ async def get_match_participants_info(
         log_handler.warning(f"[get_match_participants_info] Validation failed: {e.detail}")
         raise
 
-    try:
+    async def _fetch() -> Dict[str, Any]:
         async with httpx.AsyncClient() as client:
             #Fetch match details
             match_url = f"https://{region_lower}.api.riotgames.com/lol/match/v5/matches/{match_id}"
@@ -160,6 +162,13 @@ async def get_match_participants_info(
             "participants": detailed_participants
         }
 
+    try:
+        return await cached_or_fetch(
+            match_participants_key(region_lower, match_id, num_participants, simplified),
+            TTL_MATCH,
+            _fetch,
+            log_prefix="get_match_participants_info",
+        )
     except httpx.RequestError as e:
         log_handler.error(f"[get_match_participants_info] Riot API request failed: {e}")
         raise HTTPException(status_code=500, detail="Failed to connect to Riot API.")
