@@ -19,6 +19,7 @@ from fastapi import APIRouter, Request
 from src.utils.custom_logger import log_handler
 from src.utils.limiter import limiter as SlowLimiter
 from src.core_specs.configuration.config_loader import config_loader
+from src.resources.cache.redis_client import get_redis_status
 
 """API ROUTER-----------------------------------------------------------"""
 # Get API router
@@ -51,4 +52,8 @@ async def root_endpoint(request: Request):
         If the rate limit is exceeded, the rate_limit_handler() function handles the response.
     """
     log_handler.debug("[root_endpoint] Backend running successfully")
-    return {"message": "Backend running successfully, ready to use other endpoints"}
+    return {
+        "status": "ok",
+        "message": "Backend running successfully, ready to use other endpoints",
+        "redis": get_redis_status(),
+    }
