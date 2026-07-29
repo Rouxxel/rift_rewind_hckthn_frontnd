@@ -24,6 +24,8 @@ from src.utils.custom_logger import log_handler
 from src.utils.limiter import limiter as SlowLimiter
 from src.core_specs.configuration.config_loader import config_loader
 from src.utils.validators import validate_region_routing
+from src.resources.riot_cache_keys import match_ids_key, TTL_MATCH_IDS
+from src.resources.riot_data_service import cached_or_fetch
 
 """VARIABLES-----------------------------------------------------------"""
 RIOT_API_KEY = os.getenv("RIOT_API_KEY")
@@ -68,32 +70,34 @@ async def get_match_history_by_id(
         log_handler.warning(f"[get_match_history_by_id] Validation failed: {e.detail}")
         raise
 
-    try:
-        #Riot Match API (regional endpoint)
+    async def _fetch() -> Dict[str, Any]:
         url = f"https://{region_lower}.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids?count={count}"
         headers = {"X-Riot-Token": RIOT_API_KEY}
-    
+
         async with httpx.AsyncClient() as client:
             response = await client.get(url, headers=headers)
 
-            #Handle no response
             if not response.content:
                 raise HTTPException(status_code=500, detail="Empty response from Riot API")
 
-            #Successful fetch
             if response.status_code == 200:
                 match_ids: List[str] = response.json()
                 log_handler.info(f"[get_match_history_by_id] Fetched {len(match_ids)} matches for PUUID: {puuid}")
                 return {"puuid": puuid, "region": region, "match_ids": match_ids}
 
-            #Handle common Riot API errors
-            elif response.status_code == 403:
+            if response.status_code == 403:
                 raise HTTPException(status_code=403, detail="Forbidden: Invalid or expired Riot API key.")
-            elif response.status_code == 404:
+            if response.status_code == 404:
                 raise HTTPException(status_code=404, detail="No matches found for this PUUID.")
-            else:
-                raise HTTPException(status_code=response.status_code, detail=response.text)
+            raise HTTPException(status_code=response.status_code, detail=response.text)
 
+    try:
+        return await cached_or_fetch(
+            match_ids_key(region_lower, puuid, count),
+            TTL_MATCH_IDS,
+            _fetch,
+            log_prefix="get_match_history_by_id",
+        )
     except httpx.RequestError as e:
         log_handler.error(f"[get_match_history_by_id] Riot API request failed: {e}")
         raise HTTPException(status_code=500, detail="Failed to connect to Riot API.")
