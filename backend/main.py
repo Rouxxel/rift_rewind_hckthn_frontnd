@@ -27,6 +27,7 @@ load_dotenv()
 from src.utils.request_limiter import rate_limit_handler
 from src.utils.custom_logger import log_handler
 from src.utils.limiter import limiter
+from src.resources.cache.redis_client import close_redis
 
 #Json files
 from src.core_specs.configuration.config_loader import config_loader
@@ -81,6 +82,7 @@ async def lifespan(app: FastAPI):
     port = config_loader["network"]["server_port"]
     log_handler.info(f"[main] Rift Rewind backend server starting on port {port}")
     yield
+    close_redis()
     log_handler.info("[main] Rift Rewind backend server shutting down")
 
 #Create FastAPI app
