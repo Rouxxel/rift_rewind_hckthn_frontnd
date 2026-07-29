@@ -25,6 +25,8 @@ from src.utils.custom_logger import log_handler
 from src.utils.limiter import limiter as SlowLimiter
 from src.core_specs.configuration.config_loader import config_loader
 from src.core_specs.data.data_loader import data_loader
+from src.resources.riot_cache_keys import summoner_key, TTL_SUMMONER
+from src.resources.riot_data_service import cached_or_fetch
 
 
 """VARIABLES-----------------------------------------------------------"""
@@ -74,60 +76,72 @@ async def get_summoner_info(
             detail=f"Invalid region '{region}'. Must be one of: {list(REGION_DATA.keys())}",
         )
 
-    # Get all platform regions for this regional routing
-    platforms = REGION_DATA[region_lower]["platforms"]
-    headers = {"X-Riot-Token": RIOT_API_KEY}
-    
-    # Try each platform in the region until we find the summoner
-    summoner_data = None
-    successful_platform = None
-    last_error = None
-    
-    async with httpx.AsyncClient() as client:
-        for platform in platforms:
-            platform_lower = platform.lower()
-            url = f"https://{platform_lower}.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/{puuid}"
-            
-            try:
-                response = await client.get(url, headers=headers)
-                if response.status_code == 200:
-                    summoner_data = response.json()
-                    successful_platform = platform_lower
-                    log_handler.info(f"[get_summoner_info] Found summoner on platform: {platform_lower}")
-                    break
-                elif response.status_code == 404:
-                    # Summoner not found on this platform, try next one
-                    continue
-                else:
-                    # Other error, store it but continue trying
-                    last_error = f"Platform {platform_lower}: {response.status_code} - {response.text}"
-                    continue
-                    
-            except httpx.RequestError as e:
-                last_error = f"Platform {platform_lower}: Connection error - {str(e)}"
-                continue
-    
-    # Check if we found the summoner
-    if not summoner_data:
-        if last_error:
-            log_handler.error(f"[get_summoner_info] Failed to find summoner after trying all platforms. Last error: {last_error}")
-            raise HTTPException(status_code=500, detail=f"Failed to find summoner in {region} region. Last error: {last_error}")
-        else:
-            raise HTTPException(status_code=404, detail=f"Summoner not found in any platform within {region} region.")
+    async def _fetch() -> Dict[str, Any]:
+        platforms = REGION_DATA[region_lower]["platforms"]
+        headers = {"X-Riot-Token": RIOT_API_KEY}
 
-    result = {
-        "region": region_lower,
-        "platform": successful_platform,
-        "puuid": puuid,
-        "summoner_id": summoner_data.get("id"),
-        "account_id": summoner_data.get("accountId"),
-        "summoner_name": summoner_data.get("name"),
-        "profile_icon_id": summoner_data.get("profileIconId"),
-        "revision_date": summoner_data.get("revisionDate"),
-        "summoner_level": summoner_data.get("summonerLevel"),
-        "platforms_tried": [p.lower() for p in platforms],
-        "found_on_platform": successful_platform
-    }
+        summoner_data = None
+        successful_platform = None
+        last_error = None
 
-    log_handler.info(f"[get_summoner_info] Fetched Summoner info: {result['summoner_name']} (PUUID: {puuid})")
-    return result
+        async with httpx.AsyncClient() as client:
+            for platform in platforms:
+                platform_lower = platform.lower()
+                url = f"https://{platform_lower}.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/{puuid}"
+
+                try:
+                    response = await client.get(url, headers=headers)
+                    if response.status_code == 200:
+                        summoner_data = response.json()
+                        successful_platform = platform_lower
+                        log_handler.info(f"[get_summoner_info] Found summoner on platform: {platform_lower}")
+                        break
+                    elif response.status_code == 404:
+                        continue
+                    else:
+                        last_error = f"Platform {platform_lower}: {response.status_code} - {response.text}"
+                        continue
+
+                except httpx.RequestError as e:
+                    last_error = f"Platform {platform_lower}: Connection error - {str(e)}"
+                    continue
+
+        if not summoner_data:
+            if last_error:
+                log_handler.error(
+                    f"[get_summoner_info] Failed to find summoner after trying all platforms. Last error: {last_error}"
+                )
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Failed to find summoner in {region} region. Last error: {last_error}",
+                )
+            raise HTTPException(
+                status_code=404,
+                detail=f"Summoner not found in any platform within {region} region.",
+            )
+
+        result = {
+            "region": region_lower,
+            "platform": successful_platform,
+            "puuid": puuid,
+            "summoner_id": summoner_data.get("id"),
+            "account_id": summoner_data.get("accountId"),
+            "summoner_name": summoner_data.get("name"),
+            "profile_icon_id": summoner_data.get("profileIconId"),
+            "revision_date": summoner_data.get("revisionDate"),
+            "summoner_level": summoner_data.get("summonerLevel"),
+            "platforms_tried": [p.lower() for p in platforms],
+            "found_on_platform": successful_platform,
+        }
+
+        log_handler.info(
+            f"[get_summoner_info] Fetched Summoner info: {result['summoner_name']} (PUUID: {puuid})"
+        )
+        return result
+
+    return await cached_or_fetch(
+        summoner_key(region_lower, puuid),
+        TTL_SUMMONER,
+        _fetch,
+        log_prefix="get_summoner_info",
+    )
