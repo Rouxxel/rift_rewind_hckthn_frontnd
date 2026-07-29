@@ -23,6 +23,12 @@ from src.utils.custom_logger import log_handler
 from src.utils.limiter import limiter as SlowLimiter
 from src.core_specs.configuration.config_loader import config_loader
 from src.core_specs.data.data_loader import data_loader
+from src.resources.riot_cache_keys import (
+    ddragon_champions_key,
+    ddragon_champion_detail_key,
+    TTL_DDRAGON,
+)
+from src.resources.riot_data_service import cached_or_fetch
 
 """VARIABLES-----------------------------------------------------------"""
 # Data Dragon URL for champions (already fully formed)
@@ -124,67 +130,101 @@ async def get_champions(
     - dict containing champion data (basic or detailed based on parameters)
     """
     try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(DATA_DRAGON_CHAMPIONS_URL)
-            response.raise_for_status()
-            raw = response.json()
-            champions_data = raw.get("data") if isinstance(raw, dict) else {}
-            if not isinstance(champions_data, dict):
-                champions_data = {}
+        patch_version = data_loader["metadata"]["data_dragon"]["latest_versions"]
 
-            # If a specific champion is requested
-            if champion_name:
-                # Try match with fallback: spaces (Miss Fortune/MissFortune) and special chars (Kai'Sa/KaiSa, Cho'Gath/ChoGath)
-                variants = _champion_name_variations(champion_name)
-                found_champion = None
-                champion_key = None
+        async def _fetch_champions_catalog() -> Dict[str, Any]:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(DATA_DRAGON_CHAMPIONS_URL)
+                response.raise_for_status()
+                return response.json()
 
-                for champ_id, champ_info in champions_data.items():
-                    cid = (champ_info.get("id") or "").lower()
-                    cname = (champ_info.get("name") or "").lower()
-                    ckey = champ_id.lower()
-                    for v in variants:
-                        vv = v.lower()
-                        if cid == vv or cname == vv or ckey == vv:
-                            found_champion = champ_info
-                            champion_key = champ_id
-                            break
-                    if found_champion:
+        raw = await cached_or_fetch(
+            ddragon_champions_key(patch_version),
+            TTL_DDRAGON,
+            _fetch_champions_catalog,
+            log_prefix="get_champion_info",
+        )
+        champions_data = raw.get("data") if isinstance(raw, dict) else {}
+        if not isinstance(champions_data, dict):
+            champions_data = {}
+
+        # If a specific champion is requested
+        if champion_name:
+            # Try match with fallback: spaces (Miss Fortune/MissFortune) and special chars (Kai'Sa/KaiSa, Cho'Gath/ChoGath)
+            variants = _champion_name_variations(champion_name)
+            found_champion = None
+            champion_key = None
+
+            for champ_id, champ_info in champions_data.items():
+                cid = (champ_info.get("id") or "").lower()
+                cname = (champ_info.get("name") or "").lower()
+                ckey = champ_id.lower()
+                for v in variants:
+                    vv = v.lower()
+                    if cid == vv or cname == vv or ckey == vv:
+                        found_champion = champ_info
+                        champion_key = champ_id
                         break
+                if found_champion:
+                    break
 
-                if not found_champion:
-                    raise HTTPException(status_code=404, detail=f"Champion '{champion_name}' not found")
+            if not found_champion:
+                raise HTTPException(status_code=404, detail=f"Champion '{champion_name}' not found")
 
-                # Return detailed information if requested
-                if detailed:
-                    detailed_url = DATA_DRAGON_CHAMPION_DETAIL_URL_TEMPLATE.format(
-                        version=data_loader["metadata"]["data_dragon"]["latest_versions"],
-                        language=data_loader["metadata"]["data_dragon"]["chosen_lang"],
-                        champion=champion_key
-                    )
-                    try:
+            # Return detailed information if requested
+            if detailed:
+                detailed_url = DATA_DRAGON_CHAMPION_DETAIL_URL_TEMPLATE.format(
+                    version=patch_version,
+                    language=data_loader["metadata"]["data_dragon"]["chosen_lang"],
+                    champion=champion_key
+                )
+
+                async def _fetch_champion_detail() -> Dict[str, Any]:
+                    async with httpx.AsyncClient() as client:
                         detailed_response = await client.get(detailed_url)
                         detailed_response.raise_for_status()
-                        detailed_data = detailed_response.json().get("data", {})
-                        if champion_key in detailed_data:
-                            detailed_champion = detailed_data[champion_key]
-                            result = parse_detailed_champion_data(detailed_champion, champion_key, ability, include_stats, include_tips)
-                            log_handler.info(f"[get_champion_info] Fetched detailed info for champion '{champion_name}' from Data Dragon")
-                            return {"champion": result}
-                        log_handler.warning(f"[get_champion_info] Detailed data not found for champion '{champion_name}', falling back to basic")
-                        return {"champion": found_champion}
-                    except httpx.RequestError as e:
-                        log_handler.warning(f"[get_champion_info] Failed to fetch detailed data for champion '{champion_name}': {e}, falling back to basic")
-                        return {"champion": found_champion}
+                        return detailed_response.json()
 
-                log_handler.info(f"[get_champion_info] Fetched basic info for champion '{champion_name}' from Data Dragon")
-                return {"champion": found_champion}
+                try:
+                    detailed_raw = await cached_or_fetch(
+                        ddragon_champion_detail_key(patch_version, champion_key),
+                        TTL_DDRAGON,
+                        _fetch_champion_detail,
+                        log_prefix="get_champion_info",
+                    )
+                    detailed_data = detailed_raw.get("data", {}) if isinstance(detailed_raw, dict) else {}
+                    if champion_key in detailed_data:
+                        detailed_champion = detailed_data[champion_key]
+                        result = parse_detailed_champion_data(
+                            detailed_champion, champion_key, ability, include_stats, include_tips
+                        )
+                        log_handler.info(
+                            f"[get_champion_info] Fetched detailed info for champion '{champion_name}' from Data Dragon"
+                        )
+                        return {"champion": result}
+                    log_handler.warning(
+                        f"[get_champion_info] Detailed data not found for champion '{champion_name}', falling back to basic"
+                    )
+                    return {"champion": found_champion}
+                except httpx.RequestError as e:
+                    log_handler.warning(
+                        f"[get_champion_info] Failed to fetch detailed data for champion '{champion_name}': {e}, falling back to basic"
+                    )
+                    return {"champion": found_champion}
 
-            # Return all champions (no champion_name)
-            if detailed:
-                raise HTTPException(status_code=400, detail="Detailed information is only available for specific champions. Please specify champion_name.")
-            log_handler.info(f"[get_champion_info] Fetched {len(champions_data)} champions from Data Dragon")
-            return {"champions": champions_data}
+            log_handler.info(
+                f"[get_champion_info] Fetched basic info for champion '{champion_name}' from Data Dragon"
+            )
+            return {"champion": found_champion}
+
+        # Return all champions (no champion_name)
+        if detailed:
+            raise HTTPException(
+                status_code=400,
+                detail="Detailed information is only available for specific champions. Please specify champion_name.",
+            )
+        log_handler.info(f"[get_champion_info] Fetched {len(champions_data)} champions from Data Dragon")
+        return {"champions": champions_data}
     except HTTPException:
         raise
     except httpx.RequestError as e:
