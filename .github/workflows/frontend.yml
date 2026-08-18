@@ -1,0 +1,81 @@
+name: Frontend CI
+
+on:
+  pull_request:
+    paths:
+      - "frontend_new/**"
+      - ".github/workflows/frontend.yml"
+  push:
+    branches: [main]
+    paths:
+      - "frontend_new/**"
+      - ".github/workflows/frontend.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: frontend-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: frontend_new
+
+jobs:
+  quality:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend_new/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Run tests
+        run: npm test
+
+      - name: Production build
+        run: npm run build
+        env:
+          VITE_API_BASE_URL: https://api.example.test
+          VITE_ENVIRONMENT: production
+
+  supply-chain:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend_new/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Audit dependencies
+        run: npm audit --audit-level=high
+        continue-on-error: true
+
+      - name: Block committed env files
+        run: |
+          if [ -f .env ]; then echo "ERROR: .env file committed!" && exit 1; fi
+          if [ -f .env.local ]; then echo "ERROR: .env.local file committed!" && exit 1; fi
+
+      - name: Check for hardcoded secrets in source
+        run: |
+          ! grep -RInE '(RGAPI-|PRIVATE KEY-----|AIzaSy)' \
+            --include='*.ts' --include='*.tsx' --include='*.js' \
+            --exclude-dir=node_modules \
+            src/ || \
+            (echo "ERROR: Possible secret pattern found in source files." && exit 1)

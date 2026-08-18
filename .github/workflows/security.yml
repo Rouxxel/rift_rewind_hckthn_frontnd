@@ -1,0 +1,61 @@
+name: Security
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0 6 * * 1" # Weekly Monday 06:00 UTC
+
+permissions:
+  contents: read
+
+jobs:
+  secrets-scan:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Scan for secrets (gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  dependency-review:
+    runs-on: ubuntu-24.04
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/dependency-review-action@v4
+
+  docker-scan:
+    runs-on: ubuntu-24.04
+    if: github.event_name == 'push' || github.event_name == 'schedule'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build backend Docker image
+        run: docker build -f backend/DOCKERFILE -t rift-backend:ci backend/
+
+      - name: Scan backend image (libraries only)
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: rift-backend:ci
+          severity: CRITICAL,HIGH
+          exit-code: "0"
+          vuln-type: library
+          scanners: vuln
+
+      - name: Build frontend Docker image
+        run: docker build -f frontend_new/Dockerfile -t rift-frontend:ci frontend_new/
+
+      - name: Scan frontend image (libraries only)
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: rift-frontend:ci
+          severity: CRITICAL,HIGH
+          exit-code: "0"
+          vuln-type: library
+          scanners: vuln
