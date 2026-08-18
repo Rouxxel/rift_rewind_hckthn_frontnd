@@ -1,0 +1,26 @@
+# Gitleaks configuration
+# https://github.com/gitleaks/gitleaks
+
+title = "Rift Rewind - Gitleaks Config"
+
+[allowlist]
+  description = "Allowlisted files and patterns"
+
+  # Example/template files are safe
+  paths = [
+    '''\.env\.example$''',
+    '''\.env\.template$''',
+    '''min_sec_prac\.md$''',
+    '''min_sec_list\.md$''',
+    '''min_yml_flow\.md$''',
+    '''README\.md$''',
+  ]
+
+  # Known false positives
+  regexes = [
+    '''riot_api_key_here''',
+    '''key_here''',
+    '''RGAPI-REPLACE_ME''',
+    '''example\.test''',
+    '''api\.example\.com''',
+  ]
