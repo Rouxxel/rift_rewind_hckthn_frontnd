@@ -1,6 +1,5 @@
 # Node modules
 node_modules
-rift_frontend/node_modules
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -8,14 +7,13 @@ yarn-error.log*
 # Build output
 dist
 build
-rift_frontend/dist
-rift_frontend/build
 
 # Environment files (allow .env.docker for Docker builds)
 .env
 .env.local
 .env.development
-!rift_frontend/.env.docker
+.env.production
+!.env.docker
 
 # Git
 .git
@@ -40,24 +38,11 @@ Thumbs.db
 # Tests
 coverage
 .nyc_output
-test
-tests
-__tests__
 
 # CI/CD
 .github
 .gitlab-ci.yml
 .travis.yml
-
-# Python
-__pycache__
-*.py[cod]
-*$py.class
-*.so
-.Python
-venv
-env
-ENV
 
 # Misc
 *.log

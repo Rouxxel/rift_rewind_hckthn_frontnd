@@ -42,15 +42,7 @@ jobs:
           BACKEND_EXISTS=false
           FRONTEND_EXISTS=false
           if [ -f backend/Dockerfile ] || [ -f backend/DOCKERFILE ]; then BACKEND_EXISTS=true; fi
-          # Frontend Dockerfile exists but references rift_frontend/ which doesn't exist
-          # Only enable if the expected source directory is present
-          if [ -f frontend_new/Dockerfile ] || [ -f frontend_new/DOCKERFILE ]; then
-            if [ -d rift_frontend ] || [ -d frontend_new/rift_frontend ]; then
-              FRONTEND_EXISTS=true
-            else
-              echo "Frontend Dockerfile found but references missing rift_frontend/ directory — skipping"
-            fi
-          fi
+          if [ -f frontend_new/Dockerfile ] || [ -f frontend_new/DOCKERFILE ]; then FRONTEND_EXISTS=true; fi
           echo "backend=$BACKEND_EXISTS" >> $GITHUB_OUTPUT
           echo "frontend=$FRONTEND_EXISTS" >> $GITHUB_OUTPUT
           echo "Backend Dockerfile exists: $BACKEND_EXISTS"
@@ -79,9 +71,9 @@ jobs:
         if: steps.check-docker.outputs.frontend == 'true'
         run: |
           if [ -f frontend_new/Dockerfile ]; then
-            docker build -f frontend_new/Dockerfile -t rift-frontend:ci .
+            docker build -f frontend_new/Dockerfile -t rift-frontend:ci frontend_new/
           else
-            docker build -f frontend_new/DOCKERFILE -t rift-frontend:ci .
+            docker build -f frontend_new/DOCKERFILE -t rift-frontend:ci frontend_new/
           fi
 
       - name: Scan frontend image (libraries only)

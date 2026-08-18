@@ -5,17 +5,17 @@ FROM node:18-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files
-COPY rift_frontend/package*.json ./
+# Copy package files first (for better layer caching)
+COPY package*.json ./
 
 # Install dependencies
-RUN npm ci --only=production
+RUN npm ci
 
 # Copy source code
-COPY rift_frontend/ ./
+COPY . ./
 
 # Copy environment file for Docker builds
-COPY rift_frontend/.env.docker .env.production
+COPY .env.docker .env.production
 
 # Build the application (will use .env.production)
 RUN npm run build
@@ -45,7 +45,7 @@ EXPOSE 80
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD wget --quiet --tries=1 --spider http://localhost/ || exit 1
 
-#run as non-root
+# Run as non-root
 USER appuser
 
 CMD ["nginx", "-g", "daemon off;"]
