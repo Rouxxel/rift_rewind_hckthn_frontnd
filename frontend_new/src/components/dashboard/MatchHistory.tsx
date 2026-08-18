@@ -66,7 +66,7 @@ parsedChampions.forEach(row => {
   
   if (row.special_names) {
     try {
-      let cleaned = row.special_names.replace(/'/g, '"');
+      const cleaned = row.special_names.replace(/'/g, '"');
       const arr = JSON.parse(cleaned);
       if (Array.isArray(arr)) {
         CHAMPION_ALTERNATE_NAMES[sanitizedName] = arr;
@@ -779,7 +779,7 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
     try {
       // Check cache first
       const cacheKey = CACHE_KEYS.MATCH_TIMELINE(matchId);
-      let cachedTimeline = cache.get<MatchTimeline>(cacheKey);
+      const cachedTimeline = cache.get<MatchTimeline>(cacheKey);
 
       if (cachedTimeline) {
         console.log(`✅ Using cached match timeline for ${matchId}`);

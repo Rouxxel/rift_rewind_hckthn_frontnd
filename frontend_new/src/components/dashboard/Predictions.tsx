@@ -153,7 +153,7 @@ export const Predictions: React.FC<PredictionsProps> = ({ onBack }) => {
 
   // New function to apply filters and sorting client-side
   const applyFiltersAndSort = (allChampions: ChampionWinrate[], limit: number) => {
-    let filteredChampions = [...allChampions];
+    const filteredChampions = [...allChampions];
 
     // Apply rank filter (if backend doesn't handle it, we'd filter here)
     // For now, assuming backend handles rank filtering, so we use all data
