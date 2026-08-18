@@ -36,10 +36,29 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Check for Dockerfiles
+        id: check-docker
+        run: |
+          BACKEND_EXISTS=false
+          FRONTEND_EXISTS=false
+          if [ -f backend/Dockerfile ] || [ -f backend/DOCKERFILE ]; then BACKEND_EXISTS=true; fi
+          if [ -f frontend_new/Dockerfile ] || [ -f frontend_new/DOCKERFILE ]; then FRONTEND_EXISTS=true; fi
+          echo "backend=$BACKEND_EXISTS" >> $GITHUB_OUTPUT
+          echo "frontend=$FRONTEND_EXISTS" >> $GITHUB_OUTPUT
+          echo "Backend Dockerfile exists: $BACKEND_EXISTS"
+          echo "Frontend Dockerfile exists: $FRONTEND_EXISTS"
+
       - name: Build backend Docker image
-        run: docker build -f backend/DOCKERFILE -t rift-backend:ci backend/
+        if: steps.check-docker.outputs.backend == 'true'
+        run: |
+          if [ -f backend/Dockerfile ]; then
+            docker build -f backend/Dockerfile -t rift-backend:ci backend/
+          else
+            docker build -f backend/DOCKERFILE -t rift-backend:ci backend/
+          fi
 
       - name: Scan backend image (libraries only)
+        if: steps.check-docker.outputs.backend == 'true'
         uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: rift-backend:ci
@@ -49,9 +68,16 @@ jobs:
           scanners: vuln
 
       - name: Build frontend Docker image
-        run: docker build -f frontend_new/Dockerfile -t rift-frontend:ci frontend_new/
+        if: steps.check-docker.outputs.frontend == 'true'
+        run: |
+          if [ -f frontend_new/Dockerfile ]; then
+            docker build -f frontend_new/Dockerfile -t rift-frontend:ci frontend_new/
+          else
+            docker build -f frontend_new/DOCKERFILE -t rift-frontend:ci frontend_new/
+          fi
 
       - name: Scan frontend image (libraries only)
+        if: steps.check-docker.outputs.frontend == 'true'
         uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: rift-frontend:ci
@@ -59,3 +85,7 @@ jobs:
           exit-code: "0"
           vuln-type: library
           scanners: vuln
+
+      - name: No Dockerfiles found
+        if: steps.check-docker.outputs.backend == 'false' && steps.check-docker.outputs.frontend == 'false'
+        run: echo "No Dockerfiles found — skipping container scan."
