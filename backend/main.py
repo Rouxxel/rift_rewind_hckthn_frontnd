@@ -76,6 +76,9 @@ if not RIOT_API_KEY or RIOT_API_KEY == "RGAPI-REPLACE_ME":
     log_handler.warning("[main] RIOT_API_KEY is not properly configured")
 
 """API APP-----------------------------------------------------------"""
+#Environment mode
+_environment = os.getenv("ENVIRONMENT", "development").lower()
+
 #Lifespan event manager (startup and shutdown)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -86,23 +89,40 @@ async def lifespan(app: FastAPI):
     log_handler.info("[main] Rift Rewind backend server shutting down")
 
 #Create FastAPI app
-app = FastAPI(lifespan=lifespan, title="Rift Rewind Backend")
+_docs_url = "/docs" if _environment != "production" else None
+_redoc_url = "/redoc" if _environment != "production" else None
+
+app = FastAPI(
+    lifespan=lifespan,
+    title="Rift Rewind Backend",
+    docs_url=_docs_url,
+    redoc_url=_redoc_url,
+)
 
 """CORS Configuration-----------------------------------------------------------"""
-# Allow requests from your frontend domains
+if _environment == "production":
+    _allowed_origins = [
+        "https://rift-rewind-hckthn-frontnd.vercel.app",
+    ]
+else:
+    _allowed_origins = [
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "http://localhost:5174",
+        "http://localhost:8080",
+    ]
+
+# Add any extra origins from environment variable (comma-separated)
+_extra_origins = os.getenv("ALLOWED_ORIGINS", "")
+if _extra_origins:
+    _allowed_origins.extend([o.strip() for o in _extra_origins.split(",") if o.strip()])
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",      # Local development
-        "http://localhost:5173",      # Vite default
-        "http://localhost:5174",      # Vite alternate
-        "https://*.vercel.app",       # All Vercel preview deployments
-        "https://rift-rewind-hckthn-frontnd.vercel.app/",
-        "*"                           # Allow all origins (remove in production for security)
-    ],
+    allow_origins=_allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],              # Allow all HTTP methods
-    allow_headers=["*"],              # Allow all headers
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Content-Type", "Accept", "X-Riot-Token", "Authorization"],
 )
 
 """VARIOUS-----------------------------------------------------------"""
@@ -111,6 +131,27 @@ app.state.limiter = limiter
 
 #Add global exception handler for rate limits
 app.add_exception_handler(RateLimitExceeded, rate_limit_handler)
+
+"""Security Headers Middleware-------------------------------------------"""
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request as StarletteRequest
+from starlette.responses import Response
+
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    """Adds security headers to all responses."""
+    async def dispatch(self, request: StarletteRequest, call_next):
+        response: Response = await call_next(request)
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+        response.headers["X-XSS-Protection"] = "0"  # Disabled — CSP is preferred
+        # Cache control for API responses (no sensitive data stored, but prevent stale caching)
+        if "Cache-Control" not in response.headers:
+            response.headers["Cache-Control"] = "no-store"
+        return response
+
+app.add_middleware(SecurityHeadersMiddleware)
 
 """Routers-----------------------------------------------------------"""
 #Root
