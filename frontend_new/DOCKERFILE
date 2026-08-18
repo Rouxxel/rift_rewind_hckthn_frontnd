@@ -14,8 +14,8 @@ RUN npm ci
 # Copy source code
 COPY . ./
 
-# Copy environment file for Docker builds
-COPY .env.docker .env.production
+# Use .env.docker as the production env file (if it exists)
+RUN if [ -f .env.docker ]; then cp .env.docker .env.production; fi
 
 # Build the application (will use .env.production)
 RUN npm run build

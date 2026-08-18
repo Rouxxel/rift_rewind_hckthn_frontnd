@@ -8,11 +8,9 @@ yarn-error.log*
 dist
 build
 
-# Environment files (allow .env.docker for Docker builds)
+# Environment files (exclude all, then allow .env.docker)
 .env
-.env.local
-.env.development
-.env.production
+.env.*
 !.env.docker
 
 # Git
