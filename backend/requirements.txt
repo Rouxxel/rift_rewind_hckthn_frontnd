@@ -8,6 +8,6 @@ httpx==0.27.0
 pydantic==2.11.4
 mangum==0.17.0
 boto3==1.34.0
-google-generativeai==0.8.3
+google-generativeai==0.8.6
 gotrue==2.12.0
 redis==5.2.1
