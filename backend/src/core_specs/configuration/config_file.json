@@ -140,7 +140,7 @@
             "endpoint_route": "/get_match_outcome"
         },
         "get_team_composition_endpoint": {
-            "request_limit": 5,
+            "request_limit": 8,
             "unit_of_time_for_limit": "minute",
             "endpoint_prefix": "/analysis",
             "endpoint_tag": "analysis",
