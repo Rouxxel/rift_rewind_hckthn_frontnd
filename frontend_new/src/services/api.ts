@@ -238,9 +238,9 @@ export const apiService = {
     });
   },
 
-  // Get player performance analytics
-  getPlayerPerformance: async (puuid: string, region: string) => {
-    const params = new URLSearchParams({ puuid, region });
+  // Get player performance analytics (default all queues — works for inactive / non-Solo players)
+  getPlayerPerformance: async (puuid: string, region: string, queueType: string = 'all') => {
+    const params = new URLSearchParams({ puuid, region, queue_type: queueType });
     return apiRequest(`${API_CONFIG.endpoints.getPlayerPerformance}?${params}`);
   },
 
