@@ -836,26 +836,24 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
 
   if (!userData || !userCredentials) {
     return (
-      <div>
-        <div className="container py-10 flex flex-col items-center gap-4 text-center min-h-[60vh] justify-center">
-          <p className="font-display text-sm text-danger m-0">{error || 'Loading user data...'}</p>
-          <button
-            onClick={onBack}
-            className="px-4 py-2 rounded-sm border border-primary/70 bg-surface-inset text-primary font-pixel text-[10px] uppercase tracking-[0.18em] hover:bg-primary/10 transition-colors"
-          >
-            Return to Dashboard
-          </button>
-        </div>
+      <div className="flex flex-col items-center gap-4 py-10 text-center min-h-[60vh] justify-center">
+        <p className="font-display text-sm text-danger m-0">{error || 'Loading user data...'}</p>
+        <button
+          onClick={onBack}
+          className="px-4 py-2 rounded-sm border border-primary/70 bg-surface-inset text-primary font-pixel text-[10px] uppercase tracking-[0.18em] hover:bg-primary/10 transition-colors"
+        >
+          Return to Dashboard
+        </button>
       </div>
     );
   }
 
 
   return (
-    <div>
+    <div className="flex flex-col">
       <style>{animationStyles}</style>
       {showDetails && selectedMatch && (
-        <div className="container pt-4">
+        <div className="pb-3 sm:pb-4">
           <button
             onClick={() => {
               setShowDetails(false);
@@ -868,8 +866,7 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
         </div>
       )}
 
-      <div>
-        <div className="container py-6 space-y-6">
+      <div className="space-y-3 sm:space-y-6">
           {/* Page heading */}
           <div className="panel-bevel rounded-sm p-5 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
             <div>
@@ -960,7 +957,7 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
           )}
 
           {!loading && !error && showDetails && selectedMatch && (
-            <div className="space-y-6">
+            <div className="space-y-3 sm:space-y-6">
               {loadingStates.details && (
                 <div className="panel-bevel rounded-sm p-6 flex flex-col items-center gap-3">
                   <LoadingSpinner />
@@ -1442,7 +1439,6 @@ export const MatchHistory: React.FC<MatchHistoryProps> = ({ onBack }) => {
               )}
             </div>
           )}
-        </div>
       </div>
     </div>
   );
