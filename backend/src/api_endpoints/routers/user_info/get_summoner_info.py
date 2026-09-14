@@ -120,13 +120,34 @@ async def get_summoner_info(
                 detail=f"Summoner not found in any platform within {region} region.",
             )
 
+        # Summoner-V4 no longer returns `name`; resolve Riot ID via Account-V1
+        game_name = None
+        tag_line = None
+        display_name = summoner_data.get("name")  # legacy field if ever present
+        try:
+            account_url = (
+                f"https://{region_lower}.api.riotgames.com/riot/account/v1/accounts/by-puuid/{puuid}"
+            )
+            async with httpx.AsyncClient() as account_client:
+                account_response = await account_client.get(account_url, headers=headers)
+                if account_response.status_code == 200:
+                    account_data = account_response.json()
+                    game_name = account_data.get("gameName")
+                    tag_line = account_data.get("tagLine")
+                    if game_name and tag_line:
+                        display_name = f"{game_name}#{tag_line}"
+        except httpx.RequestError as e:
+            log_handler.warning(f"[get_summoner_info] Account lookup failed: {e}")
+
         result = {
             "region": region_lower,
             "platform": successful_platform,
             "puuid": puuid,
             "summoner_id": summoner_data.get("id"),
             "account_id": summoner_data.get("accountId"),
-            "summoner_name": summoner_data.get("name"),
+            "summoner_name": display_name,
+            "game_name": game_name,
+            "tag_line": tag_line,
             "profile_icon_id": summoner_data.get("profileIconId"),
             "revision_date": summoner_data.get("revisionDate"),
             "summoner_level": summoner_data.get("summonerLevel"),
