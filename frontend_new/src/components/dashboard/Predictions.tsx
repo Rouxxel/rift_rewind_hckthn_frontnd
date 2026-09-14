@@ -950,7 +950,7 @@ export const Predictions: React.FC<PredictionsProps> = ({ onBack }) => {
                       title={!championsLoaded ? 'Loading champions...' : 'Fill red team with random champions'}
                       className="px-4 py-2.5 rounded-sm border border-border bg-surface-inset text-ink/85 font-display text-xs uppercase tracking-[0.18em] hover:text-primary hover:border-primary/70 transition-colors disabled:opacity-50"
                     >
-                      {!championsLoaded ? '⏳ Loading...' : '🎲 Random Red'}
+                      {!championsLoaded ? 'Loading...' : 'Random Red'}
                     </button>
                     <button
                       onClick={() => fillRandomTeam('both')}
@@ -958,7 +958,7 @@ export const Predictions: React.FC<PredictionsProps> = ({ onBack }) => {
                       title={!championsLoaded ? 'Loading champions...' : 'Fill both teams with random champions'}
                       className="px-4 py-2.5 rounded-sm border border-border bg-surface-inset text-ink/85 font-display text-xs uppercase tracking-[0.18em] hover:text-primary hover:border-primary/70 transition-colors disabled:opacity-50"
                     >
-                      {!championsLoaded ? '⏳ Loading...' : '🎲 Random Both'}
+                      {!championsLoaded ? 'Loading...' : 'Random Both'}
                     </button>
                     <button
                       onClick={clearTeams}
