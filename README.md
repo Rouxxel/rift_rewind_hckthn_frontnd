@@ -1,37 +1,37 @@
-# 🎮 Rift Rewind - League of Legends AI Coach
+# Rift Rewind - League of Legends AI Coach
 
 **Rift Rewind** is an intelligent League of Legends coaching platform that provides comprehensive performance analysis, match predictions, and AI-powered insights to help players improve their gameplay, [Video demo of old UI](https://youtu.be/2k_Bq4mH-ZM) or [Video demo of new UI](https://youtu.be/9y8Wq2M8i0E).
 
 ---
 
-## ✨ Features
+## Features
 
-### 🎯 Performance Analysis
+### Performance Analysis
 - **Champion Mastery Tracking**: View mastery levels, points, and chest status
 - **Summoner Spells Analysis**: Detailed breakdown of spell usage and win rates
 - **Rune Masteries**: Comprehensive analysis of keystone choices and performance
 - **User-Configurable Filters**: Filter by champion and match count
 
-### 📊 Match History
+### Match History
 - **Detailed Match Information**: Complete match details with game mode and duration
 - **Team Composition Analysis**: AI-powered analysis of team strengths and weaknesses
 - **Match Timeline**: Frame-by-frame breakdown of kills, objectives, and events
 - **Match Predictions**: Retroactive AI predictions for accuracy analysis
 - **Smart Champion Name Resolution**: Automatic handling of special characters
 
-### 🔮 Predictions & Analytics
+### Predictions & Analytics
 - **Champion Winrates**: Real-time winrate data across different ranks
 - **Match Outcome Predictions**: AI-powered predictions for custom team compositions
 - **Team Builder**: Interactive tool to build 5v5 team compositions
 - **Detailed Analysis**: Comprehensive breakdown of team strengths and win conditions
 
-### 🎮 Game Assets Explorer
+### Game Assets Explorer
 - **Champions Database**: Browse all League of Legends champions
 - **Items Database**: Explore all items with stats and descriptions
 - **Champion Details**: In-depth champion abilities, stats, and lore
 - **Item Details**: Complete item information including build paths
 
-### 🤖 AI Assistant
+### AI Assistant
 - **Context-Aware Chat**: Intelligent chatbot that understands your current page
 - **Markdown Support**: Rich text formatting for better readability
 - **Typewriter Effect**: Smooth character-by-character response animation
@@ -41,7 +41,7 @@
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 ### Frontend
 - React 18 with TypeScript
@@ -58,7 +58,7 @@
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 - Node.js 18+ and npm
@@ -67,7 +67,7 @@
 - Google Gemini API Key
 - Docker (optional, for containerized deployment)
 
-### Quick Start with Docker 🐳
+### Quick Start with Docker
 
 The fastest way to get started:
 
@@ -138,7 +138,7 @@ python main.py
 
 ---
 
-## 🤖 AI Assistant
+## AI Assistant
 
 The AI Assistant is a context-aware chatbot powered by Google Gemini that helps users navigate the application and understand their League of Legends data.
 
@@ -153,16 +153,16 @@ The AI Assistant is a context-aware chatbot powered by Google Gemini that helps 
 ### Console Logging
 
 All operations are logged with emoji prefixes:
-- `💬 [AI Assistant]` - Chat window actions
-- `🤖 [AI Assistant]` - Message sending
-- `🔍 [AI Assistant]` - Context building
-- `💾 [AI Assistant]` - Caching operations
-- `✅ [AI Assistant]` - Success messages
-- `❌ [AI Assistant]` - Error messages
+- `[AI Assistant]` - Chat window actions
+- `[AI Assistant]` - Message sending
+- `[AI Assistant]` - Context building
+- `[AI Assistant]` - Caching operations
+- `[AI Assistant]` - Success messages
+- `[AI Assistant]` - Error messages
 
 ---
 
-## 🔌 API Endpoints
+## API Endpoints
 
 ### User & Authentication
 - `POST /user/get_riot_puuid` - Get user PUUID
@@ -197,7 +197,7 @@ All operations are logged with emoji prefixes:
 
 ---
 
-## 🎯 Key Features Explained
+## Key Features Explained
 
 ### Smart Champion Name Resolution
 
@@ -229,7 +229,7 @@ Automatically handles champion names with special characters:
 
 ---
 
-## 🐳 Docker Deployment
+## Docker Deployment
 
 ### Quick Start
 
@@ -269,7 +269,7 @@ See [DEPLOYMENT.md](./DEPLOYMENT.md) for complete deployment guide including:
 
 ---
 
-## 🐛 Debugging
+## Debugging
 
 ### Console Logs
 
@@ -301,7 +301,7 @@ console.log filter: "[Predictions]"
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Please follow these guidelines:
 
@@ -319,13 +319,13 @@ Contributions are welcome! Please follow these guidelines:
 
 ---
 
-## 📝 License
+## License
 
 This project is licensed under the MIT License.
 
 ---
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - Riot Games for the League of Legends API
 - Google for the Gemini AI API
