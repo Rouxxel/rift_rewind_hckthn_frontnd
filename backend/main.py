@@ -40,6 +40,7 @@ from src.api_endpoints.routers.user_info import get_riot_id
 from src.api_endpoints.routers.user_info import get_match_history_by_id
 from src.api_endpoints.routers.user_info import get_summoner_info
 from src.api_endpoints.routers.user_info import get_user_champion_mastery
+from src.api_endpoints.routers.user_info import get_ranked_stats
 from src.api_endpoints.routers.user_info import get_runes_masteries
 from src.api_endpoints.routers.user_info import get_summoner_spells_analysis
 from src.api_endpoints.routers.match_info import get_match_details_by_id
@@ -162,6 +163,7 @@ app.include_router(get_riot_id.router)
 app.include_router(get_summoner_info.router)
 app.include_router(get_match_history_by_id.router)
 app.include_router(get_user_champion_mastery.router)
+app.include_router(get_ranked_stats.router)
 app.include_router(get_runes_masteries.router)
 app.include_router(get_summoner_spells_analysis.router)
 

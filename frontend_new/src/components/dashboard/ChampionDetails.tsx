@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { apiService } from '../../services/api';
 
 interface ChampionDetailsProps {
@@ -151,38 +152,42 @@ export const ChampionDetails: React.FC<ChampionDetailsProps> = ({ championName, 
 
 
 
-  const overlayClasses = "fixed inset-0 z-[999] flex items-center justify-center p-6 backdrop-blur-md bg-[radial-gradient(ellipse_at_center,hsl(277_40%_22%/0.7),hsl(277_70%_4%/0.92))] animate-fade-in-up";
+  const overlayClasses = "fixed inset-0 z-[1000] flex items-center justify-center p-3 sm:p-6 backdrop-blur-md bg-[radial-gradient(ellipse_at_center,hsl(277_40%_22%/0.7),hsl(277_70%_4%/0.92))] animate-fade-in-up";
   const modalClasses = "relative w-full max-w-[1000px] max-h-[90vh] overflow-y-auto rounded-sm border-2 border-primary/80 bg-gradient-to-b from-[hsl(277_35%_22%)] to-[hsl(277_40%_14%)] shadow-[inset_0_1px_0_hsl(38_60%_90%/0.2),inset_0_-2px_0_hsl(277_50%_6%/0.6),0_18px_60px_hsl(277_80%_4%/0.7),0_0_60px_hsl(10_96%_70%/0.35)] animate-fade-in-up before:content-[''] before:absolute before:inset-[4px] before:border before:border-primary/20 before:rounded-[inherit] before:pointer-events-none";
-  const closeBtnClasses = "flex-shrink-0 w-9 h-9 inline-flex items-center justify-center rounded-sm border border-border bg-surface-inset text-ink/75 text-xl leading-none cursor-pointer transition-colors hover:text-secondary hover:border-secondary hover:bg-secondary/10";
+  const closeBtnClasses = "relative z-10 flex-shrink-0 w-9 h-9 inline-flex items-center justify-center rounded-sm border border-border bg-surface-inset text-ink/75 text-xl leading-none cursor-pointer transition-colors hover:text-secondary hover:border-secondary hover:bg-secondary/10";
+
+  const renderOverlay = (content: React.ReactNode) =>
+    createPortal(
+      <div className={overlayClasses} onClick={handleOverlayClick}>
+        {content}
+      </div>,
+      document.body
+    );
 
   if (loading) {
-    return (
-      <div className={overlayClasses} onClick={handleOverlayClick}>
-        <div className={`${modalClasses} flex items-center justify-center p-12`}>
-          <div className="flex flex-col items-center gap-3">
-            <span className="h-8 w-8 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
-            <p className="font-display text-sm text-ink/80">Loading {championName} details...</p>
-          </div>
+    return renderOverlay(
+      <div className={`${modalClasses} flex items-center justify-center p-12`}>
+        <div className="flex flex-col items-center gap-3">
+          <span className="h-8 w-8 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
+          <p className="font-display text-sm text-ink/80">Loading {championName} details...</p>
         </div>
       </div>
     );
   }
 
   if (error) {
-    return (
-      <div className={overlayClasses} onClick={handleOverlayClick}>
-        <div className={`${modalClasses} p-8`}>
-          <div className="flex flex-col items-center gap-3 text-center">
-            <h3 className="font-blackletter text-xl text-secondary m-0">Error Loading Champion</h3>
-            <p className="font-display text-sm text-ink/80 m-0">{error}</p>
-            <div className="flex gap-2 mt-2">
-              <button onClick={loadChampionDetails} className="px-4 py-2 rounded-sm border border-primary/70 bg-surface-inset text-primary font-display text-xs uppercase tracking-[0.18em] hover:bg-primary/10 transition-colors">
-                Retry
-              </button>
-              <button onClick={onClose} className="px-4 py-2 rounded-sm border border-border bg-surface-inset text-ink/80 font-display text-xs uppercase tracking-[0.18em] hover:text-secondary hover:border-secondary transition-colors">
-                Close
-              </button>
-            </div>
+    return renderOverlay(
+      <div className={`${modalClasses} p-8`}>
+        <div className="flex flex-col items-center gap-3 text-center">
+          <h3 className="font-blackletter text-xl text-secondary m-0">Error Loading Champion</h3>
+          <p className="font-display text-sm text-ink/80 m-0">{error}</p>
+          <div className="flex gap-2 mt-2">
+            <button onClick={loadChampionDetails} className="px-4 py-2 rounded-sm border border-primary/70 bg-surface-inset text-primary font-display text-xs uppercase tracking-[0.18em] hover:bg-primary/10 transition-colors">
+              Retry
+            </button>
+            <button onClick={onClose} className="px-4 py-2 rounded-sm border border-border bg-surface-inset text-ink/80 font-display text-xs uppercase tracking-[0.18em] hover:text-secondary hover:border-secondary transition-colors">
+              Close
+            </button>
           </div>
         </div>
       </div>
@@ -235,10 +240,9 @@ export const ChampionDetails: React.FC<ChampionDetailsProps> = ({ championName, 
   const stats = championData.stats;
   const get = (a?: number, b?: number) => a ?? b ?? 0;
 
-  return (
-    <div className={overlayClasses} onClick={handleOverlayClick}>
+  return renderOverlay(
       <div className={modalClasses}>
-        <div className="sticky top-0 z-[5] flex items-start justify-between flex-wrap gap-4 px-6 py-5 backdrop-blur-sm bg-gradient-to-b from-[hsl(277_40%_18%)] to-[hsl(277_40%_12%)] border-b border-primary/35">
+        <div className="sticky top-0 z-20 flex items-start justify-between flex-wrap gap-4 px-6 py-5 backdrop-blur-sm bg-gradient-to-b from-[hsl(277_40%_18%)] to-[hsl(277_40%_12%)] border-b border-primary/35">
           <div className="flex flex-row items-center gap-4 min-w-0 flex-1">
             <div className="relative h-16 w-16 rounded-sm overflow-hidden border-2 border-primary/60 shadow-bevel flex-shrink-0">
               <img
@@ -423,6 +427,5 @@ export const ChampionDetails: React.FC<ChampionDetailsProps> = ({ championName, 
           )}
         </div>
       </div>
-    </div>
   );
 };

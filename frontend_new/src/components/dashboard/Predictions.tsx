@@ -662,55 +662,92 @@ export const Predictions: React.FC<PredictionsProps> = ({ onBack }) => {
                   </span>
                 </div>
 
-                {/* Table card */}
+                {/* Table / cards */}
                 <div className="panel-bevel rounded-sm overflow-hidden">
-                  <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-2 px-4 py-3 border-b border-border bg-surface-inset/80 font-display text-[11px] uppercase tracking-[0.18em] text-primary">
+                  {/* Desktop header */}
+                  <div className="hidden md:grid md:grid-cols-[minmax(0,2.2fr)_minmax(4.5rem,0.85fr)_minmax(4.5rem,0.85fr)_minmax(4.5rem,0.85fr)_minmax(4rem,0.7fr)] gap-3 px-4 py-3 border-b border-border bg-surface-inset/80 font-display text-[11px] uppercase tracking-[0.18em] text-primary">
                     <div>Champion</div>
-                    <div>Win Rate</div>
-                    <div>Pick Rate</div>
-                    <div>Ban Rate</div>
-                    <div>Games</div>
+                    <div className="text-right">Win Rate</div>
+                    <div className="text-right">Pick Rate</div>
+                    <div className="text-right">Ban Rate</div>
+                    <div className="text-right">Games</div>
                   </div>
                   {filteredWinrates.length > 0 ? filteredWinrates.map((champion, index) => (
                     <div
                       key={champion.champion_id}
                       className={[
-                        "grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-2 items-center px-4 py-2.5 border-b border-border/60 transition-colors",
+                        "border-b border-border/60 transition-colors last:border-b-0",
                         index % 2 === 0 ? "bg-surface-inset/40" : "bg-transparent",
                         "hover:bg-primary/10",
+                        // Mobile card stack
+                        "flex flex-col gap-3 p-3",
+                        // Desktop row
+                        "md:grid md:grid-cols-[minmax(0,2.2fr)_minmax(4.5rem,0.85fr)_minmax(4.5rem,0.85fr)_minmax(4.5rem,0.85fr)_minmax(4rem,0.7fr)] md:items-center md:gap-3 md:px-4 md:py-2.5 md:p-0",
                       ].join(" ")}
                     >
                       <div className="flex items-center gap-3 min-w-0">
                         <img
                           src={`https://ddragon.leagueoflegends.com/cdn/14.22.1/img/champion/${champion.champion_id}.png`}
                           alt={champion.name}
-                          className="h-9 w-9 rounded-sm border border-primary/40 shadow-bevel object-cover flex-shrink-0"
+                          className="h-10 w-10 md:h-9 md:w-9 rounded-sm border border-primary/40 shadow-bevel object-cover flex-shrink-0"
                           onError={(e) => {
                             (e.target as HTMLImageElement).src = '/champion-placeholder.png';
                           }}
                         />
                         <div className="flex flex-col min-w-0">
-                          <span className="font-blackletter text-sm text-ink truncate">{champion.name}</span>
-                          <span className="text-[11px] text-muted-foreground truncate italic">{champion.title}</span>
+                          <span className="font-blackletter text-base md:text-sm text-ink leading-tight break-words">
+                            {champion.name}
+                          </span>
+                          <span className="text-[11px] text-muted-foreground italic leading-snug line-clamp-2 md:line-clamp-1">
+                            {champion.title}
+                          </span>
                         </div>
                       </div>
-                      <div>
-                        <span
-                          className={[
-                            "font-pixel text-[11px] px-2 py-1 rounded-sm border",
-                            champion.win_rate >= 52
-                              ? "text-[#6fd58a] border-[#6fd58a]/40 bg-[#6fd58a]/10"
-                              : champion.win_rate <= 48
-                              ? "text-secondary border-secondary/50 bg-secondary/10"
-                              : "text-gold border-gold/40 bg-gold/10",
-                          ].join(" ")}
-                        >
-                          {champion.win_rate}%
-                        </span>
+
+                      {/* Stats: 2x2 on mobile, columns on desktop */}
+                      <div className="grid grid-cols-2 gap-2 md:contents">
+                        <div className="flex items-center justify-between gap-2 rounded-sm border border-border/50 bg-surface-inset/50 px-2.5 py-1.5 md:border-0 md:bg-transparent md:p-0 md:justify-end">
+                          <span className="md:hidden font-pixel text-[8px] uppercase tracking-[0.14em] text-ink/55">
+                            Win
+                          </span>
+                          <span
+                            className={[
+                              "font-pixel text-[11px] tabular-nums px-1.5 py-0.5 rounded-sm border whitespace-nowrap",
+                              champion.win_rate >= 52
+                                ? "text-[#6fd58a] border-[#6fd58a]/40 bg-[#6fd58a]/10"
+                                : champion.win_rate <= 48
+                                ? "text-secondary border-secondary/50 bg-secondary/10"
+                                : "text-gold border-gold/40 bg-gold/10",
+                            ].join(" ")}
+                          >
+                            {champion.win_rate.toFixed(1)}%
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between gap-2 rounded-sm border border-border/50 bg-surface-inset/50 px-2.5 py-1.5 md:border-0 md:bg-transparent md:p-0 md:justify-end">
+                          <span className="md:hidden font-pixel text-[8px] uppercase tracking-[0.14em] text-ink/55">
+                            Pick
+                          </span>
+                          <span className="font-display text-sm tabular-nums text-ink/85 whitespace-nowrap">
+                            {champion.pick_rate.toFixed(1)}%
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between gap-2 rounded-sm border border-border/50 bg-surface-inset/50 px-2.5 py-1.5 md:border-0 md:bg-transparent md:p-0 md:justify-end">
+                          <span className="md:hidden font-pixel text-[8px] uppercase tracking-[0.14em] text-ink/55">
+                            Ban
+                          </span>
+                          <span className="font-display text-sm tabular-nums text-ink/85 whitespace-nowrap">
+                            {champion.ban_rate.toFixed(1)}%
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between gap-2 rounded-sm border border-border/50 bg-surface-inset/50 px-2.5 py-1.5 md:border-0 md:bg-transparent md:p-0 md:justify-end">
+                          <span className="md:hidden font-pixel text-[8px] uppercase tracking-[0.14em] text-ink/55">
+                            Games
+                          </span>
+                          <span className="font-display text-sm tabular-nums text-ink/85 whitespace-nowrap">
+                            {champion.games_played.toLocaleString()}
+                          </span>
+                        </div>
                       </div>
-                      <div className="font-display text-sm text-ink/85">{champion.pick_rate}%</div>
-                      <div className="font-display text-sm text-ink/85">{champion.ban_rate}%</div>
-                      <div className="font-display text-sm text-ink/85">{champion.games_played.toLocaleString()}</div>
                     </div>
                   )) : (
                     <div className="flex flex-col items-center justify-center gap-3 py-12 px-6 text-center">
@@ -913,7 +950,7 @@ export const Predictions: React.FC<PredictionsProps> = ({ onBack }) => {
                       title={!championsLoaded ? 'Loading champions...' : 'Fill red team with random champions'}
                       className="px-4 py-2.5 rounded-sm border border-border bg-surface-inset text-ink/85 font-display text-xs uppercase tracking-[0.18em] hover:text-primary hover:border-primary/70 transition-colors disabled:opacity-50"
                     >
-                      {!championsLoaded ? '⏳ Loading...' : '🎲 Random Red'}
+                      {!championsLoaded ? 'Loading...' : 'Random Red'}
                     </button>
                     <button
                       onClick={() => fillRandomTeam('both')}
@@ -921,7 +958,7 @@ export const Predictions: React.FC<PredictionsProps> = ({ onBack }) => {
                       title={!championsLoaded ? 'Loading champions...' : 'Fill both teams with random champions'}
                       className="px-4 py-2.5 rounded-sm border border-border bg-surface-inset text-ink/85 font-display text-xs uppercase tracking-[0.18em] hover:text-primary hover:border-primary/70 transition-colors disabled:opacity-50"
                     >
-                      {!championsLoaded ? '⏳ Loading...' : '🎲 Random Both'}
+                      {!championsLoaded ? 'Loading...' : 'Random Both'}
                     </button>
                     <button
                       onClick={clearTeams}

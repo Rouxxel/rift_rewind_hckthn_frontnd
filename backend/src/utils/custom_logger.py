@@ -52,7 +52,7 @@ os.makedirs(log_directory,exist_ok=True)
 log_file = os.path.join(
                     log_directory, 
                     datetime.datetime.now().strftime(
-                        f"{config_loader["logging"]["log_file_name"]}_%Y-%m-%dT%H-%M-%S.log"))
+                        f"{config_loader['logging']['log_file_name']}_%Y-%m-%dT%H-%M-%S.log"))
 file_handler = logging.FileHandler(log_file)
 file_handler.setFormatter(log_format)
 

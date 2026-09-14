@@ -6,7 +6,7 @@ const MatchesPage = () => {
   const navigate = useNavigate();
   return (
     <DashboardShell showBack>
-      <div className="container py-6">
+      <div className="container py-3 sm:py-6">
         <MatchHistory onBack={() => navigate("/dashboard")} />
       </div>
     </DashboardShell>
